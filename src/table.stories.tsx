@@ -110,3 +110,20 @@ function HookLayoutExample() {
 export const HookLayout: Story = { render: () => <HookLayoutExample /> };
 
 export const IndependentTables: Story = { render: () => <><Example ariaLabel="First table" /><Example ariaLabel="Second table" /></> };
+
+function UncontrolledStateExample() {
+  const [sortingChanges, setSortingChanges] = useState(0);
+  const [selectionChanges, setSelectionChanges] = useState(0);
+  return <>
+    <PuppertinoTable data={people.slice(0, 3)} columns={personColumns} getRowId={row => row.id} getRowLabel={row => row.name}
+      ariaLabel="Uncontrolled people" manualSorting={false} initialSorting={[{ id: 'score', desc: true }]} selectable
+      initialRowSelection={{ [people[0].id]: true }} onSortingChange={() => setSortingChanges(count => count + 1)}
+      onRowSelectionChange={() => setSelectionChanges(count => count + 1)}
+      getRowProps={(row, context) => ({ 'data-column-count': context.columnCount, 'data-row-id': row.id })}
+      getCellProps={(_cell, context) => ({ 'data-selectable': context.selectable })}
+      leadingRows={(_table, context) => <tr><td colSpan={context.columnCount}>Folder with correct span</td></tr>} />
+    <output aria-label="Sorting notifications">{sortingChanges}</output>
+    <output aria-label="Selection notifications">{selectionChanges}</output>
+  </>;
+}
+export const UncontrolledState: Story = { render: () => <UncontrolledStateExample /> };

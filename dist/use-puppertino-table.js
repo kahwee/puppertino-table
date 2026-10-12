@@ -1,11 +1,23 @@
 "use client";
 import { useTable } from '@tanstack/react-table';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { puppertinoTableFeatures } from './model.js';
 import { columnSizeBounds, readColumnSizing } from './sizing.js';
 /** Shared state wiring for complete tables and custom semantic layouts. */
-export function usePuppertinoTable({ data, columns, getRowId, sorting, onSortingChange, manualSorting = true, rowSelection: controlledSelection, onRowSelectionChange, selectable = false, disabled = false, storageKey, storage }) {
-    const [localSelection, setLocalSelection] = useState({});
+export function usePuppertinoTable({ data, columns, getRowId, sorting: controlledSorting, onSortingChange, initialSorting = [], initialRowSelection = {}, manualSorting = true, rowSelection: controlledSelection, onRowSelectionChange, selectable = false, disabled = false, storageKey, storage }) {
+    const [localSelection, setLocalSelection] = useState(() => initialRowSelection);
+    const [localSorting, setLocalSorting] = useState(() => initialSorting);
+    const sorting = controlledSorting ?? localSorting;
+    const changeSorting = useCallback(update => {
+        if (controlledSorting === undefined)
+            setLocalSorting(update);
+        onSortingChange?.(update);
+    }, [controlledSorting, onSortingChange]);
+    const changeSelection = useCallback(update => {
+        if (controlledSelection === undefined)
+            setLocalSelection(update);
+        onRowSelectionChange?.(update);
+    }, [controlledSelection, onRowSelectionChange]);
     const rowSelection = controlledSelection ?? localSelection;
     const canSelect = selectable && !disabled && (controlledSelection === undefined || !!onRowSelectionChange);
     const bounds = useMemo(() => columnSizeBounds(columns), [columns]);
@@ -28,9 +40,9 @@ export function usePuppertinoTable({ data, columns, getRowId, sorting, onSorting
         }
     });
     const table = useTable({ features: puppertinoTableFeatures, columns: sizedColumns, data, getRowId,
-        manualSorting, enableMultiSort: false, enableSortingRemoval: false, enableRowSelection: canSelect,
+        manualSorting, enableSorting: controlledSorting === undefined || !!onSortingChange, enableMultiSort: false, enableSortingRemoval: false, enableRowSelection: canSelect,
         enableSubRowSelection: false, initialState: { columnSizing: initialWidths },
-        state: { sorting, rowSelection }, onSortingChange, onRowSelectionChange: onRowSelectionChange ?? setLocalSelection,
+        state: { sorting, rowSelection }, onSortingChange: changeSorting, onRowSelectionChange: changeSelection,
     }, state => ({ sorting: state.sorting, rowSelection: state.rowSelection }));
     return table;
 }

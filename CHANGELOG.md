@@ -1,10 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 — 2026-10-12
 
 - Add typed row/cell DOM customization callbacks and a leading-rows slot to the complete table.
 - Expose `usePuppertinoTable` for shared sorting, selection and persisted-sizing initialization in custom layouts.
 - Share resize gesture state and global listeners per table, with safe active-handle removal and coordinated columns.
+- Support uncontrolled sorting/selection with initial values and change notifications; controlled state without callbacks is read-only.
+- Supply typed body context and data attributes to customization callbacks; infer primitive resize labels from headers.
 - Document complete-component and primitive integrations, including server-owned pagination.
 
 ## 0.1.1 — 2026-10-12

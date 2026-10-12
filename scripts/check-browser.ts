@@ -106,7 +106,7 @@ try {
   await page.frameLocator('#storybook-preview-iframe').getByRole('table').waitFor();
   await page.getByRole('link', { name: 'Default', exact: true }).waitFor();
   await page.screenshot({ path: `${evidence}/storybook-pages.png` });
-  for (const story of ['default', 'selection', 'keyboard-resize', 'dark', 'narrow', 'empty', 'disabled', 'read-only', 'server-owned-order', 'different-schema', 'grouped-headers', 'standalone-resize', 'customized-rows', 'leading-rows-when-empty', 'hook-layout', 'independent-tables']) {
+  for (const story of ['default', 'selection', 'keyboard-resize', 'dark', 'narrow', 'empty', 'disabled', 'read-only', 'server-owned-order', 'different-schema', 'grouped-headers', 'standalone-resize', 'customized-rows', 'leading-rows-when-empty', 'hook-layout', 'independent-tables', 'uncontrolled-state']) {
     if (story === 'standalone-resize') await page.addInitScript(() => {
       const target = window as any;
       const listeners = { keydown: new Set(), blur: new Set() };
@@ -186,6 +186,20 @@ try {
       assert.equal(Number(await first.getAttribute('aria-valuenow')), firstWidth);
       assert.equal(Number(await second.getAttribute('aria-valuenow')), secondWidth + 16, 'cancel restores only the active table');
     }
+    if (story === 'uncontrolled-state') {
+      const table = page.getByRole('table', { name: 'Uncontrolled people', exact: true });
+      assert.equal(await table.locator('th[aria-sort]').getAttribute('aria-sort'), 'descending');
+      assert.equal(await table.locator('input:checked').count(), 1, 'initial selection is applied');
+      await table.locator('input:checked').uncheck();
+      assert.equal(await table.locator('input:checked').count(), 0, 'uncontrolled selection updates while notifying the host');
+      assert.equal(await page.getByLabel('Selection notifications').textContent(), '1');
+      await table.getByRole('button', { name: 'Sort by Name' }).click();
+      assert.equal(await page.getByLabel('Sorting notifications').textContent(), '1');
+      assert.equal(await table.locator('th[aria-sort]').getAttribute('aria-sort'), 'ascending');
+      assert.equal(await table.locator('tbody tr').first().locator('td').getAttribute('colspan'), '5');
+      assert.equal(await table.locator('tr[data-row-id]').first().getAttribute('data-column-count'), '5');
+      assert.equal(await table.locator('td[data-selectable]').first().getAttribute('data-selectable'), 'true');
+    }
     if (story === 'empty') assert.ok(await page.getByText('No people match this view.').isVisible());
     if (story === 'disabled') assert.equal(await page.getByRole('checkbox').first().isDisabled(), true);
     if (story === 'different-schema') assert.ok(await page.getByRole('table', { name: 'Inventory' }).isVisible());
@@ -232,5 +246,5 @@ try {
     }
   }
   await page.close(); assert.deepEqual(errors, []);
-  console.log(process.env.PUPPERTINO_STORIES_ONLY ? 'Sixteen Storybook stories, customization, hook layouts and shared resize controllers passed.' : '512 repeated pointer drags, geometry, limits, keyboard/reset/cancellation/persistence, selection, disabled/unmount recovery, standalone-control cancellation, 267 rows across six pages, six light/dark axe layouts and sixteen Storybook stories, customization, hook layouts and shared resize controllers passed.');
+  console.log(process.env.PUPPERTINO_STORIES_ONLY ? 'Seventeen Storybook stories, customization, hook layouts and shared resize controllers passed.' : '512 repeated pointer drags, geometry, limits, keyboard/reset/cancellation/persistence, selection, disabled/unmount recovery, standalone-control cancellation, 267 rows across six pages, six light/dark axe layouts and seventeen Storybook stories, customization, hook layouts and shared resize controllers passed.');
 } finally { await browser.close(); await demo.close(); await stories.close(); }

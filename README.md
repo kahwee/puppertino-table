@@ -14,12 +14,10 @@ A generic React table styled with [Puppertino](https://puppertino.com/) and powe
 
 ## Install
 
-The customization callbacks, leading rows and `usePuppertinoTable` described below are prepared for the next release. The current npm release is 0.1.1; use a pinned Git commit to try these additions before publication.
-
 The package includes built ESM and TypeScript declarations. Install it from npm:
 
 ```sh
-pnpm add puppertino-table@0.1.1 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react react-dom
+pnpm add puppertino-table@0.2.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react react-dom
 ```
 
 React, TanStack Table and Puppertino are peer dependencies; the library does not bundle another copy of them. For Git-based installation, use `github:kahwee/puppertino-table` and pin a commit or tag for reproducibility.
@@ -63,6 +61,8 @@ export function Example() {
 }
 ```
 
+For simpler tables, omit `sorting` and `onSortingChange` to let the library own sort state; set `manualSorting={false}` for local ordering. `initialSorting` and `initialRowSelection` seed uncontrolled state on mount. You can provide change callbacks as notifications while leaving state uncontrolled. If you provide controlled `sorting` or `rowSelection` without its matching callback, that state is read-only. Do not switch between controlled and uncontrolled ownership while a table is mounted.
+
 The example uses local sorting and uncontrolled checkbox selection. Pass both `rowSelection` and `onRowSelectionChange` for controlled selection. Controlled selection without a change callback is read-only. Keep column definitions and data references stable when possible.
 
 ### Sorting and pagination
@@ -92,17 +92,17 @@ Use **`PuppertinoTable`** for the complete semantic table: headers, sort buttons
     onContextMenu: event => { event.preventDefault(); openMenu(row.original, event.clientX, event.clientY); },
   })}
   getCellProps={cell => ({ title: String(cell.getValue() ?? '') })}
-  leadingRows={table => (
-    <tr><td colSpan={table.getAllLeafColumns().length + 1}>
+  leadingRows={(_table, context) => (
+    <tr><td colSpan={context.columnCount}>
       <button type="button" onClick={openFolder}>Open folder</button>
     </td></tr>
   )}
 />
 ```
 
-Callbacks receive typed TanStack row/cell objects, including `original`, IDs and state methods. Row props are applied to data `<tr>` elements and cell props to data `<td>` elements. The selection cell stays library-owned. Custom row classes are combined with `p-selected`; selection checkbox clicks do not bubble to the row. The library retains row/cell children and React keys. Keep callbacks stable when possible so sizing updates can reuse the memoized body. Callbacks can attach events, styles and DOM attributes; the app owns context-menu rendering and keyboard access to its actions.
+Callbacks receive typed TanStack row/cell objects, including `original`, IDs and state methods. Their second argument is `PuppertinoBodyContext`: `{ table, columnCount, selectable, disabled }`. Typed `data-*` attributes are supported on row and cell props; return `undefined` to leave a row or cell unchanged. Row props are applied to data `<tr>` elements and cell props to data `<td>` elements. The selection cell stays library-owned. Custom row classes are combined with `p-selected`; selection checkbox clicks do not bubble to the row. The library retains row/cell children and React keys. Keep callbacks stable when possible so sizing updates can reuse the memoized body. Callbacks can attach events, styles and DOM attributes; the app owns context-menu rendering and keyboard access to its actions.
 
-`leadingRows` accepts React content or a function receiving the table. Return semantic `<tr>` elements with `<th>`/`<td>` children. It renders inside `<tbody>` before data rows, including when there are no data rows; the empty-state row still renders. Include one extra column in `colSpan` when `selectable` is enabled. Leading rows are app-owned: they do not enter the data row model, sorting, selection ranges or the row/cell callbacks.
+`leadingRows` accepts React content or a function receiving the table. Its second argument is the same body context, with `columnCount` including the selection column. Return semantic `<tr>` elements with `<th>`/`<td>` children. It renders inside `<tbody>` before data rows, including when there are no data rows; the empty-state row still renders. Use `context.columnCount` for full-width row `colSpan`. Leading rows are app-owned: they do not enter the data row model, sorting, selection ranges or the row/cell callbacks.
 
 Use **`usePuppertinoTable` and the primitives** when you own the table markup, selection controls or header layout. The hook returns a `PuppertinoTableInstance` and shares the complete component's column bounds, persisted initial sizing, sorting ownership and controlled/uncontrolled selection rules. It accepts the state/data options from `PuppertinoTable`, without rendering options such as `ariaLabel` or `leadingRows`.
 
@@ -143,7 +143,7 @@ function CustomItems() {
 }
 ```
 
-The hook initializes sizing but does not install resize listeners. `ColumnResizeHandle` and `useColumnResize` automatically share a controller keyed by the table's sizing store, with one pair of global keydown/blur listeners and one active gesture. The initiating handle's options govern that gesture; pass consistent storage and responsive settings to all handles. Removing the active handle, disabling it or changing its resize settings cancels its preview. Removing other handles leaves the gesture running. Separate tables remain independent. Pass `options={{ enabled: false }}` to hide a primitive handle when your layout is disabled; the hook's `disabled` controls selection, while primitive UI controls remain yours to disable.
+The hook initializes sizing but does not install resize listeners. `ColumnResizeHandle` infers its accessible label from a string header or column ID; pass `label` for a custom or translated name. Its props type is exported as `ColumnResizeHandleProps`. `ColumnResizeHandle` and `useColumnResize` automatically share a controller keyed by the table's sizing store, with one pair of global keydown/blur listeners and one active gesture. The initiating handle's options govern that gesture; pass consistent storage and responsive settings to all handles. Removing the active handle, disabling it or changing its resize settings cancels its preview. Removing other handles leaves the gesture running. Separate tables remain independent. Pass `options={{ enabled: false }}` to hide a primitive handle when your layout is disabled; the hook's `disabled` controls selection, while primitive UI controls remain yours to disable.
 
 For more specialized state wiring, the existing `puppertinoTableFeatures`, `PuppertinoTableInstance`, sizing helpers and TanStack `useTable` remain available. In custom layouts, memoize your row body separately from the `columnSizing` subscription to avoid rerendering cells during drags.
 
@@ -213,7 +213,7 @@ Stories cover local sorting, host-owned order, range selection, keyboard resizin
 pnpm check
 ```
 
-Checks include TypeScript, preference/schema unit tests, library/demo/Storybook builds, and Chromium regression tests. The browser suite exercises 512 repeated pointer drags, width limits, reset/cancellation/persistence, selection, unmount/disabled recovery, standalone-control removal and grouped-header resizing, all 267 demo rows across six pages, six light/dark accessibility layouts, all sixteen Storybook stories, and tarball installation with typed imports, server rendering and CSS exports in fresh React 18 and React 19 consumers. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to a system Chromium path, or install a browser with `pnpm exec playwright install chromium`.
+Checks include TypeScript, preference/schema unit tests, library/demo/Storybook builds, and Chromium regression tests. The browser suite exercises 512 repeated pointer drags, width limits, reset/cancellation/persistence, selection, unmount/disabled recovery, standalone-control removal and grouped-header resizing, all 267 demo rows across six pages, six light/dark accessibility layouts, all seventeen Storybook stories, and tarball installation with typed imports, server rendering and CSS exports in fresh React 18 and React 19 consumers. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to a system Chromium path, or install a browser with `pnpm exec playwright install chromium`.
 
 GitHub Actions runs the same checks and uploads Storybook plus browser evidence as an artifact. Browser tests use fictional data and do not claim Safari, physical-device or latency coverage.
 
@@ -223,7 +223,7 @@ The unscoped **`puppertino-table`** package is public on npm. Stable releases us
 
 ```sh
 pnpm check
-npm publish test-results/package/puppertino-table-0.1.1.tgz --dry-run --ignore-scripts --access public
+npm publish test-results/package/puppertino-table-0.2.0.tgz --dry-run --ignore-scripts --access public
 ```
 
 `pnpm check` builds and packs the library, checks the tarball file list, and installs it in isolated React 18 and React 19 consumers. `prepack` rebuilds JavaScript and declarations so a locally packed release cannot silently use stale output. Only the compiled library, CSS, package metadata, README, changelog and MIT license ship; Storybook, the demo and tests stay out of the npm package.

@@ -4,8 +4,8 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { memo } from 'react';
 import { usePuppertinoTable } from './use-puppertino-table.js';
 import { useColumnResize } from './use-column-resize.js';
-export function PuppertinoTable({ data, columns, getRowId, sorting, onSortingChange, manualSorting = true, rowSelection: controlledSelection, onRowSelectionChange, getRowLabel, selectable = false, disabled = false, resizable = true, storageKey, storage, cancelMediaQuery, ariaLabel, caption, emptyContent = 'No rows', className = '', getRowProps, getCellProps, leadingRows }) {
-    const table = usePuppertinoTable({ data, columns, getRowId, sorting, onSortingChange, manualSorting,
+export function PuppertinoTable({ data, columns, getRowId, sorting, onSortingChange, initialSorting, initialRowSelection, manualSorting = true, rowSelection: controlledSelection, onRowSelectionChange, getRowLabel, selectable = false, disabled = false, resizable = true, storageKey, storage, cancelMediaQuery, ariaLabel, caption, emptyContent = 'No rows', className = '', getRowProps, getCellProps, leadingRows }) {
+    const table = usePuppertinoTable({ data, columns, getRowId, sorting, onSortingChange, initialSorting, initialRowSelection, manualSorting,
         rowSelection: controlledSelection, onRowSelectionChange, selectable, disabled, storageKey, storage });
     const options = { enabled: resizable && !disabled, storageKey, storage, cancelMediaQuery };
     const { handle } = useColumnResize(table, options);
@@ -16,18 +16,19 @@ export function PuppertinoTable({ data, columns, getRowId, sorting, onSortingCha
                                     const sorted = column.getIsSorted();
                                     const leaf = column.columns.length === 0;
                                     return _jsxs("th", { colSpan: header.colSpan, scope: leaf ? 'col' : 'colgroup', "aria-sort": sorted ? sorted === 'asc' ? 'ascending' : 'descending' : undefined, children: [!header.isPlaceholder && (column.getCanSort() ? _jsxs("button", { type: "button", className: "pt-sort", "aria-label": `Sort by ${label}`, disabled: disabled, onClick: () => column.toggleSorting(), children: [_jsx(table.FlexRender, { header: header }), _jsx("span", { className: "pt-sort-arrow", "aria-hidden": "true", "data-direction": sorted || 'none', children: "\u2304" })] }) : _jsx(table.FlexRender, { header: header })), leaf && !header.isPlaceholder && resizable && !disabled && _jsx("span", { className: "pt-resizer", role: "separator", tabIndex: 0, "aria-orientation": "vertical", "aria-label": `Resize ${label} column`, "aria-valuemin": column.columnDef.minSize, "aria-valuemax": column.columnDef.maxSize, "aria-valuenow": header.getSize(), "aria-valuetext": `${header.getSize()} pixels`, title: "Drag to resize. Double-click or Enter to reset. Arrows adjust width; Escape cancels a drag.", ...handle(column.id) })] }, header.id);
-                                })] }, group.id)) }), _jsx(MemoTableBody, { table: table, selectable: selectable, getRowLabel: getRowLabel, emptyContent: emptyContent, getRowProps: getRowProps, getCellProps: getCellProps, leadingRows: leadingRows })] }) }) });
+                                })] }, group.id)) }), _jsx(MemoTableBody, { table: table, selectable: selectable, disabled: disabled, getRowLabel: getRowLabel, emptyContent: emptyContent, getRowProps: getRowProps, getCellProps: getCellProps, leadingRows: leadingRows })] }) }) });
 }
 /** Geometry updates do not rerender cells. State and data changes still do. */
-function TableBody({ table, selectable, getRowLabel, emptyContent, getRowProps, getCellProps, leadingRows }) {
+function TableBody({ table, selectable, disabled, getRowLabel, emptyContent, getRowProps, getCellProps, leadingRows }) {
     const rows = table.getRowModel().rows;
-    return _jsxs("tbody", { children: [typeof leadingRows === 'function' ? leadingRows(table) : leadingRows, rows.length ? rows.map(row => {
-                const props = getRowProps?.(row);
+    const context = { table, selectable, disabled, columnCount: table.getAllLeafColumns().length + (selectable ? 1 : 0) };
+    return _jsxs("tbody", { children: [typeof leadingRows === 'function' ? leadingRows(table, context) : leadingRows, rows.length ? rows.map(row => {
+                const props = getRowProps?.(row, context);
                 const className = [row.getIsSelected() ? 'p-selected' : '', props?.className].filter(Boolean).join(' ') || undefined;
                 return _createElement("tr", { ...props, key: row.id, className: className },
                     selectable && _jsx("td", { className: "pt-selection", children: _jsx("input", { type: "checkbox", "aria-label": `Select ${getRowLabel?.(row.original) ?? row.id}`, checked: row.getIsSelected(), disabled: !row.getCanSelect(), onClick: event => { event.stopPropagation(); row.getToggleSelectedHandler()(event); }, onChange: () => { } }) }),
-                    row.getAllCells().map(cell => _createElement("td", { ...getCellProps?.(cell), key: cell.id },
+                    row.getAllCells().map(cell => _createElement("td", { ...getCellProps?.(cell, context), key: cell.id },
                         _jsx(table.FlexRender, { cell: cell }))));
-            }) : _jsx("tr", { children: _jsx("td", { colSpan: table.getAllLeafColumns().length + (selectable ? 1 : 0), children: emptyContent }) })] });
+            }) : _jsx("tr", { children: _jsx("td", { colSpan: context.columnCount, children: emptyContent }) })] });
 }
 const MemoTableBody = memo(TableBody);

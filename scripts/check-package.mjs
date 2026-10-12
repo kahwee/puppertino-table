@@ -31,6 +31,7 @@ try {
     await writeFile(path.join(directory, 'consumer.tsx'), `
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import type { PuppertinoBodyContext, PuppertinoRowProps, ColumnResizeHandleProps } from 'puppertino-table';
 import { PuppertinoTable, usePuppertinoTable, ColumnResizeHandle, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
 type Item = { id: string; title: string; price: number };
 const helper = createPuppertinoColumnHelper<Item>();
@@ -45,17 +46,18 @@ const markup = renderToStaticMarkup(createElement(PuppertinoTable<Item>, {
 }));
 const customized = renderToStaticMarkup(createElement(PuppertinoTable<Item>, {
   data, columns, getRowId: item => item.id, ariaLabel: 'Custom inventory', sorting: [], onSortingChange: () => {},
-  getRowProps: row => ({ className: 'custom-row', title: row.original.title }),
+  getRowProps: (row, context) => ({ className: 'custom-row', title: row.original.title, 'data-column-count': context.columnCount }),
   getCellProps: cell => ({ title: String(cell.getValue()) }),
-  leadingRows: table => createElement('tr', null, createElement('td', { colSpan: table.getAllLeafColumns().length }, 'Folder')),
+  leadingRows: (_table, context) => createElement('tr', null, createElement('td', { colSpan: context.columnCount }, 'Folder')),
 }));
 if (!customized.includes('custom-row') || customized.indexOf('Folder') > customized.indexOf('Ten')) throw new Error('Custom rows failed');
 function HookConsumer() {
-  const table = usePuppertinoTable({ data, columns, getRowId: item => item.id, sorting: [], onSortingChange: () => {}, selectable: true });
+  const table = usePuppertinoTable({ data, columns, getRowId: item => item.id, initialSorting: [{ id: 'price', desc: false }], manualSorting: false, selectable: true });
   const header = table.getHeaderGroups()[0].headers[0];
   return createElement('table', null, createElement('thead', null, createElement('tr', null, createElement('th', null,
-    createElement(ColumnResizeHandle<Item>, { table, header, label: 'Title' })))));
+    createElement(ColumnResizeHandle<Item>, { table, header })))));
 }
+const attributes: PuppertinoRowProps = { 'data-row-id': 'example' };
 if (!renderToStaticMarkup(createElement(HookConsumer)).includes('Resize Title column')) throw new Error('Hook consumer failed');
 if (!markup.includes('aria-label="Inventory"')) throw new Error('Missing table label');
 if (markup.indexOf('Two') >= markup.indexOf('Ten')) throw new Error('Numeric sorting failed');
