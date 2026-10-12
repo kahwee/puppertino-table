@@ -51,6 +51,10 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
 
   await page.goto(`${base}/iframe.html?id=start-here-overview--docs&viewMode=docs`);
   await page.locator('#puppertino-table').waitFor();
+  assert.equal(
+    await page.getByRole('table', { name: 'Choose a Storybook example' }).getByRole('row').count(),
+    4,
+  );
   const link = page.getByRole('link', { name: 'Finder walkthrough', exact: true });
   assert.equal(await link.getAttribute('target'), '_top');
   await link.click();

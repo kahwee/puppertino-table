@@ -1,0 +1,21 @@
+.storybook-guide-table-scroll {
+  overflow-x: auto;
+  margin: 20px 0;
+}
+.storybook-guide-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.storybook-guide-table th,
+.storybook-guide-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 12px 14px;
+  border-bottom: 1px solid #dce1e8;
+}
+.storybook-guide-table th {
+  background: #f5f7fa;
+}
