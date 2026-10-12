@@ -34,7 +34,7 @@
     "build": "node scripts/build.mjs",
     "build:demo": "vite build",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/*.test.ts",
+    "test": "tsx --test tests/*.test.ts && node --test tests/release.test.mjs",
     "test:browser": "tsx scripts/check-browser.ts",
     "check": "pnpm typecheck && pnpm test && pnpm build && pnpm build:demo && pnpm build:storybook && pnpm test:browser && pnpm test:package",
     "storybook": "storybook dev -p 6006 --no-open",

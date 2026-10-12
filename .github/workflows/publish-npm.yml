@@ -1,0 +1,101 @@
+name: Publish npm release
+on:
+  release:
+    types: [published]
+permissions:
+  contents: read
+concurrency:
+  group: npm-release-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'kahwee/puppertino-table' && !github.event.release.draft && !github.event.release.prerelease
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      sha: ${{ steps.release.outputs.sha }}
+      tarball: ${{ steps.release.outputs.tarball }}
+      integrity: ${{ steps.pack.outputs.integrity }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.21.0
+      - name: Validate stable tag, exact event SHA and package version
+        id: release
+        run: node scripts/release-guards.mjs validate-event
+      - run: node --test tests/release.test.mjs
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm check
+      - run: git diff --exit-code -- dist
+      - name: Verify packed artifact identity, file list and integrity
+        id: pack
+        run: node scripts/release-guards.mjs validate-packed
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: npm-release-${{ github.run_id }}
+          path: test-results/package/
+          if-no-files-found: error
+  publish:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      EXPECTED_INTEGRITY: ${{ needs.verify.outputs.integrity }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.verify.outputs.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.21.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: npm-release-${{ github.run_id }}
+          path: release-candidate
+      - name: Revalidate tag and downloaded candidate; check for existing version
+        id: registry
+        run: node scripts/release-guards.mjs registry-state release-candidate/pack.json
+      - name: Publish verified tarball using npm trusted OIDC
+        if: steps.registry.outputs.state == 'missing'
+        env:
+          TARBALL: ${{ needs.verify.outputs.tarball }}
+        # Detached tag checkout is validated explicitly; lifecycle scripts never run here.
+        run: pnpm publish "release-candidate/$TARBALL" --ignore-scripts --no-git-checks --access public --provenance --registry=https://registry.npmjs.org/
+      - name: Verify exact registry version and artifact integrity
+        run: node scripts/release-guards.mjs verify-registry release-candidate/pack.json
+  consumer:
+    needs: [verify, publish]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.verify.outputs.sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.21.0
+      - run: pnpm install --frozen-lockfile
+      - name: Clean registry consumers with React 18 and 19, types, rendering and CSS
+        run: node scripts/check-package.mjs --from-registry
