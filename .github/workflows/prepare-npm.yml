@@ -1,0 +1,31 @@
+name: Prepare npm package
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm check
+      - name: Verify checked-in build
+        run: git diff --exit-code -- dist
+      - name: Preview public npm publication
+        run: npm publish test-results/package/*.tgz --dry-run --ignore-scripts --access public
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-release-candidate
+          path: test-results/package/
+          if-no-files-found: error
