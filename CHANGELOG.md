@@ -8,6 +8,9 @@
 - Compose the complete table from exported `TableHeader`, memoized `TableBody`, `RowSelectionCheckbox` and `ColumnResizeHandle` primitives.
 - Separate public state, row/cell customization, body context and resize type contracts from rendering modules; preserve existing root exports.
 - Replace duplicated custom-layout examples with shared primitives, document the contracts, and add controller unit tests plus checkbox Storybook coverage.
+- Preserve Puppertino's separated borders, rounded stripes, native header emphasis and numeric alignment.
+- Derive secondary text, focus rings and resize dividers from Puppertino theme tokens; keep selected-row colors through hover.
+- Match the compact desktop header band and group the selection cell with its first data column.
 
 ## 0.2.0 — 2026-10-12
 

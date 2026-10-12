@@ -32,6 +32,25 @@ try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' });
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(demo.base); if (theme === 'dark') await page.getByRole('button', { name: 'Use dark theme' }).click();
+    const nativeGeometry = await page.evaluate(() => {
+      const table = document.querySelector<HTMLTableElement>('.pt-table')!;
+      const native = document.createElement('table'); native.className = 'p-table';
+      native.style.cssText = 'position:fixed;left:-10000px;top:0';
+      native.innerHTML = '<thead><tr><th scope="col">Native</th><th scope="col" aria-sort="ascending">Sorted</th></tr></thead><tbody><tr><td>First</td><td>Second</td></tr></tbody>';
+      table.parentElement!.append(native);
+      const header = table.querySelector<HTMLTableCellElement>('th:not(.pt-selection)')!;
+      const reference = native.querySelectorAll('th')[header.hasAttribute('aria-sort') ? 1 : 0];
+      const actual = getComputedStyle(table); const expected = getComputedStyle(native);
+      const result = {
+        borders: [actual.borderCollapse, expected.borderCollapse],
+        spacing: [actual.borderSpacing, expected.borderSpacing],
+        corners: [getComputedStyle(table.querySelector('tbody td')!).borderTopLeftRadius, getComputedStyle(native.querySelector('td')!).borderTopLeftRadius],
+        header: [header.getBoundingClientRect().height, reference.getBoundingClientRect().height],
+        weight: [getComputedStyle(header).fontWeight, getComputedStyle(reference).fontWeight],
+      };
+      native.remove(); return result;
+    });
+    for (const [property, [actual, expected]] of Object.entries(nativeGeometry)) assert.equal(actual, expected, `${theme}: shared ${property} matches Puppertino`);
     const checks = page.getByRole('checkbox', { name: /^Select Person/ });
     await checks.nth(1).click(); await checks.nth(4).click({ modifiers: ['Shift'] });
     assert.equal(await page.getByLabel('Selection count').textContent(), '4 selected');
@@ -124,7 +143,21 @@ try {
     await page.goto(`${stories.base}/iframe.html?id=puppertino-table--${story}&viewMode=story`);
     await page.getByRole('table').first().waitFor();
     assert.equal(await page.locator('#storybook-root').getByRole('table').count(), story === 'independent-tables' ? 2 : 1);
-    if (story === 'selection') await page.waitForFunction(() => document.querySelector('output')?.textContent === '4 selected');
+    if (story === 'selection') {
+      await page.waitForFunction(() => document.querySelector('output')?.textContent === '4 selected');
+      const selected = page.locator('tbody tr.p-selected').first();
+      await selected.hover();
+      const colors = await selected.evaluate(row => {
+        const native = document.createElement('table'); native.className = 'p-table';
+        native.style.cssText = 'position:fixed;left:-10000px;top:0';
+        native.innerHTML = '<tbody><tr class="p-selected"><td>Native selection</td></tr></tbody>';
+        row.closest('table')!.parentElement!.append(native);
+        const actual = getComputedStyle(row.querySelector('td')!); const expected = getComputedStyle(native.querySelector('td')!);
+        const result = [[actual.backgroundColor, actual.color], [expected.backgroundColor, expected.color]];
+        native.remove(); return result;
+      });
+      assert.deepEqual(colors[0], colors[1], 'selection keeps native Puppertino colors while hovered');
+    }
     if (story === 'default') await page.waitForFunction(() => document.querySelector('th[aria-sort]')?.getAttribute('aria-sort') === 'ascending');
     if (story === 'grouped-headers') {
       assert.ok(await page.locator('thead tr').count() >= 2);

@@ -200,6 +200,8 @@ Keep `loadPage` stable (for example, a module-level function or `useCallback`). 
 
 The package adds scoped `.pt-*` enhancements to Puppertino's `p-table` styles. Import Puppertino's CSS in your application, then the package stylesheet. Theme tokens remain owned by Puppertino and your application. Include Puppertino's dark-mode stylesheet when using its dark theme.
 
+Puppertino owns separated borders, rounded row stripes, numeric alignment and active-header weight. The package adds scroll/sticky geometry, sort-button and resize-target behavior, plus contrast-safe text. Override `--pt-table-secondary` for secondary/header text and `--pt-table-text` for data-cell text using your application's Puppertino theme tokens. Selection reads `--p-list-selection` and `--p-list-selection-text` in every hover state.
+
 ## Storybook and demo
 
 GitHub Pages is configured to publish [Storybook 10](https://kahwee.github.io/puppertino-table/) from `storybook-static/` after the checks on main pass. The Pages artifact contains only Storybook and its examples. Pull requests run verification without deploying. For repository setup, select **Settings → Pages → Source → GitHub Actions**; the workflow also attempts to enable Pages automatically.
