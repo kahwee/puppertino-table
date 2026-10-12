@@ -17,7 +17,7 @@ A generic React table styled with [Puppertino](https://puppertino.com/) and powe
 The package includes built ESM and TypeScript declarations. Install it from npm:
 
 ```sh
-pnpm add puppertino-table@0.4.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
+pnpm add puppertino-table@0.5.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
 ```
 
 React 19.3.0 or a compatible newer React 19 release is required (`^19.3.0`). React 18 and React 20 are outside the supported range. React, TanStack Table and Puppertino are peer dependencies; the library does not bundle another copy of them. For Git-based installation, use `github:kahwee/puppertino-table` and pin a commit or tag for reproducibility.
@@ -84,7 +84,7 @@ const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({ name: 240 
 
 The callback receives a value or functional updater, like a React state setter. Supplying widths without a callback makes sizing read-only. The callback is used only with controlled widths; omit both props for TanStack-owned sizing and its fine-grained geometry subscription. Controlled widths ignore saved preferences: the app owns restoration and persistence, so omit `storageKey` from controlled resize handles. Uncontrolled sorting and selection also stay in TanStack’s internal atoms; callbacks can observe their changes without owning the state. React-controlled sizing rerenders its state owner; for high-frequency custom layouts, TanStack v9 also supports external atoms through `useTable`.
 
-### External atom ownership (unreleased, available on main)
+### External atom ownership
 
 For shared app-owned state with fine-grained subscriptions, pass `atoms` to the complete table or hook. Install `@tanstack/react-store@0.11.2` in the app to create and subscribe to the atoms:
 
@@ -105,7 +105,7 @@ function ItemsTable() {
 
 ### Shared density
 
-The density, column-browser and context-menu APIs below are unreleased and available on main. Pin a Git commit until an npm release includes them.
+The density, column-browser and context-menu APIs below are available starting in version 0.5.0.
 
 Complete tables accept `density="native" | "compact" | "comfortable"`. Native is the default and preserves the existing Puppertino table geometry. Compact uses 24px minimum rows, 3px block padding, 8px inline padding and 16px icons. Comfortable uses 36px rows, 8px block padding, 12px inline padding and 20px icons. Content can make a row taller; text and icons are never clipped to force a height.
 
@@ -384,7 +384,7 @@ The unscoped **`puppertino-table`** package is public on npm. Stable releases us
 
 ```sh
 pnpm check
-npm publish test-results/package/puppertino-table-0.4.0.tgz --dry-run --ignore-scripts --access public
+npm publish test-results/package/puppertino-table-0.5.0.tgz --dry-run --ignore-scripts --access public
 ```
 
 `pnpm check` builds and packs the library, checks the tarball file list, and installs it in isolated React 19.3.0 consumers. `prepack` rebuilds JavaScript and declarations so a locally packed release cannot silently use stale output. Only the compiled library, CSS, package metadata, README, changelog and MIT license ship; Storybook, the demo and tests stay out of the npm package.

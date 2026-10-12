@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0 — 2026-10-12
 
 - Add scoped native/compact/comfortable density and explicit row/padding/icon metrics across tables and custom layouts; preserve native defaults.
 - Add a caller-rendered, independently resizable column browser with whole-panel fitting, selected/path states and controlled/read-only widths.
