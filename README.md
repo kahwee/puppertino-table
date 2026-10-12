@@ -12,13 +12,13 @@ A generic React table styled with [Puppertino](https://puppertino.com/) and powe
 
 ## Install
 
-This repository includes built ESM and TypeScript declarations for Git-based installation. It has not been published to npm.
+The package includes built ESM and TypeScript declarations. The first npm release is pending; once published, install it with:
 
 ```sh
-pnpm add github:kahwee/puppertino-table @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react react-dom
+pnpm add @kahwee/puppertino-table@0.1.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react react-dom
 ```
 
-Pin a Git commit or tag for reproducible installations. React, TanStack Table and Puppertino are peer dependencies; the library does not bundle another copy of them.
+React, TanStack Table and Puppertino are peer dependencies; the library does not bundle another copy of them. For Git-based installation, use `github:kahwee/puppertino-table` and pin a commit or tag for reproducibility.
 
 ## Use
 

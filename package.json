@@ -2,6 +2,10 @@
   "name": "@kahwee/puppertino-table",
   "version": "0.1.0",
   "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "type": "module",
   "license": "MIT",
   "description": "Accessible Puppertino React tables backed by TanStack Table sizing, sorting and selection.",
