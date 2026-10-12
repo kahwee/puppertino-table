@@ -1,4 +1,5 @@
-import type { ColumnSizingState } from '@tanstack/react-table';
+import { useCreateAtom } from '@tanstack/react-store';
+import type { ColumnSizingState, RowSelectionState, SortingState } from '@tanstack/react-table';
 import { memo, useState } from 'react';
 import { renderToString } from 'react-dom/server';
 import {
@@ -16,6 +17,8 @@ let setKey: (key: string) => void;
 let setMode: (mode: string) => void;
 let setWidths: (widths: ColumnSizingState) => void;
 let updates = 0;
+let setAtomWidth: (width: number) => void;
+let readAtoms: () => { width: number; selection: RowSelectionState; sorting: SortingState };
 let primitiveRenders = 0;
 const StablePrimitives = memo(function StablePrimitives({
   table,
@@ -35,15 +38,26 @@ const StablePrimitives = memo(function StablePrimitives({
 let setAdapter: (enabled: boolean) => void;
 const alternateStorage = { getItem: () => '{"name":310}', setItem: () => {} };
 
-function Fixture() {
+function Fixture({ initialMode = 'local' }: { initialMode?: string }) {
+  const sizingAtom = useCreateAtom<ColumnSizingState>({ name: 245 });
+  const otherSizingAtom = useCreateAtom<ColumnSizingState>({ name: 275 });
+  const sortingAtom = useCreateAtom<SortingState>([]);
+  const selectionAtom = useCreateAtom<RowSelectionState>({});
   const [alternate, changeAdapter] = useState(false);
   setAdapter = changeAdapter;
   const [key, changeKey] = useState('a');
-  const [mode, changeMode] = useState('local');
+  const [mode, changeMode] = useState(initialMode);
   const [widths, changeWidths] = useState<ColumnSizingState>({ name: 220 });
   setKey = changeKey;
   setMode = changeMode;
   setWidths = changeWidths;
+  const activeSizingAtom = mode === 'atoms-alt' ? otherSizingAtom : sizingAtom;
+  setAtomWidth = (width) => activeSizingAtom.set({ name: width });
+  readAtoms = () => ({
+    width: activeSizingAtom.get().name,
+    selection: selectionAtom.get(),
+    sorting: sortingAtom.get(),
+  });
   table = usePuppertinoTable({
     data,
     columns: [...columns],
@@ -51,7 +65,16 @@ function Fixture() {
     getRowId,
     selectable: true,
     storageKey: key,
-    ...(mode !== 'local' ? { columnSizing: widths } : {}),
+    ...(mode.startsWith('atoms')
+      ? {
+          atoms: {
+            columnSizing: activeSizingAtom,
+            sorting: sortingAtom,
+            rowSelection: selectionAtom,
+          },
+        }
+      : {}),
+    ...(mode === 'controlled' || mode === 'readonly' ? { columnSizing: widths } : {}),
     ...(mode === 'controlled'
       ? {
           onColumnSizingChange: (update) => {
@@ -80,8 +103,11 @@ export async function hydrate() {
   if (!root) throw new Error('Missing hydration root');
   const errors: string[] = [];
   const firstHTML = root.innerHTML;
-  hydrateRoot(root, <Fixture />, { onRecoverableError: (error) => errors.push(String(error)) });
+  const hydrated = hydrateRoot(root, <Fixture />, {
+    onRecoverableError: (error) => errors.push(String(error)),
+  });
   return {
+    remount: (mode: string) => hydrated.render(<Fixture key={mode} initialMode={mode} />),
     adapter: (enabled: boolean) => setAdapter(enabled),
     errors,
     firstHTML,
@@ -91,6 +117,9 @@ export async function hydrate() {
     resize: (width: number) => table.setColumnSizing((old) => ({ ...old, name: width })),
     updates: () => updates,
     primitiveRenders: () => primitiveRenders,
+    atomWidth: (width: number) => setAtomWidth(width),
+    atoms: () => readAtoms(),
+    sort: () => table.setSorting([{ id: 'name', desc: true }]),
     select: () => table.getRowModel().rows[0].toggleSelected(),
   };
 }

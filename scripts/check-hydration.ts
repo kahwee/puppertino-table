@@ -92,6 +92,28 @@ try {
   await width(270);
   assert.equal(await edge.getAttribute('aria-valuenow'), '270');
   assert.equal(await page.evaluate(() => window.sizing.primitiveRenders()), primitiveRenders);
+  await page.evaluate(() => window.sizing.remount('atoms'));
+  await width(245);
+  await page.evaluate(() => window.sizing.key('b'));
+  await width(245);
+  await page.evaluate(() => window.sizing.resize(255));
+  await width(255);
+  assert.equal(await page.evaluate(() => window.sizing.atoms().width), 255);
+  await page.evaluate(() => window.sizing.atomWidth(265));
+  await width(265);
+  await page.evaluate(() => window.sizing.select());
+  assert.deepEqual(await page.evaluate(() => window.sizing.atoms().selection), { ada: true });
+  await page.evaluate(() => window.sizing.sort());
+  assert.deepEqual(await page.evaluate(() => window.sizing.atoms().sorting), [
+    { id: 'name', desc: true },
+  ]);
+  await page.evaluate(() => window.sizing.remount('atoms-alt'));
+  await width(275);
+  await page.evaluate(() => window.sizing.resize(285));
+  await width(285);
+  assert.equal(await page.evaluate(() => window.sizing.atoms().width), 285);
+  await page.evaluate(() => window.sizing.remount('local'));
+  await width(300);
   const blocked = await browser.newPage();
   await blocked.addInitScript(() => {
     Storage.prototype.getItem = () => {

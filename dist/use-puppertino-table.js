@@ -1,11 +1,28 @@
 'use client';
 import { makeStateUpdater, useTable } from '@tanstack/react-table';
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { puppertinoTableFeatures, } from './model.js';
 import { columnSizeBounds, readColumnSizing } from './sizing.js';
+import { validateAtomIdentity, validateAtomOwnership } from './state-ownership.js';
+import { useColumnSizingPersistence } from './use-column-sizing-persistence.js';
 /** Shared state wiring for complete tables and custom semantic layouts. */
-export function usePuppertinoTable({ data, columns, getRowId, sorting: controlledSorting, onSortingChange, initialSorting = [], initialRowSelection = {}, manualSorting = true, rowSelection: controlledSelection, onRowSelectionChange, selectable = false, disabled = false, columnSizing, onColumnSizingChange, storageKey, storage, }) {
-    const canSelect = selectable && !disabled && (controlledSelection === undefined || !!onRowSelectionChange);
+export function usePuppertinoTable({ data, columns, atoms, getRowId, sorting: controlledSorting, onSortingChange, initialSorting = [], initialRowSelection = {}, manualSorting = true, rowSelection: controlledSelection, onRowSelectionChange, selectable = false, disabled = false, columnSizing, onColumnSizingChange, storageKey, storage, }) {
+    const mountedAtoms = useRef(atoms ? { ...atoms } : undefined);
+    validateAtomIdentity(mountedAtoms.current, atoms);
+    validateAtomOwnership({
+        atoms,
+        sorting: controlledSorting,
+        onSortingChange,
+        rowSelection: controlledSelection,
+        onRowSelectionChange,
+        columnSizing,
+        onColumnSizingChange,
+    });
+    const atomSorting = !!atoms?.sorting;
+    const atomSelection = !!atoms?.rowSelection;
+    const canSelect = selectable &&
+        !disabled &&
+        (atomSelection || controlledSelection === undefined || !!onRowSelectionChange);
     const bounds = useMemo(() => columnSizeBounds(columns), [columns]);
     const sizedColumns = useMemo(() => {
         const byId = new Map(bounds.map((bound) => [bound.id, bound]));
@@ -17,30 +34,33 @@ export function usePuppertinoTable({ data, columns, getRowId, sorting: controlle
         });
         return decorate(columns);
     }, [columns, bounds]);
-    const controlledSizing = columnSizing !== undefined;
+    const appOwnedSizing = columnSizing !== undefined || !!atoms?.columnSizing;
     const table = useTable({
         features: puppertinoTableFeatures,
+        atoms,
         columns: sizedColumns,
         data,
         getRowId,
         manualSorting,
-        enableSorting: controlledSorting === undefined || !!onSortingChange,
+        enableSorting: atomSorting || controlledSorting === undefined || !!onSortingChange,
         enableMultiSort: false,
         enableSortingRemoval: false,
         enableRowSelection: canSelect,
         enableSubRowSelection: false,
         initialState: {
-            ...(controlledSorting === undefined ? { sorting: initialSorting } : {}),
-            ...(controlledSelection === undefined ? { rowSelection: initialRowSelection } : {}),
-            ...(!controlledSizing ? { columnSizing: readColumnSizing(bounds) } : {}),
+            ...(!atomSorting && controlledSorting === undefined ? { sorting: initialSorting } : {}),
+            ...(!atomSelection && controlledSelection === undefined
+                ? { rowSelection: initialRowSelection }
+                : {}),
+            ...(!appOwnedSizing ? { columnSizing: readColumnSizing(bounds) } : {}),
         },
         state: {
             ...(controlledSorting !== undefined ? { sorting: controlledSorting } : {}),
             ...(controlledSelection !== undefined ? { rowSelection: controlledSelection } : {}),
-            ...(controlledSizing ? { columnSizing } : {}),
+            ...(columnSizing !== undefined ? { columnSizing } : {}),
         },
         onColumnSizingChange: (update) => {
-            if (controlledSizing)
+            if (columnSizing !== undefined)
                 onColumnSizingChange?.(update);
             else
                 makeStateUpdater('columnSizing', table)(update);
@@ -56,28 +76,6 @@ export function usePuppertinoTable({ data, columns, getRowId, sorting: controlle
             onRowSelectionChange?.(update);
         },
     }, (state) => ({ sorting: state.sorting, rowSelection: state.rowSelection }));
-    const sizingAtom = table.baseAtoms.columnSizing;
-    const restored = useRef(null);
-    // Restore only after hydration. This is initialization, not a user resize or storage write.
-    useEffect(() => {
-        if (controlledSizing) {
-            restored.current = null;
-            return;
-        }
-        const schema = JSON.stringify(bounds);
-        if (restored.current?.schema === schema &&
-            restored.current.key === storageKey &&
-            restored.current.adapter === storage)
-            return;
-        restored.current = { schema, key: storageKey, adapter: storage };
-        let widths = readColumnSizing(bounds);
-        try {
-            widths = readColumnSizing(bounds, storageKey, storage ?? window.localStorage);
-        }
-        catch {
-            widths = readColumnSizing(bounds);
-        }
-        sizingAtom.set(widths);
-    }, [sizingAtom, bounds, storageKey, storage, controlledSizing]);
+    useColumnSizingPersistence({ table, bounds, appOwned: appOwnedSizing, storageKey, storage });
     return table;
 }

@@ -11,7 +11,7 @@ export { type ColumnSizeBounds, clampSize, columnSizeBounds, readColumnSizing } 
 export { PuppertinoTable } from './table.js';
 export { TableBody } from './table-body.js';
 export { TableHeader } from './table-header.js';
-export type { PuppertinoTableOptions } from './table-options.js';
+export type { PuppertinoTableAtoms, PuppertinoTableOptions } from './table-options.js';
 export type {
   PuppertinoBodyContext,
   PuppertinoBodyOptions,

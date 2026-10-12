@@ -555,8 +555,8 @@ try {
   assert.deepEqual(errors, []);
   console.log(
     process.env.PUPPERTINO_STORIES_ONLY
-      ? 'Eighteen Storybook stories, customization, hook layouts and shared resize controllers passed.'
-      : '512 repeated pointer drags, geometry, limits, keyboard/reset/cancellation/persistence, selection, disabled/unmount recovery, standalone-control cancellation, 267 rows across six pages, six light/dark axe layouts and nineteen Storybook stories, customization, hook layouts and shared resize controllers passed.',
+      ? 'Twenty Storybook stories, customization, hook layouts and shared resize controllers passed.'
+      : '512 repeated pointer drags, geometry, limits, keyboard/reset/cancellation/persistence, selection, disabled/unmount recovery, standalone-control cancellation, 267 rows across six pages, six light/dark axe layouts and twenty Storybook stories, customization, hook layouts and shared resize controllers passed.',
   );
 } finally {
   await browser.close();

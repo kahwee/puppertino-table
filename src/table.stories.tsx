@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { useCreateAtom, useSelector } from '@tanstack/react-store';
 import type { ColumnSizingState, RowSelectionState, SortingState } from '@tanstack/react-table';
 import { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
@@ -7,6 +8,7 @@ import {
   ColumnResizeHandle,
   type PuppertinoColumnDef,
   PuppertinoTable,
+  type PuppertinoTableAtoms,
   type PuppertinoTableProps,
   RowSelectionCheckbox,
   TableBody,
@@ -402,5 +404,52 @@ export const ControlledSizing: Story = {
     await expect(canvas.getByLabelText('Name width')).toHaveTextContent('296');
     await userEvent.click(canvas.getByRole('button', { name: 'Set name width to 200' }));
     await expect(edge).toHaveAttribute('aria-valuenow', '200');
+  },
+};
+
+function AtomWidthOutput({ atom }: { atom: NonNullable<PuppertinoTableAtoms['columnSizing']> }) {
+  const widths = useSelector(atom);
+  return <output aria-label="Atom name width">{widths.name}</output>;
+}
+function AtomOwnershipExample() {
+  const columnSizing = useCreateAtom<ColumnSizingState>({ name: 280 });
+  const sorting = useCreateAtom<SortingState>([]);
+  const rowSelection = useCreateAtom<RowSelectionState>({});
+  return (
+    <>
+      <button type="button" onClick={() => columnSizing.set({ name: 200 })}>
+        Set atom width to 200
+      </button>
+      <PuppertinoTable
+        data={people.slice(0, 5)}
+        columns={personColumns}
+        getRowId={(row) => row.id}
+        ariaLabel="Atom-owned table"
+        selectable
+        manualSorting={false}
+        atoms={{ columnSizing, sorting, rowSelection }}
+      />
+      <AtomWidthOutput atom={columnSizing} />
+    </>
+  );
+}
+export const ExternalAtoms: Story = {
+  render: () => <AtomOwnershipExample />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const edge = canvas.getByRole('separator', { name: 'Resize Name column' });
+    edge.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(canvas.getByLabelText('Atom name width')).toHaveTextContent('296');
+    await userEvent.click(canvas.getByRole('button', { name: 'Set atom width to 200' }));
+    await expect(edge).toHaveAttribute('aria-valuenow', '200');
+    const checkbox = canvas.getAllByRole('checkbox')[0];
+    await userEvent.click(checkbox);
+    await expect(checkbox).toBeChecked();
+    await userEvent.click(canvas.getByRole('button', { name: 'Sort by Score' }));
+    await expect(canvas.getByRole('columnheader', { name: /Score/ })).toHaveAttribute(
+      'aria-sort',
+      'ascending',
+    );
   },
 };

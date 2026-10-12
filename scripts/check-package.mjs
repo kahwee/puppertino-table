@@ -58,6 +58,7 @@ try {
         '--no-fund',
         '--registry=https://registry.npmjs.org/',
         installSpec,
+        `@tanstack/react-store@${manifest.devDependencies['@tanstack/react-store']}`,
         `react@${react}`,
         `react-dom@${react}`,
         `@types/react@${manifest.devDependencies['@types/react'].replace('^', '')}`,
@@ -70,8 +71,10 @@ try {
       path.join(directory, 'consumer.tsx'),
       `
 import { createElement } from 'react';
+import { createAtom } from '@tanstack/react-store';
+import type { ColumnSizingState, SortingState, RowSelectionState } from '@tanstack/react-table';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { PuppertinoBodyContext, PuppertinoRowProps, ColumnResizeHandleProps, TableHeaderProps, TableBodyProps, RowSelectionCheckboxProps, PuppertinoTableOptions } from 'puppertino-table';
+import type { PuppertinoBodyContext, PuppertinoRowProps, ColumnResizeHandleProps, TableHeaderProps, TableBodyProps, RowSelectionCheckboxProps, PuppertinoTableOptions, PuppertinoTableAtoms } from 'puppertino-table';
 import { PuppertinoTable, usePuppertinoTable, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
 type Item = { id: string; title: string; price: number };
 const helper = createPuppertinoColumnHelper<Item>();
@@ -101,6 +104,15 @@ function HookConsumer() {
     createElement('table', null, createElement(TableHeader<Item>, headerProps), createElement(TableBody<Item>, bodyProps)),
     createElement(RowSelectionCheckbox<Item>, checkboxProps));
 }
+const atoms: PuppertinoTableAtoms = {
+  columnSizing: createAtom<ColumnSizingState>({ title: 240 }),
+  sorting: createAtom<SortingState>([{ id: 'price', desc: false }]),
+  rowSelection: createAtom<RowSelectionState>({ two: true }),
+};
+const atomMarkup = renderToStaticMarkup(createElement(PuppertinoTable<Item>, {
+  data, columns, atoms, getRowId: item => item.id, ariaLabel: 'Atom inventory', selectable: true, manualSorting: false,
+}));
+if (!atomMarkup.includes('width:240px') || !atomMarkup.includes('p-selected') || atomMarkup.indexOf('Two') > atomMarkup.indexOf('Ten')) throw new Error('External atom consumer failed');
 const attributes: PuppertinoRowProps = { 'data-row-id': 'example' };
 const primitiveMarkup = renderToStaticMarkup(createElement(HookConsumer));
 if (!primitiveMarkup.includes('Resize Title column') || !primitiveMarkup.includes('Select Standalone item') || primitiveMarkup.indexOf('Two') > primitiveMarkup.indexOf('Ten')) throw new Error('Shared primitive consumer failed');

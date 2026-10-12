@@ -1,8 +1,12 @@
-import type { ColumnSizingState, OnChangeFn, RowData, RowSelectionState, SortingState } from '@tanstack/react-table';
-import type { PuppertinoColumnDef } from './model.js';
+import type { ColumnSizingState, ExternalAtoms, OnChangeFn, RowData, RowSelectionState, SortingState } from '@tanstack/react-table';
+import type { PuppertinoColumnDef, puppertinoTableFeatures } from './model.js';
+/** App-owned writable atoms for the registered table state slices. */
+export type PuppertinoTableAtoms = ExternalAtoms<typeof puppertinoTableFeatures>;
 /** Shared state contract for complete tables and custom layouts. */
 export interface PuppertinoTableOptions<T extends RowData> {
     data: readonly T[];
+    /** Atom ownership replaces value/callback ownership for that slice. */
+    atoms?: PuppertinoTableAtoms;
     columns: readonly PuppertinoColumnDef<T>[];
     getRowId: (row: T, index: number) => string;
     /** Omit for local state. Controlled state without a callback is read-only. */

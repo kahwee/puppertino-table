@@ -84,6 +84,25 @@ const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({ name: 240 
 
 The callback receives a value or functional updater, like a React state setter. Supplying widths without a callback makes sizing read-only. The callback is used only with controlled widths; omit both props for TanStack-owned sizing and its fine-grained geometry subscription. Controlled widths ignore saved preferences: the app owns restoration and persistence, so omit `storageKey` from controlled resize handles. Uncontrolled sorting and selection also stay in TanStack’s internal atoms; callbacks can observe their changes without owning the state. React-controlled sizing rerenders its state owner; for high-frequency custom layouts, TanStack v9 also supports external atoms through `useTable`.
 
+### External atom ownership (unreleased, available on main)
+
+For shared app-owned state with fine-grained subscriptions, pass `atoms` to the complete table or hook. Install `@tanstack/react-store@0.11.2` in the app to create and subscribe to the atoms:
+
+```tsx
+import { useCreateAtom, useSelector } from '@tanstack/react-store';
+import type { ColumnSizingState, RowSelectionState, SortingState } from '@tanstack/react-table';
+
+function ItemsTable() {
+  const columnSizing = useCreateAtom<ColumnSizingState>({ name: 240 });
+  const sorting = useCreateAtom<SortingState>([]);
+  const rowSelection = useCreateAtom<RowSelectionState>({});
+  return <PuppertinoTable data={items} columns={columns} getRowId={(row) => row.id}
+    ariaLabel="Items" selectable atoms={{ columnSizing, sorting, rowSelection }} />;
+}
+```
+
+`PuppertinoTableAtoms` is exported for typed custom integrations. A state slice has one owner: supplying an atom together with that slice's value or callback throws a clear error. Different slices may use different ownership modes. Atom bindings must stay identical for the lifetime of the table, as required by the installed v9 adapter; changing bindings requires remounting with a new React `key`. You may recreate the map when it contains the same atom instances. Initial sorting/selection values apply only to internally owned slices; initialize app atoms yourself. Atom-owned sizing bypasses automatic preference restoration, and the complete component also disables automatic saving. In primitive layouts, omit `storageKey` from resize options when the app owns sizing restoration and saving. Read with `atom.get()` for a snapshot, or use `useSelector(atom)` in the smallest component that needs reactive state. No callback is needed for atom-owned slices. Width changes retain the existing geometry subscription rather than rerendering the table's row body.
+
 ### Resizing
 
 Drag a header's right edge. Double-click or Enter resets that column to its definition's initial size. Left/Right adjusts 16 pixels; Shift uses 40 pixels. Home/End reaches its limits, and Escape cancels an unfinished gesture. Pointer cancellation, losing window focus, unmounting, or disabling resizing also cancels.
@@ -251,7 +270,7 @@ pnpm format # apply formatting, import organization and safe lint fixes
 pnpm check
 ```
 
-Checks include TypeScript, independent controller ownership/cancellation/persistence tests, preference/schema unit tests, real SSR hydration and controlled-sizing browser tests, library/demo/Storybook builds, and Chromium regression tests. The browser suite exercises 512 repeated pointer drags, width limits, reset/cancellation/persistence, selection, unmount/disabled recovery, standalone-control removal and grouped-header resizing, all 267 demo rows across six pages, six light/dark accessibility layouts, all nineteen Storybook stories, and tarball installation with typed imports, server rendering and CSS exports in fresh React 19.3.0 consumers. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to a system Chromium path, or install a browser with `pnpm exec playwright install chromium`.
+Checks include TypeScript, independent controller ownership/cancellation/persistence tests, preference/schema unit tests, real SSR hydration and controlled-sizing browser tests, library/demo/Storybook builds, and Chromium regression tests. The browser suite exercises 512 repeated pointer drags, width limits, reset/cancellation/persistence, selection, unmount/disabled recovery, standalone-control removal and grouped-header resizing, all 267 demo rows across six pages, six light/dark accessibility layouts, all twenty Storybook stories, and tarball installation with typed imports, server rendering and CSS exports in fresh React 19.3.0 consumers. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to a system Chromium path, or install a browser with `pnpm exec playwright install chromium`.
 
 GitHub Actions runs the same checks and uploads Storybook plus browser evidence as an artifact. Browser tests use fictional data and do not claim Safari, physical-device or latency coverage.
 
@@ -279,3 +298,7 @@ MIT. Puppertino, React and TanStack Table remain independently maintained projec
 Dependabot checks npm dependencies and GitHub Actions every Monday at 08:00 America/Los_Angeles. It groups compatible npm patch/minor updates and proposes major changes separately. React and React DOM, including their type packages, stay on the supported React 19 line; versions 20 and later are excluded.
 
 Dependency updates must pass verification on the current PR head before merging. Review major migrations separately. Releases remain explicitly authorized actions; dependency maintenance does not publish npm versions or alter trusted-publisher settings.
+
+### Pointer profiling
+
+Run `pnpm profile:pointer` to measure the production table with 100 rows and 10, 40 and 100 columns, under 4× Chromium CPU throttling. The harness uses one warmup and three measured drags per size, records dispatch timings and browser task/layout totals, and asserts that pointer resizing does not rerender cells. Results are written to `test-results/pointer-profile/results.json`. These synthetic samples guide optimization; they do not guarantee real-device latency. Use the existing browser executable environment variable when needed. The [recorded profile](https://github.com/kahwee/puppertino-table/blob/main/docs/pointer-performance.md) shows zero cell rerenders and increasing browser task cost for very wide tables. Immediate updates remain in place until a burst-workload comparison demonstrates that frame batching helps without weakening gesture semantics.

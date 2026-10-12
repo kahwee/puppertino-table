@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Extract hydration-safe preference restoration into a dedicated persistence lifecycle hook.
+- Add typed external atom ownership for sorting, selection and sizing; reject conflicting owners and changed bindings without a remount.
+- Add external-atom integration docs, Storybook coverage and production pointer profiling with cell-render regression checks.
+
 ## 0.4.0 — 2026-10-12
 
 - Keep uncontrolled sorting and selection in TanStack atoms while preserving observer callbacks and the public selected-state contract.

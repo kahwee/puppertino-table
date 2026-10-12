@@ -19,6 +19,7 @@ export type {
 export function PuppertinoTable<T extends RowData>({
   data,
   columns,
+  atoms,
   getRowId,
   sorting,
   onSortingChange,
@@ -47,6 +48,7 @@ export function PuppertinoTable<T extends RowData>({
   const table = usePuppertinoTable({
     data,
     columns,
+    atoms,
     getRowId,
     sorting,
     onSortingChange,
@@ -90,7 +92,8 @@ export function PuppertinoTable<T extends RowData>({
               disabled={disabled}
               resizable={resizable && (columnSizing === undefined || !!onColumnSizingChange)}
               resizeOptions={{
-                storageKey: columnSizing === undefined ? storageKey : undefined,
+                storageKey:
+                  columnSizing === undefined && !atoms?.columnSizing ? storageKey : undefined,
                 storage,
                 cancelMediaQuery,
               }}
