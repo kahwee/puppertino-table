@@ -708,6 +708,7 @@ export const NarrowColumns: Story = {
   ),
   parameters: {
     docs: {
+      source: ColumnWorkspace.parameters?.docs?.source,
       description: {
         story:
           'Start with the file column; click a file to reveal its preview. Narrow windows keep ancestor columns accessible by horizontal scrolling. Use the canvas resize control to compare smaller widths.',
