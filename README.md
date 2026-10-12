@@ -7,16 +7,16 @@ Finder-style React tables and column browsers, built on [Puppertino](https://pup
 ![Compact file table with sortable headers and bounded resize handles](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/table-light.png)
 
 - Semantic tables, typed columns, local or server-owned sorting, and range selection.
-- Pointer and keyboard resizing, width limits, reset, cancellation and completed-gesture callbacks.
+- Pointer and keyboard resizing, width limits, reset, cancellation, completed-gesture callbacks, and optional browser width persistence.
 - Independently resizable column-browser panels with native links and caller-rendered previews.
-- Shared CSS density, nested overrides and dark themes, without a React provider.
-- Right-click and keyboard menus with commands, links, separators and disabled items.
+- Shared CSS density, documented styling hooks and dark themes, without a React provider.
+- Right-click and keyboard menus with delegated workspace triggers, commands, links and disabled items.
 - Fine-grained sizing subscriptions keep the memoized row body out of resize renders.
 
 ## Install and use
 
 ```sh
-pnpm add puppertino-table @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
+pnpm add puppertino-table@0.7.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
 ```
 
 ```tsx

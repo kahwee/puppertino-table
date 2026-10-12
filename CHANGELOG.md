@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.0 — 2026-10-12
 
 - Add hydration-safe, completion-only column-browser width persistence with bounded hidden-panel preferences and controlled-state ownership.
 - Add delegated context-menu capture handlers with caller-owned context resolution and native-menu fallthrough.
