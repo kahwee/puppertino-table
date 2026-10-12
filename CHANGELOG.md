@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Keep uncontrolled sorting and selection in TanStack atoms while preserving observer callbacks and the public selected-state contract.
+- Subscribe inside checkbox and resize primitives to prevent stale selection and sizing with stable memoized props.
+- Cancel only the dragged column and avoid repeating the completed resize preview update.
+
 - Restore saved widths after hydration and reload preferences when the storage key, adapter or column schema changes.
 - Add app-owned `columnSizing` and `onColumnSizingChange`, including read-only sizing and controlled/uncontrolled transition coverage.
 

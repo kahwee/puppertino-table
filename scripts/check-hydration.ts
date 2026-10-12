@@ -82,6 +82,16 @@ try {
   await width(310);
   await page.evaluate(() => window.sizing.adapter(false));
   await width(300);
+  const edge = page.getByRole('separator');
+  assert.equal(await edge.getAttribute('aria-valuenow'), '300');
+  const primitiveRenders = await page.evaluate(() => window.sizing.primitiveRenders());
+  await page.evaluate(() => window.sizing.select());
+  await page.getByRole('checkbox').waitFor();
+  assert.equal(await page.getByRole('checkbox').isChecked(), true);
+  await page.evaluate(() => window.sizing.resize(270));
+  await width(270);
+  assert.equal(await edge.getAttribute('aria-valuenow'), '270');
+  assert.equal(await page.evaluate(() => window.sizing.primitiveRenders()), primitiveRenders);
   const blocked = await browser.newPage();
   await blocked.addInitScript(() => {
     Storage.prototype.getItem = () => {
@@ -95,7 +105,7 @@ try {
   await blocked.close();
   assert.deepEqual(errors, []);
   console.log(
-    'SSR hydration, persisted key changes, invalid preferences, controlled updater and read-only sizing passed.',
+    'SSR hydration, persisted key changes, invalid preferences, controlled updater, read-only sizing and memoized primitive subscriptions passed.',
   );
 } finally {
   await browser.close();

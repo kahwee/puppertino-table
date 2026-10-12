@@ -196,3 +196,28 @@ test('independent controllers and capture failure leave no active gesture', () =
   assert.equal(a.controller.begin(ownerA, 'name', 0, 2, broken, 0), false);
   assert.equal(a.controller.key(ownerA, 'name', 'ArrowRight'), true);
 });
+
+test('cancel restores only the owned column and completion does not repeat the preview update', () => {
+  const f = fixture();
+  const owner = f.member();
+  f.controller.retain(owner);
+  f.controller.begin(owner, 'name', 0, 1, f.target, 0);
+  f.controller.move(owner, 1, 40);
+  owner.adapter.apply({ ...owner.adapter.snapshot(), score: 175 });
+  f.controller.cancel(owner, 1);
+  assert.deepEqual(f.widths(), { name: 200, score: 175 });
+  assert.equal(f.saved.length, 0);
+  let writes = 0;
+  const apply = owner.adapter.apply;
+  owner.adapter.apply = (widths) => {
+    writes++;
+    apply(widths);
+  };
+  f.controller.begin(owner, 'name', 0, 2, f.target, 0);
+  f.controller.move(owner, 2, 40);
+  assert.equal(writes, 1);
+  f.controller.end(owner, 2);
+  assert.equal(writes, 1);
+  assert.deepEqual(f.widths(), { name: 240, score: 175 });
+  assert.equal(f.saved.length, 1);
+});

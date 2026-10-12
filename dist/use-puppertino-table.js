@@ -1,24 +1,10 @@
 'use client';
-import { useTable } from '@tanstack/react-table';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { makeStateUpdater, useTable } from '@tanstack/react-table';
+import { useEffect, useMemo, useRef } from 'react';
 import { puppertinoTableFeatures, } from './model.js';
 import { columnSizeBounds, readColumnSizing } from './sizing.js';
 /** Shared state wiring for complete tables and custom semantic layouts. */
 export function usePuppertinoTable({ data, columns, getRowId, sorting: controlledSorting, onSortingChange, initialSorting = [], initialRowSelection = {}, manualSorting = true, rowSelection: controlledSelection, onRowSelectionChange, selectable = false, disabled = false, columnSizing, onColumnSizingChange, storageKey, storage, }) {
-    const [localSelection, setLocalSelection] = useState(() => initialRowSelection);
-    const [localSorting, setLocalSorting] = useState(() => initialSorting);
-    const sorting = controlledSorting ?? localSorting;
-    const changeSorting = useCallback((update) => {
-        if (controlledSorting === undefined)
-            setLocalSorting(update);
-        onSortingChange?.(update);
-    }, [controlledSorting, onSortingChange]);
-    const changeSelection = useCallback((update) => {
-        if (controlledSelection === undefined)
-            setLocalSelection(update);
-        onRowSelectionChange?.(update);
-    }, [controlledSelection, onRowSelectionChange]);
-    const rowSelection = controlledSelection ?? localSelection;
     const canSelect = selectable && !disabled && (controlledSelection === undefined || !!onRowSelectionChange);
     const bounds = useMemo(() => columnSizeBounds(columns), [columns]);
     const sizedColumns = useMemo(() => {
@@ -43,16 +29,32 @@ export function usePuppertinoTable({ data, columns, getRowId, sorting: controlle
         enableSortingRemoval: false,
         enableRowSelection: canSelect,
         enableSubRowSelection: false,
-        initialState: controlledSizing ? undefined : { columnSizing: readColumnSizing(bounds) },
-        state: { sorting, rowSelection, ...(controlledSizing ? { columnSizing } : {}) },
+        initialState: {
+            ...(controlledSorting === undefined ? { sorting: initialSorting } : {}),
+            ...(controlledSelection === undefined ? { rowSelection: initialRowSelection } : {}),
+            ...(!controlledSizing ? { columnSizing: readColumnSizing(bounds) } : {}),
+        },
+        state: {
+            ...(controlledSorting !== undefined ? { sorting: controlledSorting } : {}),
+            ...(controlledSelection !== undefined ? { rowSelection: controlledSelection } : {}),
+            ...(controlledSizing ? { columnSizing } : {}),
+        },
         onColumnSizingChange: (update) => {
             if (controlledSizing)
                 onColumnSizingChange?.(update);
             else
-                table.baseAtoms.columnSizing.set((old) => typeof update === 'function' ? update(old) : update);
+                makeStateUpdater('columnSizing', table)(update);
         },
-        onSortingChange: changeSorting,
-        onRowSelectionChange: changeSelection,
+        onSortingChange: (update) => {
+            if (controlledSorting === undefined)
+                makeStateUpdater('sorting', table)(update);
+            onSortingChange?.(update);
+        },
+        onRowSelectionChange: (update) => {
+            if (controlledSelection === undefined)
+                makeStateUpdater('rowSelection', table)(update);
+            onRowSelectionChange?.(update);
+        },
     }, (state) => ({ sorting: state.sorting, rowSelection: state.rowSelection }));
     const sizingAtom = table.baseAtoms.columnSizing;
     const restored = useRef(null);

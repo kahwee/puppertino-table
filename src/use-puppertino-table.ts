@@ -1,7 +1,7 @@
 'use client';
-import type { OnChangeFn, RowData, RowSelectionState, SortingState } from '@tanstack/react-table';
-import { useTable } from '@tanstack/react-table';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { RowData } from '@tanstack/react-table';
+import { makeStateUpdater, useTable } from '@tanstack/react-table';
+import { useEffect, useMemo, useRef } from 'react';
 import {
   type PuppertinoColumnDef,
   type PuppertinoTableInstance,
@@ -32,26 +32,6 @@ export function usePuppertinoTable<T extends RowData>({
   storageKey,
   storage,
 }: PuppertinoTableOptions<T>): PuppertinoTableInstance<T> {
-  const [localSelection, setLocalSelection] = useState<RowSelectionState>(
-    () => initialRowSelection,
-  );
-  const [localSorting, setLocalSorting] = useState<SortingState>(() => initialSorting);
-  const sorting = controlledSorting ?? localSorting;
-  const changeSorting = useCallback<OnChangeFn<SortingState>>(
-    (update) => {
-      if (controlledSorting === undefined) setLocalSorting(update);
-      onSortingChange?.(update);
-    },
-    [controlledSorting, onSortingChange],
-  );
-  const changeSelection = useCallback<OnChangeFn<RowSelectionState>>(
-    (update) => {
-      if (controlledSelection === undefined) setLocalSelection(update);
-      onRowSelectionChange?.(update);
-    },
-    [controlledSelection, onRowSelectionChange],
-  );
-  const rowSelection = controlledSelection ?? localSelection;
   const canSelect =
     selectable && !disabled && (controlledSelection === undefined || !!onRowSelectionChange);
   const bounds = useMemo(() => columnSizeBounds(columns), [columns]);
@@ -79,17 +59,28 @@ export function usePuppertinoTable<T extends RowData>({
       enableSortingRemoval: false,
       enableRowSelection: canSelect,
       enableSubRowSelection: false,
-      initialState: controlledSizing ? undefined : { columnSizing: readColumnSizing(bounds) },
-      state: { sorting, rowSelection, ...(controlledSizing ? { columnSizing } : {}) },
+      initialState: {
+        ...(controlledSorting === undefined ? { sorting: initialSorting } : {}),
+        ...(controlledSelection === undefined ? { rowSelection: initialRowSelection } : {}),
+        ...(!controlledSizing ? { columnSizing: readColumnSizing(bounds) } : {}),
+      },
+      state: {
+        ...(controlledSorting !== undefined ? { sorting: controlledSorting } : {}),
+        ...(controlledSelection !== undefined ? { rowSelection: controlledSelection } : {}),
+        ...(controlledSizing ? { columnSizing } : {}),
+      },
       onColumnSizingChange: (update) => {
         if (controlledSizing) onColumnSizingChange?.(update);
-        else
-          table.baseAtoms.columnSizing.set((old) =>
-            typeof update === 'function' ? update(old) : update,
-          );
+        else makeStateUpdater('columnSizing', table)(update);
       },
-      onSortingChange: changeSorting,
-      onRowSelectionChange: changeSelection,
+      onSortingChange: (update) => {
+        if (controlledSorting === undefined) makeStateUpdater('sorting', table)(update);
+        onSortingChange?.(update);
+      },
+      onRowSelectionChange: (update) => {
+        if (controlledSelection === undefined) makeStateUpdater('rowSelection', table)(update);
+        onRowSelectionChange?.(update);
+      },
     },
     (state) => ({ sorting: state.sorting, rowSelection: state.rowSelection }),
   );

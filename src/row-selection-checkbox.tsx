@@ -1,5 +1,5 @@
 'use client';
-import type { RowData } from '@tanstack/react-table';
+import { type RowData, Subscribe } from '@tanstack/react-table';
 import type { RowSelectionCheckboxProps } from './table-types.js';
 
 export type { RowSelectionCheckboxProps } from './table-types.js';
@@ -10,16 +10,20 @@ export function RowSelectionCheckbox<T extends RowData>({
   disabled = false,
 }: RowSelectionCheckboxProps<T>) {
   return (
-    <input
-      type="checkbox"
-      aria-label={`Select ${label ?? row.id}`}
-      checked={row.getIsSelected()}
-      disabled={disabled || !row.getCanSelect()}
-      onClick={(event) => {
-        event.stopPropagation();
-        row.getToggleSelectedHandler()(event);
-      }}
-      onChange={() => {}}
-    />
+    <Subscribe source={row.table.atoms.rowSelection} selector={(selection) => !!selection[row.id]}>
+      {(selected) => (
+        <input
+          type="checkbox"
+          aria-label={`Select ${label ?? row.id}`}
+          checked={selected}
+          disabled={disabled || !row.getCanSelect()}
+          onClick={(event) => {
+            event.stopPropagation();
+            row.getToggleSelectedHandler()(event);
+          }}
+          onChange={() => {}}
+        />
+      )}
+    </Subscribe>
   );
 }

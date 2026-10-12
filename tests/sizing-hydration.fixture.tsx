@@ -1,7 +1,12 @@
 import type { ColumnSizingState } from '@tanstack/react-table';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { renderToString } from 'react-dom/server';
-import { type PuppertinoTableInstance, usePuppertinoTable } from '../src/index.js';
+import {
+  ColumnResizeHandle,
+  type PuppertinoTableInstance,
+  RowSelectionCheckbox,
+  usePuppertinoTable,
+} from '../src/index.js';
 
 const columns = [{ accessorKey: 'name', size: 150, minSize: 50, maxSize: 400 }];
 const data = [{ name: 'Ada' }];
@@ -11,6 +16,22 @@ let setKey: (key: string) => void;
 let setMode: (mode: string) => void;
 let setWidths: (widths: ColumnSizingState) => void;
 let updates = 0;
+let primitiveRenders = 0;
+const StablePrimitives = memo(function StablePrimitives({
+  table,
+}: {
+  table: PuppertinoTableInstance<{ name: string }>;
+}) {
+  primitiveRenders++;
+  const row = table.getRowModel().rows[0];
+  const header = table.getHeaderGroups()[0].headers[0];
+  return (
+    <div>
+      <RowSelectionCheckbox row={row} />
+      <ColumnResizeHandle table={table} header={header} />
+    </div>
+  );
+});
 let setAdapter: (enabled: boolean) => void;
 const alternateStorage = { getItem: () => '{"name":310}', setItem: () => {} };
 
@@ -28,6 +49,7 @@ function Fixture() {
     columns: [...columns],
     storage: alternate ? alternateStorage : undefined,
     getRowId,
+    selectable: true,
     storageKey: key,
     ...(mode !== 'local' ? { columnSizing: widths } : {}),
     ...(mode === 'controlled'
@@ -39,10 +61,14 @@ function Fixture() {
         }
       : {}),
   });
+  const [primitiveTable] = useState(() => table);
   return (
-    <table.Subscribe source={table.atoms.columnSizing}>
-      {() => <output id="width">{table.getColumn('name')?.getSize()}</output>}
-    </table.Subscribe>
+    <>
+      <StablePrimitives table={primitiveTable} />
+      <table.Subscribe source={table.atoms.columnSizing}>
+        {() => <output id="width">{table.getColumn('name')?.getSize()}</output>}
+      </table.Subscribe>
+    </>
   );
 }
 export function serverHTML() {
@@ -64,5 +90,7 @@ export async function hydrate() {
     widths: (widths: ColumnSizingState) => setWidths(widths),
     resize: (width: number) => table.setColumnSizing((old) => ({ ...old, name: width })),
     updates: () => updates,
+    primitiveRenders: () => primitiveRenders,
+    select: () => table.getRowModel().rows[0].toggleSelected(),
   };
 }

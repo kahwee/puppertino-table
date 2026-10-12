@@ -1,4 +1,4 @@
-import type { RowData } from '@tanstack/react-table';
+import { type RowData } from '@tanstack/react-table';
 import type { RowSelectionCheckboxProps } from './table-types.js';
 export type { RowSelectionCheckboxProps } from './table-types.js';
 /** Shared click/keyboard semantics, including Shift selection and row-event isolation. */

@@ -51,8 +51,12 @@ export function createResizeController(
     if (!active) return false;
     drag = null;
     active.cleanup();
-    active.member.adapter.apply(cancel ? active.before : active.member.adapter.snapshot());
-    if (!cancel) persist(active.member);
+    if (cancel) {
+      active.member.adapter.apply({
+        ...active.member.adapter.snapshot(),
+        [active.id]: active.before[active.id],
+      });
+    } else persist(active.member);
     return true;
   };
   const owns = (member: ResizeMember, pointer: number) =>
