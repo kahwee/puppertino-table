@@ -1,6 +1,24 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { fitColumnBrowser } from '../src/column-browser-layout.js';
+import { fitColumnBrowser, fitColumnPanels } from '../src/column-browser-layout.js';
+
+test('independent panel widths reveal the nearest complete ancestors', () => {
+  assert.deepEqual(fitColumnPanels(724, [180, 300, 224], 288), {
+    currentWidth: 500,
+    scrollLeft: 480,
+    visibleAncestors: 1,
+  });
+  assert.deepEqual(fitColumnPanels(1000, [180, 300, 224], 288), {
+    currentWidth: 296,
+    scrollLeft: 0,
+    visibleAncestors: 3,
+  });
+  assert.deepEqual(fitColumnPanels(280, [180, 300], 288), {
+    currentWidth: 280,
+    scrollLeft: 480,
+    visibleAncestors: 0,
+  });
+});
 
 const defaults = {
   availableWidth: 1216,

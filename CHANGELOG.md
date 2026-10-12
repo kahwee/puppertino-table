@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add scoped native/compact/comfortable density and explicit row/padding/icon metrics across tables and custom layouts; preserve native defaults.
+- Add a caller-rendered, independently resizable column browser with whole-panel fitting, selected/path states and controlled/read-only widths.
+- Share resize lifecycle/event adaptation between table columns and browser panels instead of duplicating gesture handling.
+- Add right-click and keyboard context-menu primitives with viewport fitting, disabled-item navigation, dismissal and focus restoration, plus realistic light/dark resource-browser Storybook workflows.
+
 - Add opt-in anchored row-selection gestures for custom layouts, with mixed leading/data items, Command/Ctrl toggles, shrinking Shift ranges and controlled/atom/disabled ownership guards.
 - Export a React-independent selection reducer and whole-column browser geometry helper, with unit, Storybook, browser and packed-consumer checks. Existing checkbox selection remains unchanged.
 

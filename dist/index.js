@@ -1,4 +1,7 @@
+export { ColumnBrowser, ColumnBrowserItem, } from './column-browser.js';
 export { fitColumnBrowser } from './column-browser-layout.js';
+export { ContextMenu, useContextMenu, } from './context-menu.js';
+export { DensityScope, } from './density.js';
 export { createPuppertinoColumnHelper, puppertinoTableFeatures, } from './model.js';
 export { ColumnResizeHandle } from './resize-handle.js';
 export { RowSelectionCheckbox } from './row-selection-checkbox.js';

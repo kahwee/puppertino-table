@@ -1,6 +1,7 @@
 // biome-ignore-all lint/a11y/noNoninteractiveTabindex: This wrapper provides a keyboard-focusable horizontal scroll region.
 'use client';
 import type { RowData } from '@tanstack/react-table';
+import { DensityScope } from './density.js';
 import { TableBody } from './table-body.js';
 import { TableHeader } from './table-header.js';
 import type { PuppertinoTableProps } from './table-types.js';
@@ -41,6 +42,8 @@ export function PuppertinoTable<T extends RowData>({
   caption,
   emptyContent = 'No rows',
   className = '',
+  density = 'native',
+  densityMetrics,
   getRowProps,
   getCellProps,
   leadingRows,
@@ -65,8 +68,9 @@ export function PuppertinoTable<T extends RowData>({
     storage,
   });
   return (
-    // biome-ignore lint/a11y/useSemanticElements: The labelled scroll region must be focusable for keyboard horizontal scrolling.
-    <div
+    <DensityScope
+      density={density}
+      metrics={densityMetrics}
       className={`pt-scroll ${className}`}
       tabIndex={0}
       role="region"
@@ -111,6 +115,6 @@ export function PuppertinoTable<T extends RowData>({
           </table>
         )}
       </table.Subscribe>
-    </div>
+    </DensityScope>
   );
 }

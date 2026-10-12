@@ -1,4 +1,25 @@
+export {
+  ColumnBrowser,
+  ColumnBrowserItem,
+  type ColumnBrowserItemProps,
+  type ColumnBrowserPanel,
+  type ColumnBrowserProps,
+  type ColumnBrowserWidths,
+} from './column-browser.js';
 export { type ColumnBrowserLayoutOptions, fitColumnBrowser } from './column-browser-layout.js';
+export {
+  ContextMenu,
+  type ContextMenuAction,
+  type ContextMenuPosition,
+  type ContextMenuProps,
+  useContextMenu,
+} from './context-menu.js';
+export {
+  type DensityMetrics,
+  DensityScope,
+  type DensityScopeProps,
+  type TableDensity,
+} from './density.js';
 export {
   createPuppertinoColumnHelper,
   type PuppertinoColumnDef,
