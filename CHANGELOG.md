@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 — 2026-10-12
+
+- Inherit density through CSS custom properties and scoped table rules when no preset is supplied; preserve standalone defaults, explicit native/compact/comfortable overrides and partial metrics without React context.
 
 - Add completion-only browser `onWidthsCommit` and table resize `onCommit` callbacks; preserve preview updates and report intended controlled widths without waiting for React to rerender.
 - Add native anchor browser items through `href`, with link-specific types, modifier-click/target/download support and accessible disabled behavior.

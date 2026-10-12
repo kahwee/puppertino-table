@@ -7,6 +7,7 @@ export interface DensityMetrics {
     iconSize?: number;
 }
 export interface DensityScopeProps extends ComponentPropsWithRef<'div'> {
+    /** Omit to inherit CSS metrics; explicit presets start a new density scope. */
     density?: TableDensity;
     metrics?: DensityMetrics;
 }

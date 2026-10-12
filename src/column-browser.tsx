@@ -42,7 +42,7 @@ export interface ColumnBrowserProps {
 export function ColumnBrowser({
   panels,
   ariaLabel,
-  density = 'compact',
+  density,
   densityMetrics,
   minimumCurrentWidth = 288,
   resizable = true,

@@ -18,6 +18,6 @@ export function densityStyle(metrics = {}) {
     }));
 }
 /** The same scoped metrics apply to complete tables, custom layouts and browser items. */
-export function DensityScope({ density = 'native', metrics, className = '', style, ...props }) {
+export function DensityScope({ density, metrics, className = '', style, ...props }) {
     return (_jsx("div", { ...props, className: `pt-density ${className}`, "data-pt-density": density, "data-pt-metrics": metrics ? 'custom' : undefined, style: { ...densityStyle(metrics), ...style } }));
 }

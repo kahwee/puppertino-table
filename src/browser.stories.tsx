@@ -8,6 +8,7 @@ import {
   type ColumnBrowserWidths,
   ContextMenu,
   createPuppertinoColumnHelper,
+  DensityScope,
   PuppertinoTable,
   type TableDensity,
   useContextMenu,
@@ -209,14 +210,16 @@ function ResourceBrowser({
             Toggle inspector
           </button>
         </div>
-        <div className={`demo-browser-workspace ${inspect ? 'has-inspector' : ''}`}>
+        <DensityScope
+          density={density}
+          className={`demo-browser-workspace ${inspect ? 'has-inspector' : ''}`}
+        >
           {tableView ? (
             <PuppertinoTable
               data={resources.slice(0, 8)}
               columns={columns}
               getRowId={(item) => item.id}
               ariaLabel="Project resources"
-              density={density}
               selectable
               rowSelection={selection}
               onRowSelectionChange={setSelection}
@@ -227,7 +230,6 @@ function ResourceBrowser({
             <ColumnBrowser
               panels={rootOnly ? panels.slice(0, 1) : panels}
               ariaLabel="Project folders"
-              density={density}
               resizeDisabled={resizeDisabled}
               onWidthsCommit={(next) => {
                 setCommittedWidths(next);
@@ -258,7 +260,7 @@ function ResourceBrowser({
               <p>Sample content for the shared layout demo.</p>
             </aside>
           )}
-        </div>
+        </DensityScope>
         <footer>
           <span>Workspace › Projects › {project}</span>
           <span className="demo-spacer" />
@@ -346,3 +348,79 @@ export const ColumnWorkspace: Story = {};
 export const DensityTable: Story = { args: { tableView: true } };
 export const ControlledPanels: Story = { args: { controlled: true } };
 export const ReadOnlyPanels: Story = { args: { controlled: true, readOnly: true } };
+
+function DensityInheritanceExample() {
+  const [density, setDensity] = useState<TableDensity>('comfortable');
+  const item = <ColumnBrowserItem icon={<ResourceIcon />}>Inherited resource</ColumnBrowserItem>;
+  return (
+    <main className="demo-shell">
+      <label>
+        Workspace density{' '}
+        <select
+          aria-label="Workspace density"
+          value={density}
+          onChange={(event) => setDensity(event.target.value as TableDensity)}
+        >
+          <option value="native">Native</option>
+          <option value="compact">Compact</option>
+          <option value="comfortable">Comfortable</option>
+        </select>
+      </label>
+      <DensityScope density={density}>
+        <h2>Inherited table</h2>
+        <PuppertinoTable
+          data={resources.slice(0, 2)}
+          getRowId={(item) => item.id}
+          columns={columns}
+          ariaLabel="Inherited table"
+        />
+        <h2>Inherited browser</h2>
+        <div style={{ height: 100 }}>
+          <ColumnBrowser
+            panels={[{ id: 'items', label: 'Inherited items', content: item }]}
+            ariaLabel="Inherited browser"
+          />
+        </div>
+        <h2>Explicit native table</h2>
+        <PuppertinoTable
+          data={resources.slice(0, 2)}
+          getRowId={(item) => item.id}
+          columns={columns}
+          density="native"
+          ariaLabel="Native override"
+        />
+        <h2>Explicit compact browser</h2>
+        <div style={{ height: 100 }}>
+          <ColumnBrowser
+            density="compact"
+            panels={[{ id: 'compact', label: 'Compact items', content: item }]}
+            ariaLabel="Compact override"
+          />
+        </div>
+        <DensityScope metrics={{ iconSize: 22 }}>
+          <h2>Partial metrics preserve inherited rows</h2>
+          <PuppertinoTable
+            data={resources.slice(0, 2)}
+            getRowId={(item) => item.id}
+            columns={columns}
+            ariaLabel="Partial metrics"
+          />
+        </DensityScope>
+      </DensityScope>
+      <h2>Standalone defaults</h2>
+      <PuppertinoTable
+        data={resources.slice(0, 2)}
+        getRowId={(item) => item.id}
+        columns={columns}
+        ariaLabel="Standalone table"
+      />
+      <div style={{ height: 100 }}>
+        <ColumnBrowser
+          panels={[{ id: 'standalone', label: 'Standalone items', content: item }]}
+          ariaLabel="Standalone browser"
+        />
+      </div>
+    </main>
+  );
+}
+export const DensityInheritance: StoryObj = { render: () => <DensityInheritanceExample /> };

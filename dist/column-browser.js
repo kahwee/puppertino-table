@@ -6,7 +6,7 @@ import { DensityScope } from './density.js';
 import { clampSize, columnSizeBounds } from './sizing.js';
 import { useResizeGesture } from './use-resize-gesture.js';
 /** Caller-rendered hierarchy. No fetching, navigation, selection or application commands. */
-export function ColumnBrowser({ panels, ariaLabel, density = 'compact', densityMetrics, minimumCurrentWidth = 288, resizable = true, resizeDisabled: disabled = false, cancelMediaQuery, widths: controlled, onWidthsChange, onWidthsCommit, className = '', style, }) {
+export function ColumnBrowser({ panels, ariaLabel, density, densityMetrics, minimumCurrentWidth = 288, resizable = true, resizeDisabled: disabled = false, cancelMediaQuery, widths: controlled, onWidthsChange, onWidthsCommit, className = '', style, }) {
     const ids = panels.map((panel) => panel.id);
     if (ids.some((id) => !id) || new Set(ids).size !== ids.length)
         throw new Error('Browser panels need unique stable IDs.');

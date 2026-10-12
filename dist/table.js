@@ -5,7 +5,7 @@ import { DensityScope } from './density.js';
 import { TableBody } from './table-body.js';
 import { TableHeader } from './table-header.js';
 import { usePuppertinoTable } from './use-puppertino-table.js';
-export function PuppertinoTable({ data, columns, atoms, getRowId, sorting, onSortingChange, initialSorting, initialRowSelection, manualSorting = true, rowSelection, onRowSelectionChange, getRowLabel, selectable = false, disabled = false, resizable = true, columnSizing, onColumnSizingChange, storageKey, storage, cancelMediaQuery, ariaLabel, caption, emptyContent = 'No rows', className = '', density = 'native', densityMetrics, getRowProps, getCellProps, leadingRows, }) {
+export function PuppertinoTable({ data, columns, atoms, getRowId, sorting, onSortingChange, initialSorting, initialRowSelection, manualSorting = true, rowSelection, onRowSelectionChange, getRowLabel, selectable = false, disabled = false, resizable = true, columnSizing, onColumnSizingChange, storageKey, storage, cancelMediaQuery, ariaLabel, caption, emptyContent = 'No rows', className = '', density, densityMetrics, getRowProps, getCellProps, leadingRows, }) {
     const table = usePuppertinoTable({
         data,
         columns,

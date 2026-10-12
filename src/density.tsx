@@ -8,6 +8,7 @@ export interface DensityMetrics {
   iconSize?: number;
 }
 export interface DensityScopeProps extends ComponentPropsWithRef<'div'> {
+  /** Omit to inherit CSS metrics; explicit presets start a new density scope. */
   density?: TableDensity;
   metrics?: DensityMetrics;
 }
@@ -36,7 +37,7 @@ export function densityStyle(metrics: DensityMetrics = {}): CSSProperties {
 
 /** The same scoped metrics apply to complete tables, custom layouts and browser items. */
 export function DensityScope({
-  density = 'native',
+  density,
   metrics,
   className = '',
   style,

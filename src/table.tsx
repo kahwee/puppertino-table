@@ -42,7 +42,7 @@ export function PuppertinoTable<T extends RowData>({
   caption,
   emptyContent = 'No rows',
   className = '',
-  density = 'native',
+  density,
   densityMetrics,
   getRowProps,
   getCellProps,

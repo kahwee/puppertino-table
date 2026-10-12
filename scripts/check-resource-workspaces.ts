@@ -5,6 +5,66 @@ import type { Page } from 'playwright';
 
 /** Shared example page checks, separate from the table gesture stress suite. */
 export async function checkResourceWorkspaces(page: Page, base: string, evidence: string) {
+  await page.goto(
+    `${base}/iframe.html?id=puppertino-resource-browser--density-inheritance&viewMode=story`,
+  );
+  const inherited = page.getByRole('table', { name: 'Inherited table', exact: true });
+  await inherited.waitFor();
+  const padding = (name: string) =>
+    page
+      .getByRole('table', { name, exact: true })
+      .locator('th')
+      .first()
+      .evaluate((element) => getComputedStyle(element).paddingTop);
+  const icon = (name: string) =>
+    page
+      .getByRole('table', { name, exact: true })
+      .locator('.pt-icon')
+      .first()
+      .evaluate((element) => element.getBoundingClientRect().width);
+  const nativePadding = await padding('Standalone table');
+  assert.equal(await padding('Inherited table'), '8px');
+  assert.equal(await icon('Inherited table'), 20);
+  assert.equal(
+    await padding('Native override'),
+    nativePadding,
+    'Explicit native opts out of inherited table spacing',
+  );
+  assert.equal(await icon('Native override'), 14);
+  assert.equal(
+    await padding('Partial metrics'),
+    '8px',
+    'Partial metric scopes retain inherited row spacing',
+  );
+  assert.equal(await icon('Partial metrics'), 22);
+  assert.equal(
+    await page
+      .getByRole('region', { name: 'Inherited browser', exact: true })
+      .locator('.pt-icon')
+      .evaluate((element) => element.getBoundingClientRect().width),
+    20,
+  );
+  assert.equal(
+    await page
+      .getByRole('region', { name: 'Compact override', exact: true })
+      .locator('.pt-icon')
+      .evaluate((element) => element.getBoundingClientRect().width),
+    16,
+  );
+  assert.equal(
+    await page
+      .getByRole('region', { name: 'Standalone browser', exact: true })
+      .locator('.pt-icon')
+      .evaluate((element) => element.getBoundingClientRect().width),
+    16,
+  );
+  await page.getByLabel('Workspace density').selectOption('compact');
+  assert.equal(await padding('Inherited table'), '3px');
+  assert.equal(await icon('Inherited table'), 16);
+  assert.equal(await padding('Native override'), nativePadding);
+  await page.getByLabel('Workspace density').selectOption('native');
+  assert.equal(await padding('Inherited table'), nativePadding);
+  await page.screenshot({ path: `${evidence}/density-inheritance.png` });
   for (const story of [
     'column-workspace',
     'density-table',

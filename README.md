@@ -17,7 +17,7 @@ A generic React table styled with [Puppertino](https://puppertino.com/) and powe
 The package includes built ESM and TypeScript declarations. Install it from npm:
 
 ```sh
-pnpm add puppertino-table@0.5.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
+pnpm add puppertino-table@0.6.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
 ```
 
 React 19.3.0 or a compatible newer React 19 release is required (`^19.3.0`). React 18 and React 20 are outside the supported range. React, TanStack Table and Puppertino are peer dependencies; the library does not bundle another copy of them. For Git-based installation, use `github:kahwee/puppertino-table` and pin a commit or tag for reproducibility.
@@ -107,7 +107,7 @@ function ItemsTable() {
 
 The density, column-browser and context-menu APIs below are available starting in version 0.5.0.
 
-Complete tables accept `density="native" | "compact" | "comfortable"`. Native is the default and preserves the existing Puppertino table geometry. Compact uses 24px minimum rows, 3px block padding, 8px inline padding and 16px icons. Comfortable uses 36px rows, 8px block padding, 12px inline padding and 20px icons. Content can make a row taller; text and icons are never clipped to force a height.
+Complete tables accept `density="native" | "compact" | "comfortable"`. Omitting density inherits the nearest CSS scope. Outside a preset scope, tables retain native Puppertino geometry and column browsers use compact fallbacks. Explicit `native` resets metrics and opts tables out of an outer preset. Compact uses 24px minimum rows, 3px block padding, 8px inline padding and 16px icons. Comfortable uses 36px rows, 8px block padding, 12px inline padding and 20px icons. Content can make a row taller; text and icons are never clipped to force a height.
 
 Use `DensityScope` around layouts built with the table primitives, or pass `densityMetrics` to `PuppertinoTable` and `ColumnBrowser` for explicit overrides. Metrics are CSS pixels: `rowHeight`, `rowPaddingBlock`, `rowPaddingInline` and `iconSize`. `DensityScope` calls the same object `metrics`. Heights and icon sizes must be positive; padding may be zero. Styles stay scoped to each wrapper, so adjacent components can use different densities. Put caller-owned artwork in a `.pt-icon` span to share sizing; the library does not replace your icons.
 
@@ -119,6 +119,19 @@ Use `DensityScope` around layouts built with the table primitives, or pass `dens
 ```
 
 The corresponding CSS properties are `--pt-row-height`, `--pt-row-padding-block`, `--pt-row-padding-inline` and `--pt-icon-size`. Explicit metrics are applied on the scope; ordinary host CSS can customize them. Native density leaves default table header/cell styling intact unless metrics are explicitly supplied. Density changes layout only, not sorting, selection or saved widths.
+
+Density is a library term implemented with standard CSS custom properties, not a CSS `density` property or React provider/context. In 0.6.0, one parent scope applies to nested tables, browsers and transparent scopes:
+
+```tsx
+<DensityScope density="comfortable">
+  <PuppertinoTable data={items} columns={columns} ariaLabel="Items" />
+  <ColumnBrowser panels={panels} ariaLabel="Projects" />
+  <DensityScope metrics={{ iconSize: 22 }}><PuppertinoTable data={items} columns={columns} ariaLabel="Larger icons" /></DensityScope>
+  <PuppertinoTable density="native" data={items} columns={columns} ariaLabel="Native override" />
+</DensityScope>
+```
+
+Explicit presets start a new scope; partial metrics override only the specified variables. Scoped table rules use standard CSS `@scope` to stop at nested explicit presets, preserving native spacing. This requires browsers supporting `@scope` (Chrome/Edge 118+, Safari 17.4+, Firefox 146+). Browser/item metrics inherit normally through custom properties; the standalone table and browser defaults remain native and compact respectively. Number five's generic keyboard navigation hook is not part of this release.
 
 ### Column-browser component
 
@@ -136,7 +149,7 @@ import { ColumnBrowser, ColumnBrowserItem } from 'puppertino-table';
 ]} />
 ```
 
-Panels require unique stable `id`, an accessible `label` for their region, and caller-rendered `content`. Ancestors default to 224px, bounded to 120–640px. `minimumCurrentWidth` defaults to 288px. Give the component or its parent a bounded height; it fills that height. The default density is compact. Optional `widths` and `onWidthsChange` provide controlled ancestor sizing. Widths without a callback are read-only and omit resize handles. `resizable={false}` or `resizeDisabled` cancels active gestures; `cancelMediaQuery` can cancel when a responsive layout removes the controls. Panel removal and changed bounds also cancel. Completed gestures remain in local state until unmount; the component does not write preferences. Change callbacks include previews and cancellations, so they are not approval or persistence receipts. On main, the unreleased `onWidthsCommit` callback supplies a copied snapshot after completed pointer, keyboard and reset operations only; use it to save app-owned preferences. Table resize options offer the matching `onCommit` callback. Storage failure does not suppress either callback.
+Panels require unique stable `id`, an accessible `label` for their region, and caller-rendered `content`. Ancestors default to 224px, bounded to 120–640px. `minimumCurrentWidth` defaults to 288px. Give the component or its parent a bounded height; it fills that height. Standalone browser items use compact fallback metrics; omitted density inherits an enclosing scope. Optional `widths` and `onWidthsChange` provide controlled ancestor sizing. Widths without a callback are read-only and omit resize handles. `resizable={false}` or `resizeDisabled` cancels active gestures; `cancelMediaQuery` can cancel when a responsive layout removes the controls. Panel removal and changed bounds also cancel. Completed gestures remain in local state until unmount; the component does not write preferences. Change callbacks include previews and cancellations, so they are not approval or persistence receipts. Starting in 0.6.0, the `onWidthsCommit` callback supplies a copied snapshot after completed pointer, keyboard and reset operations only; use it to save app-owned preferences. Table resize options offer the matching `onCommit` callback. Storage failure does not suppress either callback.
 
 `ColumnBrowserItem` defaults to a native button with `icon`, `trailing`, `selected` and `pathSelected` slots/states. It shares density metrics, ellipsis, hover and keyboard-focus styling. Selection and path indication are separate. Standard button props provide actions, labels, disabled state and context-menu triggers. The browser does not fetch records, enter folders, select items or open documents. Compose your navigation, `useRowSelectionGestures`, and custom content around it. Its geometry is measured only after hydration; initial server markup uses deterministic panel widths.
 
@@ -154,9 +167,9 @@ const menu = useContextMenu<string>();
 
 For tables, spread trigger props in `getRowProps` and make the target keyboard-focusable, or attach them to a button inside a cell. `ContextMenu` accepts command actions with stable `id`, `label`, optional `disabled`, and `onSelect`. It fits the viewport, focuses the first enabled action, supports arrows/Home/End, skips disabled actions, closes on Escape/Tab/outside pointer/scroll/resize/blur, and restores the invoking target's focus. It uses a manual popover where supported so a table or panel's overflow does not clip it. Place it in the same themed DOM subtree as its trigger. Commands, right-click selection policy and authorization remain caller-owned; the component never invents file operations.
 
-### Browser links and richer menus (unreleased, available on main)
+### Browser links and richer menus
 
-These additions build on npm 0.5.0 and require a pinned main commit until the next release.
+These additions are available starting in version 0.6.0.
 
 ```tsx
 <ColumnBrowserItem href="/projects/alpine" pathSelected icon={<FolderIcon />}>
@@ -407,7 +420,7 @@ The unscoped **`puppertino-table`** package is public on npm. Stable releases us
 
 ```sh
 pnpm check
-npm publish test-results/package/puppertino-table-0.5.0.tgz --dry-run --ignore-scripts --access public
+npm publish test-results/package/puppertino-table-0.6.0.tgz --dry-run --ignore-scripts --access public
 ```
 
 `pnpm check` builds and packs the library, checks the tarball file list, and installs it in isolated React 19.3.0 consumers. `prepack` rebuilds JavaScript and declarations so a locally packed release cannot silently use stale output. Only the compiled library, CSS, package metadata, README, changelog and MIT license ship; Storybook, the demo and tests stay out of the npm package.

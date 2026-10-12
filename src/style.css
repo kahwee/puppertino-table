@@ -151,7 +151,7 @@
 }
 
 /* Scoped density. Native leaves the existing Puppertino table geometry untouched. */
-.pt-density {
+.pt-density[data-pt-density="native"] {
   --pt-row-height: 20px;
   --pt-row-padding-block: 0px;
   --pt-row-padding-inline: 8px;
@@ -169,23 +169,26 @@
   --pt-row-padding-inline: 12px;
   --pt-icon-size: 20px;
 }
-.pt-density:is([data-pt-density="compact"], [data-pt-density="comfortable"], [data-pt-metrics])
-  .pt-table
-  :is(th, td):not(.pt-selection) {
-  height: var(--pt-row-height);
-  padding: var(--pt-row-padding-block) var(--pt-row-padding-inline);
+/* A nested explicit preset/metric scope stops the outer table rule. Omitted
+   presets remain transparent, so native tables can opt out without JS context. */
+@scope (
+  .pt-density:is([data-pt-density="compact"], [data-pt-density="comfortable"], [data-pt-metrics])
+) to (.pt-density:is([data-pt-density], [data-pt-metrics])) {
+  .pt-table :is(th, td):not(.pt-selection) {
+    height: var(--pt-row-height, 20px);
+    padding: var(--pt-row-padding-block, 0px) var(--pt-row-padding-inline, 8px);
+  }
+  .pt-sort {
+    min-height: 18px;
+  }
 }
 .pt-icon {
   display: inline-grid;
   place-items: center;
-  width: var(--pt-icon-size, 16px);
-  height: var(--pt-icon-size, 16px);
-  flex: 0 0 var(--pt-icon-size, 16px);
+  width: var(--pt-icon-size, 14px);
+  height: var(--pt-icon-size, 14px);
+  flex: 0 0 var(--pt-icon-size, 14px);
   vertical-align: middle;
-}
-.pt-density:is([data-pt-density="compact"], [data-pt-density="comfortable"], [data-pt-metrics])
-  .pt-sort {
-  min-height: 18px;
 }
 .pt-icon > :is(svg, img) {
   width: 100%;
@@ -231,8 +234,8 @@
   align-items: center;
   gap: 6px;
   width: 100%;
-  min-height: var(--pt-row-height);
-  padding: var(--pt-row-padding-block) var(--pt-row-padding-inline);
+  min-height: var(--pt-row-height, 24px);
+  padding: var(--pt-row-padding-block, 3px) var(--pt-row-padding-inline, 8px);
   border: 0;
   border-radius: 4px;
   background: transparent;
@@ -375,4 +378,11 @@
 
 .pt-browser-item[aria-disabled="true"] {
   cursor: default;
+}
+
+/* Browser defaults are fallbacks, so inherited metrics are never redeclared. */
+.pt-column-browser .pt-icon {
+  width: var(--pt-icon-size, 16px);
+  height: var(--pt-icon-size, 16px);
+  flex-basis: var(--pt-icon-size, 16px);
 }
