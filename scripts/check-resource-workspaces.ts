@@ -124,6 +124,8 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
       const popup = await popupPromise;
       await popup.waitForURL((url) => url.hash === '#workspace-guide');
       await popup.close();
+      await page.bringToFront();
+      await page.waitForFunction(() => document.hasFocus());
     }
     await target.click({ button: 'right' });
     const menu = page.getByRole('menu', { name: 'Resource commands', exact: true });
@@ -204,6 +206,8 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
     const popup = await popupPromise;
     await popup.waitForURL((url) => url.hash === '#resource-0');
     await popup.close();
+    await page.bringToFront();
+    await page.waitForFunction(() => document.hasFocus());
     await menu.waitFor({ state: 'detached' });
     await page.getByRole('button', { name: 'Toggle narrow layout' }).click();
     if (!tableView)
@@ -228,6 +232,13 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
         undefined,
         { timeout: 10000 },
       );
+    await target.scrollIntoViewIfNeeded();
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    );
     await target.click({ button: 'right' });
     await menu.waitFor();
     await page.getByRole('button', { name: 'Toggle dark theme' }).click();
