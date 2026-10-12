@@ -256,3 +256,9 @@ The manually dispatched **Prepare npm package** GitHub Actions workflow performs
 ## License
 
 MIT. Puppertino, React and TanStack Table remain independently maintained projects under their own licenses.
+
+## Dependency maintenance
+
+Dependabot checks npm dependencies and GitHub Actions every Monday at 08:00 America/Los_Angeles. It groups compatible npm patch/minor updates and proposes major changes separately. React and React DOM, including their type packages, stay on the supported React 19 line; versions 20 and later are excluded.
+
+Dependency updates must pass verification on the current PR head before merging. Review major migrations separately. Releases remain explicitly authorized actions; dependency maintenance does not publish npm versions or alter trusted-publisher settings.

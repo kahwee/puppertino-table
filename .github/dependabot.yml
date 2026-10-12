@@ -7,6 +7,15 @@ updates:
       day: monday
       time: '08:00'
       timezone: America/Los_Angeles
+    ignore:
+      - dependency-name: react
+        versions: ['>=20']
+      - dependency-name: react-dom
+        versions: ['>=20']
+      - dependency-name: '@types/react'
+        versions: ['>=20']
+      - dependency-name: '@types/react-dom'
+        versions: ['>=20']
     open-pull-requests-limit: 5
     groups:
       compatible-dependencies:
