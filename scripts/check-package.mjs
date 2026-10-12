@@ -75,7 +75,7 @@ import { createAtom } from '@tanstack/react-store';
 import type { ColumnSizingState, SortingState, RowSelectionState } from '@tanstack/react-table';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { PuppertinoBodyContext, PuppertinoRowProps, ColumnResizeHandleProps, TableHeaderProps, TableBodyProps, RowSelectionCheckboxProps, PuppertinoTableOptions, PuppertinoTableAtoms } from 'puppertino-table';
-import { PuppertinoTable, usePuppertinoTable, useRowSelectionGestures, applySelectionGesture, fitColumnBrowser, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
+import { PuppertinoTable, DensityScope, ColumnBrowser, ColumnBrowserItem, ContextMenu, useContextMenu, usePuppertinoTable, useRowSelectionGestures, applySelectionGesture, fitColumnBrowser, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
 type Item = { id: string; title: string; price: number };
 const helper = createPuppertinoColumnHelper<Item>();
 const columns = helper.columns([
@@ -83,6 +83,10 @@ const columns = helper.columns([
   helper.accessor('price', { header: 'Price', cell: cell => cell.getValue() }),
 ]);
 const data: Item[] = [{ id: 'ten', title: 'Ten', price: 10 }, { id: 'two', title: 'Two', price: 2 }];
+const browserMarkup = renderToStaticMarkup(createElement(DensityScope, { density: 'comfortable' }, createElement(ColumnBrowser, {
+  ariaLabel: 'Consumer browser', panels: [{ id: 'root', label: 'Root', content: createElement(ColumnBrowserItem, { selected: true }, 'Item') }],
+})));
+if (!browserMarkup.includes('Consumer browser') || !browserMarkup.includes('aria-pressed="true"')) throw new Error('Column browser consumer failed');
 const markup = renderToStaticMarkup(createElement(PuppertinoTable<Item>, {
   data, columns, getRowId: item => item.id, ariaLabel: 'Inventory',
   sorting: [{ id: 'price', desc: false }], onSortingChange: () => {}, manualSorting: false,
@@ -97,6 +101,8 @@ if (!customized.includes('custom-row') || customized.indexOf('Folder') > customi
 function HookConsumer() {
   const table = usePuppertinoTable({ data, columns, getRowId: item => item.id, initialSorting: [{ id: 'price', desc: false }], manualSorting: false, selectable: true });
   const gestures = useRowSelectionGestures(table);
+  const menu = useContextMenu<string>();
+  if (menu.state !== null || typeof menu.getTriggerProps('ten').onContextMenu !== 'function') throw new Error('Context menu hook consumer failed');
   if (typeof gestures.select !== 'function') throw new Error('Selection gesture hook export failed');
   const header = table.getHeaderGroups()[0].headers[0];
   const headerProps: TableHeaderProps<Item> = { table, selectable: true };
@@ -117,6 +123,7 @@ const atomMarkup = renderToStaticMarkup(createElement(PuppertinoTable<Item>, {
 if (!atomMarkup.includes('width:240px') || !atomMarkup.includes('p-selected') || atomMarkup.indexOf('Two') > atomMarkup.indexOf('Ten')) throw new Error('External atom consumer failed');
 const attributes: PuppertinoRowProps = { 'data-row-id': 'example' };
 const primitiveMarkup = renderToStaticMarkup(createElement(HookConsumer));
+if (renderToStaticMarkup(createElement(ContextMenu, { position: null, actions: [], ariaLabel: 'Commands', onClose: () => {} })) !== '') throw new Error('Closed menu SSR failed');
 if (!primitiveMarkup.includes('Resize Title column') || !primitiveMarkup.includes('Select Standalone item') || primitiveMarkup.indexOf('Two') > primitiveMarkup.indexOf('Ten')) throw new Error('Shared primitive consumer failed');
 if (!markup.includes('aria-label="Inventory"')) throw new Error('Missing table label');
 if (markup.indexOf('Two') >= markup.indexOf('Ten')) throw new Error('Numeric sorting failed');

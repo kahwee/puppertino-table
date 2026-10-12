@@ -1,5 +1,6 @@
 import type { Cell, Row, RowData } from '@tanstack/react-table';
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import type { DensityMetrics, TableDensity } from './density.js';
 import type { PuppertinoTableInstance, puppertinoTableFeatures } from './model.js';
 import type { ColumnResizeOptions } from './resize-types.js';
 import type { PuppertinoTableOptions } from './table-options.js';
@@ -45,6 +46,8 @@ export interface PuppertinoTableProps<T extends RowData>
   ariaLabel: string;
   caption?: ReactNode;
   className?: string;
+  density?: TableDensity;
+  densityMetrics?: DensityMetrics;
 }
 export interface TableHeaderProps<T extends RowData> {
   table: PuppertinoTableInstance<T>;

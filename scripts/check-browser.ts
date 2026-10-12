@@ -5,6 +5,7 @@ import { createServer } from 'node:http';
 import path from 'node:path';
 import axe from 'axe-core';
 import { chromium } from 'playwright';
+import { checkResourceWorkspaces } from './check-resource-workspaces.js';
 
 async function serve(directory: string, mount = '/') {
   const root = path.resolve(directory);
@@ -231,7 +232,10 @@ try {
     }
     await page.close();
   }
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const page = await browser.newPage({
+    viewport: { width: 1280, height: 900 },
+    reducedMotion: 'reduce',
+  });
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto(`${stories.base}/?path=/story/puppertino-table--default`);
   await page.frameLocator('#storybook-preview-iframe').getByRole('table').waitFor();
@@ -621,12 +625,13 @@ try {
     );
     await page.screenshot({ path: `${evidence}/${story}.png` });
   }
+  await checkResourceWorkspaces(page, stories.base, evidence);
   await page.close();
   assert.deepEqual(errors, []);
   console.log(
     process.env.PUPPERTINO_STORIES_ONLY
-      ? 'Storybook stories, customization, hook layouts, shared resize controllers and anchored gestures with controlled/local/atom selection passed.'
-      : '512 repeated pointer drags, geometry, limits, keyboard/reset/cancellation/persistence, selection, disabled/unmount recovery, standalone-control cancellation, 267 rows across six pages, six light/dark axe layouts, Storybook customization and anchored gestures with controlled/local/atom selection passed.',
+      ? 'Storybook stories, customization, hook layouts, shared resize controllers and anchored gestures with controlled/local/atom selection, shared density, resizable browser panels and keyboard/context-menu workflows passed.'
+      : '512 repeated pointer drags, geometry, limits, keyboard/reset/cancellation/persistence, selection, disabled/unmount recovery, standalone-control cancellation, 267 rows across six pages, six light/dark axe layouts, Storybook customization and anchored gestures with controlled/local/atom selection, shared density, resizable browser panels and keyboard/context-menu workflows passed.',
   );
 } finally {
   await browser.close();

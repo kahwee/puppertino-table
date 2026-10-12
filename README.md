@@ -103,6 +103,57 @@ function ItemsTable() {
 
 `PuppertinoTableAtoms` is exported for typed custom integrations. A state slice has one owner: supplying an atom together with that slice's value or callback throws a clear error. Different slices may use different ownership modes. Atom bindings must stay identical for the lifetime of the table, as required by the installed v9 adapter; changing bindings requires remounting with a new React `key`. You may recreate the map when it contains the same atom instances. Initial sorting/selection values apply only to internally owned slices; initialize app atoms yourself. Atom-owned sizing bypasses automatic preference restoration, and the complete component also disables automatic saving. In primitive layouts, omit `storageKey` from resize options when the app owns sizing restoration and saving. Read with `atom.get()` for a snapshot, or use `useSelector(atom)` in the smallest component that needs reactive state. No callback is needed for atom-owned slices. Width changes retain the existing geometry subscription rather than rerendering the table's row body.
 
+### Shared density
+
+The density, column-browser and context-menu APIs below are unreleased and available on main. Pin a Git commit until an npm release includes them.
+
+Complete tables accept `density="native" | "compact" | "comfortable"`. Native is the default and preserves the existing Puppertino table geometry. Compact uses 24px minimum rows, 3px block padding, 8px inline padding and 16px icons. Comfortable uses 36px rows, 8px block padding, 12px inline padding and 20px icons. Content can make a row taller; text and icons are never clipped to force a height.
+
+Use `DensityScope` around layouts built with the table primitives, or pass `densityMetrics` to `PuppertinoTable` and `ColumnBrowser` for explicit overrides. Metrics are CSS pixels: `rowHeight`, `rowPaddingBlock`, `rowPaddingInline` and `iconSize`. `DensityScope` calls the same object `metrics`. Heights and icon sizes must be positive; padding may be zero. Styles stay scoped to each wrapper, so adjacent components can use different densities. Put caller-owned artwork in a `.pt-icon` span to share sizing; the library does not replace your icons.
+
+```tsx
+<PuppertinoTable {...tableProps} density="compact" densityMetrics={{ iconSize: 18 }} />
+<DensityScope density="comfortable" metrics={{ rowPaddingInline: 16 }}>
+  <MyCustomLayout />
+</DensityScope>
+```
+
+The corresponding CSS properties are `--pt-row-height`, `--pt-row-padding-block`, `--pt-row-padding-inline` and `--pt-icon-size`. Explicit metrics are applied on the scope; ordinary host CSS can customize them. Native density leaves default table header/cell styling intact unless metrics are explicitly supplied. Density changes layout only, not sorting, selection or saved widths.
+
+### Column-browser component
+
+`ColumnBrowser` renders caller-owned panels in order; the last is the current panel. Ancestors scroll vertically on their own. The surface scrolls horizontally and reveals the current panel beside whole ancestors after navigation, resizing or container changes. Each ancestor can be resized independently with a pointer or the keyboard, using the same cancel/reset lifecycle as table columns. The current panel fills spare room and fits containers narrower than its preferred minimum.
+
+```tsx
+import { ColumnBrowser, ColumnBrowserItem } from 'puppertino-table';
+
+<ColumnBrowser ariaLabel="Projects" density="compact" panels={[
+  { id: 'workspace', label: 'Workspace', content:
+    <ColumnBrowserItem pathSelected onClick={showProjects}>Projects</ColumnBrowserItem> },
+  { id: 'projects', label: 'Projects', width: 260, minWidth: 160, maxWidth: 600,
+    content: projectButtons },
+  { id: 'current', label: 'Selected project', content: resourceButtons },
+]} />
+```
+
+Panels require unique stable `id`, an accessible `label` for their region, and caller-rendered `content`. Ancestors default to 224px, bounded to 120–640px. `minimumCurrentWidth` defaults to 288px. Give the component or its parent a bounded height; it fills that height. The default density is compact. Optional `widths` and `onWidthsChange` provide controlled ancestor sizing. Widths without a callback are read-only and omit resize handles. `resizable={false}` or `resizeDisabled` cancels active gestures; `cancelMediaQuery` can cancel when a responsive layout removes the controls. Panel removal and changed bounds also cancel. Completed gestures remain in local state until unmount; the component does not write preferences. Change callbacks include previews and cancellations, so they are not approval or persistence receipts.
+
+`ColumnBrowserItem` is a native button with `icon`, `trailing`, `selected` and `pathSelected` slots/states. It shares density metrics, ellipsis, hover and keyboard-focus styling. Selection and path indication are separate. Standard button props provide actions, labels, disabled state and context-menu triggers. The browser does not fetch records, enter folders, select items or open documents. Compose your navigation, `useRowSelectionGestures`, and custom content around it. Its geometry is measured only after hydration; initial server markup uses deterministic panel widths.
+
+### Right-click and keyboard context menus
+
+`useContextMenu<T>()` supplies `state`, `open(context, event)`, `close()` and `getTriggerProps(context)`. The trigger props open on right-click, Shift+F10 or the Context Menu key and advertise a menu popup. They are opt-in: items without them keep the browser's native context menu. If you already handle key events, compose that handler with the returned `onKeyDown` instead of overwriting either one.
+
+```tsx
+const menu = useContextMenu<string>();
+<ColumnBrowserItem {...menu.getTriggerProps(item.id)}>{item.name}</ColumnBrowserItem>
+<ContextMenu ariaLabel="Item commands" position={menu.state?.position ?? null}
+  returnFocus={menu.state?.returnFocus} onClose={menu.close}
+  actions={menu.state ? commandsFor(menu.state.context) : []} />
+```
+
+For tables, spread trigger props in `getRowProps` and make the target keyboard-focusable, or attach them to a button inside a cell. `ContextMenu` accepts actions with stable `id`, `label`, optional `disabled`, and `onSelect`. It fits the viewport, focuses the first enabled action, supports arrows/Home/End, skips disabled actions, closes on Escape/Tab/outside pointer/scroll/resize/blur, and restores the invoking target's focus. It uses a manual popover where supported so a table or panel's overflow does not clip it. Place it in the same themed DOM subtree as its trigger. Commands, right-click selection policy and authorization remain caller-owned; the component never invents file operations.
+
 ### Anchored item selection in custom layouts
 
 `useRowSelectionGestures(table, options)` adds opt-in desktop item selection to a custom list, card grid or table. A normal click replaces the selection, Command/Ctrl-click toggles one item, and Shift-click extends or shrinks a range from its original anchor. Shift with a toggle modifier adds a range. This policy is separate from the existing checkbox range behavior.
@@ -152,7 +203,7 @@ const layout = fitColumnBrowser({
 // { currentWidth: 500, scrollLeft: 448, visibleAncestors: 1 }
 ```
 
-Widths are outer panel widths in CSS pixels; use border-box panels and measure the available scroll surface. The final panel takes spare room and fits surfaces narrower than its preferred minimum. A root with no ancestors takes the entire width. Dimensions must be finite and nonnegative, the ancestor width positive, and the count an integer; invalid inputs throw `RangeError`. The helper provides geometry only. The caller owns resize observation, scrolling, styling, hierarchy, loading and data access; no new column-browser component or folder API is implied.
+Widths are outer panel widths in CSS pixels; use border-box panels and measure the available scroll surface. The final panel takes spare room and fits surfaces narrower than its preferred minimum. A root with no ancestors takes the entire width. Dimensions must be finite and nonnegative, the ancestor width positive, and the count an integer; invalid inputs throw `RangeError`. The helper remains available for manual layouts. `ColumnBrowser` owns resize observation and scrolling for caller-rendered panels; hierarchy, loading and data access remain app-owned.
 
 ### Resizing
 
