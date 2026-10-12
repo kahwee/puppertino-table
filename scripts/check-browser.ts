@@ -31,6 +31,7 @@ async function serve(directory: string, mount = '/') {
         '.svg': 'image/svg+xml',
         '.png': 'image/png',
         '.mp4': 'video/mp4',
+        '.webm': 'video/webm',
       };
       const bytes = await readFile(file);
       response.setHeader('Content-Type', types[path.extname(file)] || 'application/octet-stream');

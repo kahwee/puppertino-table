@@ -2,25 +2,35 @@ import assert from 'node:assert/strict';
 import type { Page } from 'playwright';
 
 export async function checkStorybookDocs(page: Page, base: string, evidence: string) {
+  page.setDefaultTimeout(15000);
+  console.log('Checking Storybook docs: render and readable source');
   await page.goto(`${base}/iframe.html?id=examples-finder--docs&viewMode=docs`);
   await page.locator('#finder-walkthrough').waitFor();
   const app = page.locator('#story--examples-finder--file-table .finder-demo-window');
   await app.getByRole('table', { name: 'Project files' }).waitFor();
   assert.equal(await page.locator('video').count(), 3);
   assert.equal(await page.locator('img[src*="/media/"]').count(), 4);
-  await page.waitForFunction(() =>
-    document.body.innerText.includes('createPuppertinoColumnHelper'),
+  await page.waitForFunction(
+    () => document.body.innerText.includes('createPuppertinoColumnHelper'),
+    undefined,
+    { timeout: 15000 },
   );
   assert.ok(
     !(await page.locator('body').innerText()).includes('<v\n'),
     'Sources use readable library recipes, not minified demo component names',
   );
   for (const video of await page.locator('video').all()) {
+    console.log(`Checking Storybook video: ${await video.getAttribute('aria-label')}`);
     assert.equal(await video.getAttribute('autoplay'), null);
     assert.notEqual(await video.getAttribute('controls'), null);
     await video.evaluate(async (element) => {
       const player = element as HTMLVideoElement;
-      await player.play();
+      await Promise.race([
+        player.play(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Screencast playback timed out')), 15000),
+        ),
+      ]);
       player.pause();
     });
     assert.ok(
@@ -28,6 +38,7 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
       'Each embedded screencast decodes',
     );
   }
+  console.log('Checking Storybook docs: live app reset and controls');
   await app.getByRole('row').filter({ hasText: 'Project brief.pdf' }).click({ button: 'right' });
   await app.getByRole('menuitem', { name: 'Move to Archive', exact: true }).click();
   assert.equal(await app.getByRole('row').filter({ hasText: 'Project brief.pdf' }).count(), 0);
@@ -41,14 +52,19 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
       document
         .querySelector('#story--examples-finder--file-table [data-pt-density]')
         ?.getAttribute('data-pt-density') === 'comfortable',
+    undefined,
+    { timeout: 15000 },
   );
   await page.locator('input[name="initialDark"]').focus();
   await page.locator('input[name="initialDark"]').press('Space');
-  await page.waitForFunction(() =>
-    document.querySelector('#story--examples-finder--file-table .p-dark-mode'),
+  await page.waitForFunction(
+    () => document.querySelector('#story--examples-finder--file-table .p-dark-mode'),
+    undefined,
+    { timeout: 15000 },
   );
   await page.screenshot({ path: `${evidence}/finder-walkthrough.png` });
 
+  console.log('Checking Storybook docs: overview and manager navigation');
   await page.goto(`${base}/iframe.html?id=start-here-overview--docs&viewMode=docs`);
   await page.locator('#puppertino-table').waitFor();
   assert.equal(

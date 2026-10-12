@@ -101,6 +101,23 @@ async function finish(context, page, name) {
       '-y',
       '-i',
       input,
+      '-c:v',
+      'libvpx-vp9',
+      '-b:v',
+      '0',
+      '-crf',
+      '36',
+      '-an',
+      path.join(media, `${name}.webm`),
+    ],
+    { stdio: 'pipe' },
+  );
+  execFileSync(
+    'ffmpeg',
+    [
+      '-y',
+      '-i',
+      input,
       '-vf',
       'fps=12,scale=900:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer',
       '-loop',
