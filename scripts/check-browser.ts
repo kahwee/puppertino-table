@@ -551,12 +551,82 @@ try {
       );
     }
   }
+  for (const story of [
+    'item-selection-gestures',
+    'uncontrolled-item-gestures',
+    'atom-item-gestures',
+  ]) {
+    await page.goto(`${stories.base}/iframe.html?id=puppertino-table--${story}&viewMode=story`);
+    const items = page.getByRole('list', { name: 'Selectable items' }).getByRole('button');
+    const count = page.getByLabel('Gesture selection count');
+    await items.first().waitFor();
+    await items.nth(0).click();
+    await items.nth(4).click({ modifiers: ['Shift'] });
+    assert.equal(
+      await count.textContent(),
+      '5 selected',
+      `${story} includes caller-owned leading items`,
+    );
+    await page.getByRole('button', { name: 'Switch layout' }).click();
+    await items.nth(2).click({ modifiers: ['Shift'] });
+    assert.equal(
+      await count.textContent(),
+      '3 selected',
+      `${story} retains its anchor across layouts`,
+    );
+    await items.nth(1).click({ modifiers: ['Control'] });
+    assert.equal(await count.textContent(), '2 selected');
+    await items.nth(5).click({ modifiers: ['Meta'] });
+    assert.equal(await count.textContent(), '3 selected');
+    await items.nth(3).focus();
+    await items.nth(3).press('Space');
+    assert.equal(
+      await count.textContent(),
+      '1 selected',
+      `${story} native keyboard activation selects`,
+    );
+    for (const label of [
+      'Disable gestures',
+      'Disable gesture hook',
+      ...(story === 'item-selection-gestures' ? ['Read-only selection'] : []),
+    ]) {
+      await page.getByRole('checkbox', { name: label, exact: true }).check();
+      await items.nth(0).dispatchEvent('click');
+      await page.getByRole('button', { name: 'Clear selection' }).dispatchEvent('click');
+      assert.equal(
+        await count.textContent(),
+        '1 selected',
+        `${story} ${label} guards imperative gestures`,
+      );
+      await page.getByRole('checkbox', { name: label, exact: true }).uncheck();
+      await items.nth(2).click({ modifiers: ['Shift'] });
+      assert.equal(
+        await count.textContent(),
+        '2 selected',
+        `${story} blocked gestures preserve the anchor`,
+      );
+      await items.nth(3).click();
+    }
+    await page.getByRole('button', { name: 'Clear selection' }).click();
+    assert.equal(await count.textContent(), '0 selected');
+    await items.nth(0).click();
+    await items.nth(2).click({ modifiers: ['Shift'] });
+    await page.addScriptTag({ content: axe.source });
+    assert.deepEqual(
+      (await page.evaluate(async () => (await (window as any).axe.run(document)).violations)).map(
+        (violation: any) => violation.id,
+      ),
+      [],
+      story,
+    );
+    await page.screenshot({ path: `${evidence}/${story}.png` });
+  }
   await page.close();
   assert.deepEqual(errors, []);
   console.log(
     process.env.PUPPERTINO_STORIES_ONLY
-      ? 'Twenty Storybook stories, customization, hook layouts and shared resize controllers passed.'
-      : '512 repeated pointer drags, geometry, limits, keyboard/reset/cancellation/persistence, selection, disabled/unmount recovery, standalone-control cancellation, 267 rows across six pages, six light/dark axe layouts and twenty Storybook stories, customization, hook layouts and shared resize controllers passed.',
+      ? 'Storybook stories, customization, hook layouts, shared resize controllers and anchored gestures with controlled/local/atom selection passed.'
+      : '512 repeated pointer drags, geometry, limits, keyboard/reset/cancellation/persistence, selection, disabled/unmount recovery, standalone-control cancellation, 267 rows across six pages, six light/dark axe layouts, Storybook customization and anchored gestures with controlled/local/atom selection passed.',
   );
 } finally {
   await browser.close();
