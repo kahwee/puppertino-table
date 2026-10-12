@@ -1,24 +1,37 @@
 import type { ResizeEnvironment } from './resize-controller.js';
+
 const activeClasses = new Map<string, number>();
 function markDrag(name: string, delta: number) {
   const count = Math.max(0, (activeClasses.get(name) || 0) + delta);
-  if (count) activeClasses.set(name, count); else activeClasses.delete(name);
+  if (count) activeClasses.set(name, count);
+  else activeClasses.delete(name);
   document.documentElement.classList.toggle(name, count > 0);
 }
 /** Browser effects are installed only when a mounted hook retains a controller. */
 export const resizeEnvironment: ResizeEnvironment = {
   listenCancel(cancel) {
-    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape' && cancel()) event.preventDefault(); };
-    const blur = () => { cancel(); };
-    window.addEventListener('keydown', escape); window.addEventListener('blur', blur);
-    return () => { window.removeEventListener('keydown', escape); window.removeEventListener('blur', blur); };
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && cancel()) event.preventDefault();
+    };
+    const blur = () => {
+      cancel();
+    };
+    window.addEventListener('keydown', onEscape);
+    window.addEventListener('blur', blur);
+    return () => {
+      window.removeEventListener('keydown', onEscape);
+      window.removeEventListener('blur', blur);
+    };
   },
-  isCompact: query => !!(query && window.matchMedia(query).matches),
+  isCompact: (query) => !!(query && window.matchMedia(query).matches),
   startGesture(target, pointer, className, query, cancel) {
-    target.focus(); target.setPointerCapture(pointer);
+    target.focus();
+    target.setPointerCapture(pointer);
     markDrag(className, 1);
     const compact = query ? window.matchMedia(query) : undefined;
-    const change = () => { if (compact?.matches) cancel(); };
+    const change = () => {
+      if (compact?.matches) cancel();
+    };
     compact?.addEventListener('change', change);
     let released = false;
     return () => {

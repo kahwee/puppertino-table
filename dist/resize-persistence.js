@@ -4,5 +4,7 @@ export function persistResize({ adapter, options }) {
         if (options.storageKey)
             (options.storage || localStorage).setItem(options.storageKey, JSON.stringify(adapter.snapshot()));
     }
-    catch { /* Storage is optional. */ }
+    catch {
+        /* Storage is optional. */
+    }
 }

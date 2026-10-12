@@ -16,8 +16,10 @@ export function createResizeController(environment, persist) {
         return true;
     };
     const owns = (member, pointer) => drag?.member === member && drag.pointer === pointer;
-    const cancelMember = (member) => { if (drag?.member === member)
-        finish(true); };
+    const cancelMember = (member) => {
+        if (drag?.member === member)
+            finish(true);
+    };
     return {
         cancelMember,
         retain(member) {
@@ -38,12 +40,25 @@ export function createResizeController(environment, persist) {
             };
         },
         begin(member, id, x, pointer, target, button) {
-            if (button !== 0 || member.options.enabled === false || drag || !members.has(member) || environment.isCompact(member.options.cancelMediaQuery))
+            if (button !== 0 ||
+                member.options.enabled === false ||
+                drag ||
+                !members.has(member) ||
+                environment.isCompact(member.options.cancelMediaQuery))
                 return false;
             const before = member.adapter.snapshot();
             if (!Number.isFinite(before[id]))
                 return false;
-            const active = { member, id, x, width: before[id], before, pointer, query: member.options.cancelMediaQuery, cleanup: () => { } };
+            const active = {
+                member,
+                id,
+                x,
+                width: before[id],
+                before,
+                pointer,
+                query: member.options.cancelMediaQuery,
+                cleanup: () => { },
+            };
             drag = active;
             try {
                 active.cleanup = environment.startGesture(target, pointer, member.options.dragClassName ?? 'pt-resizing', active.query, () => finish(true));
@@ -57,14 +72,19 @@ export function createResizeController(environment, persist) {
         move(member, pointer, x) {
             if (!owns(member, pointer) || !drag)
                 return;
-            member.adapter.apply({ ...member.adapter.snapshot(), [drag.id]: clampSize(drag.width + x - drag.x, member.adapter.bounds(drag.id)) });
+            member.adapter.apply({
+                ...member.adapter.snapshot(),
+                [drag.id]: clampSize(drag.width + x - drag.x, member.adapter.bounds(drag.id)),
+            });
         },
         end(member, pointer) {
             if (owns(member, pointer))
                 finish(member.options.enabled === false || environment.isCompact(drag?.query));
         },
-        cancel(member, pointer) { if (owns(member, pointer))
-            finish(true); },
+        cancel(member, pointer) {
+            if (owns(member, pointer))
+                finish(true);
+        },
         reset(member, id) {
             if (!members.has(member) || member.options.enabled === false || drag)
                 return false;
@@ -83,7 +103,15 @@ export function createResizeController(environment, persist) {
             const widths = member.adapter.snapshot();
             const bounds = member.adapter.bounds(id);
             const step = shift ? 40 : 16;
-            const next = key === 'ArrowLeft' ? widths[id] - step : key === 'ArrowRight' ? widths[id] + step : key === 'Home' ? bounds.minSize : key === 'End' ? bounds.maxSize : undefined;
+            const next = key === 'ArrowLeft'
+                ? widths[id] - step
+                : key === 'ArrowRight'
+                    ? widths[id] + step
+                    : key === 'Home'
+                        ? bounds.minSize
+                        : key === 'End'
+                            ? bounds.maxSize
+                            : undefined;
             if (next === undefined)
                 return false;
             member.adapter.apply({ ...widths, [id]: clampSize(next, bounds) });

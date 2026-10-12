@@ -1,5 +1,5 @@
-import { type ColumnSizeBounds } from './sizing.js';
 import type { ColumnResizeOptions } from './resize-types.js';
+import { type ColumnSizeBounds } from './sizing.js';
 export type ResizeWidths = Record<string, number>;
 export interface ResizeAdapter {
     snapshot(): ResizeWidths;

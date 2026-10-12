@@ -217,6 +217,17 @@ pnpm build:storybook # static Storybook in storybook-static/
 
 Stories cover local sorting, host-owned order, range selection, keyboard resizing, dark mode, narrow layouts, empty/disabled/read-only states, grouped headers, a different row schema with currency cells, customized/leading rows, a shared-primitive hook layout, and standalone checkbox selection. Story controls expose selection, resizing, disabled state and sorting ownership.
 
+## Code quality
+
+[Biome](https://biomejs.dev/) is pinned as a development dependency. It checks formatting, import organization and recommended lint rules for library code, examples, tests and configuration. Generated `dist` and build/test artifacts are excluded; the compiler owns their formatting.
+
+```sh
+pnpm lint   # read-only CI checks; warnings fail the command
+pnpm format # apply formatting, import organization and safe lint fixes
+```
+
+`pnpm check` starts with `pnpm lint`, so the existing verification and release workflows enforce the same rules. Keep suppressions local and explain the behavior they protect. The keyboard scroll region, interactive resize separator, drag CSS overrides and gesture-cancellation effect have documented exceptions. Only the browser regression harness permits `any` and non-null assertions for injected browser globals and asserted DOM fixtures; library code retains those checks.
+
 ## Verification
 
 ```sh
@@ -245,3 +256,9 @@ The manually dispatched **Prepare npm package** GitHub Actions workflow performs
 ## License
 
 MIT. Puppertino, React and TanStack Table remain independently maintained projects under their own licenses.
+
+## Dependency maintenance
+
+Dependabot checks npm dependencies and GitHub Actions every Monday at 08:00 America/Los_Angeles. It groups compatible npm patch/minor updates and proposes major changes separately. React and React DOM, including their type packages, stay on the supported React 19 line; versions 20 and later are excluded.
+
+Dependency updates must pass verification on the current PR head before merging. Review major migrations separately. Releases remain explicitly authorized actions; dependency maintenance does not publish npm versions or alter trusted-publisher settings.

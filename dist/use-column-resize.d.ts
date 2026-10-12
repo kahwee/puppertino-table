@@ -1,5 +1,5 @@
 import type { RowData } from '@tanstack/react-table';
-import { type PointerEvent, type KeyboardEvent } from 'react';
+import { type KeyboardEvent, type PointerEvent } from 'react';
 import type { PuppertinoTableInstance } from './model.js';
 import type { ColumnResizeOptions } from './resize-types.js';
 export type { ColumnResizeOptions } from './resize-types.js';

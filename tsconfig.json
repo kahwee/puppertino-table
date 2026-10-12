@@ -1,27 +1,14 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "lib": [
-      "ES2023",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "strict": true,
     "skipLibCheck": true,
     "jsx": "react-jsx",
     "esModuleInterop": true,
-    "types": [
-      "node",
-      "vite/client"
-    ]
+    "types": ["node", "vite/client"]
   },
-  "include": [
-    "src",
-    "demo",
-    "tests",
-    "vite.config.ts",
-    ".storybook"
-  ]
+  "include": ["src", "demo", "tests", "vite.config.ts", ".storybook"]
 }

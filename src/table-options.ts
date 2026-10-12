@@ -1,4 +1,4 @@
-import type { RowData, SortingState, RowSelectionState, OnChangeFn } from '@tanstack/react-table';
+import type { OnChangeFn, RowData, RowSelectionState, SortingState } from '@tanstack/react-table';
 import type { PuppertinoColumnDef } from './model.js';
 /** Shared state contract for complete tables and custom layouts. */
 export interface PuppertinoTableOptions<T extends RowData> {
