@@ -44,6 +44,25 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   assert.equal(await app.getByRole('row').filter({ hasText: 'Project brief.pdf' }).count(), 0);
   await app.getByRole('button', { name: 'Reset demo', exact: true }).click();
   await app.getByRole('row').filter({ hasText: 'Project brief.pdf' }).waitFor();
+  // Live behavior controls must preserve the app's current search.
+  await app.getByRole('searchbox', { name: 'Search files' }).fill('brief');
+  const toggleControl = async (name: string) => {
+    const control = page.locator(`input[name="${name}"]`);
+    await control.focus();
+    await control.press('Space');
+  };
+  await toggleControl('selectable');
+  await page.waitForFunction(
+    () => !document.querySelector('#story--examples-finder--file-table input[type="checkbox"]'),
+  );
+  assert.equal(await app.getByRole('searchbox').inputValue(), 'brief');
+  await toggleControl('resizable');
+  await page.waitForFunction(
+    () => !document.querySelector('#story--examples-finder--file-table [role="separator"]'),
+  );
+  await toggleControl('selectable');
+  await toggleControl('resizable');
+  await app.getByRole('searchbox').fill('');
   await page.locator('input[type="radio"][value="columns"]').check();
   await app.getByRole('region', { name: 'Workspace columns' }).waitFor();
   await page.locator('input[type="radio"][value="comfortable"]').check();

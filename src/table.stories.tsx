@@ -44,6 +44,9 @@ const meta = {
   title: 'Puppertino/Table',
   component: Example,
   parameters: {
+    controls: {
+      include: ['disabled', 'selectable', 'resizable', 'manualSorting', 'density', 'ariaLabel'],
+    },
     docs: {
       description: {
         component:
@@ -51,11 +54,30 @@ const meta = {
       },
     },
   },
+  args: {
+    disabled: false,
+    selectable: true,
+    resizable: true,
+    manualSorting: false,
+    density: 'native',
+    ariaLabel: 'People',
+  },
   argTypes: {
-    disabled: { control: 'boolean' },
-    selectable: { control: 'boolean' },
-    resizable: { control: 'boolean' },
-    manualSorting: { control: 'boolean' },
+    disabled: { control: 'boolean', description: 'Disable sorting, selection and resizing.' },
+    selectable: { control: 'boolean', description: 'Show row selection checkboxes.' },
+    resizable: { control: 'boolean', description: 'Enable pointer and keyboard column resizing.' },
+    manualSorting: {
+      control: 'boolean',
+      description: 'Preserve app-owned row order; disable to sort locally.',
+    },
+    density: {
+      control: 'inline-radio',
+      options: ['native', 'compact', 'comfortable'],
+      description: 'Use native Puppertino spacing or an explicit row density.',
+    },
+    ariaLabel: { control: 'text', description: 'Accessible name for the table.' },
+    data: { control: false },
+    columns: { control: false },
   },
 } satisfies Meta<typeof Example>;
 export default meta;
@@ -170,12 +192,17 @@ function ItemGestureExample({ ownership }: { ownership: 'controlled' | 'local' |
 }
 
 export const ItemSelectionGestures: Story = {
+  parameters: { controls: { disable: true } },
   render: () => <ItemGestureExample ownership="controlled" />,
 };
 export const UncontrolledItemGestures: Story = {
+  parameters: { controls: { disable: true } },
   render: () => <ItemGestureExample ownership="local" />,
 };
-export const AtomItemGestures: Story = { render: () => <ItemGestureExample ownership="atom" /> };
+export const AtomItemGestures: Story = {
+  parameters: { controls: { disable: true } },
+  render: () => <ItemGestureExample ownership="atom" />,
+};
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -240,6 +267,7 @@ export const ServerOwnedOrder: Story = {
   },
 };
 export const DifferentSchema: Story = {
+  parameters: { controls: { disable: true } },
   render: () => {
     const [sorting, setSorting] = useState<SortingState>([]);
     return (
@@ -330,7 +358,10 @@ function StandaloneResizeExample() {
     </>
   );
 }
-export const StandaloneResize: Story = { render: () => <StandaloneResizeExample /> };
+export const StandaloneResize: Story = {
+  parameters: { controls: { disable: true } },
+  render: () => <StandaloneResizeExample />,
+};
 
 function CustomizedRowsExample({ empty = false }: { empty?: boolean }) {
   const [active, setActive] = useState('');
@@ -374,8 +405,14 @@ function CustomizedRowsExample({ empty = false }: { empty?: boolean }) {
     </>
   );
 }
-export const CustomizedRows: Story = { render: () => <CustomizedRowsExample /> };
-export const LeadingRowsWhenEmpty: Story = { render: () => <CustomizedRowsExample empty /> };
+export const CustomizedRows: Story = {
+  parameters: { controls: { disable: true } },
+  render: () => <CustomizedRowsExample />,
+};
+export const LeadingRowsWhenEmpty: Story = {
+  parameters: { controls: { disable: true } },
+  render: () => <CustomizedRowsExample empty />,
+};
 
 function HookLayoutExample() {
   const [readOnly, setReadOnly] = useState(false);
@@ -416,9 +453,13 @@ function HookLayoutExample() {
     </>
   );
 }
-export const HookLayout: Story = { render: () => <HookLayoutExample /> };
+export const HookLayout: Story = {
+  parameters: { controls: { disable: true } },
+  render: () => <HookLayoutExample />,
+};
 
 export const IndependentTables: Story = {
+  parameters: { controls: { disable: true } },
   render: () => (
     <>
       <Example ariaLabel="First table" />
@@ -460,7 +501,10 @@ function UncontrolledStateExample() {
     </>
   );
 }
-export const UncontrolledState: Story = { render: () => <UncontrolledStateExample /> };
+export const UncontrolledState: Story = {
+  parameters: { controls: { disable: true } },
+  render: () => <UncontrolledStateExample />,
+};
 
 function CheckboxPrimitiveExample() {
   const table = usePuppertinoTable({
@@ -490,7 +534,10 @@ function CheckboxPrimitiveExample() {
     </table>
   );
 }
-export const CheckboxPrimitive: Story = { render: () => <CheckboxPrimitiveExample /> };
+export const CheckboxPrimitive: Story = {
+  parameters: { controls: { disable: true } },
+  render: () => <CheckboxPrimitiveExample />,
+};
 
 function ControlledSizingExample() {
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({ name: 280 });
@@ -512,6 +559,7 @@ function ControlledSizingExample() {
   );
 }
 export const ControlledSizing: Story = {
+  parameters: { controls: { disable: true } },
   render: () => <ControlledSizingExample />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -551,6 +599,7 @@ function AtomOwnershipExample() {
   );
 }
 export const ExternalAtoms: Story = {
+  parameters: { controls: { disable: true } },
   render: () => <AtomOwnershipExample />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

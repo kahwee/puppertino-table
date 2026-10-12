@@ -350,6 +350,35 @@ function ResourceBrowser({
 const meta = {
   title: 'Puppertino/Resource browser',
   component: ResourceBrowser,
+  args: {
+    tableView: false,
+    controlled: false,
+    readOnly: false,
+    persistent: false,
+    delegated: false,
+  },
+  argTypes: {
+    tableView: {
+      control: 'boolean',
+      description: 'Display resources as a table instead of columns.',
+    },
+    controlled: {
+      control: 'boolean',
+      description: 'Let the example own panel widths.',
+      if: { arg: 'tableView', truthy: false },
+    },
+    readOnly: {
+      control: 'boolean',
+      description: 'Keep controlled widths fixed by omitting the change callback.',
+      if: { arg: 'controlled', truthy: true },
+    },
+    persistent: {
+      control: 'boolean',
+      description: 'Persist completed panel widths in story-specific localStorage.',
+      if: { arg: 'tableView', truthy: false },
+    },
+    delegated: { control: 'boolean', description: 'Use one workspace context-menu trigger.' },
+  },
   parameters: {
     layout: 'fullscreen',
     docs: {
@@ -439,6 +468,7 @@ export const CustomStyling: StoryObj = {
     </DensityScope>
   ),
   parameters: {
+    controls: { disable: true },
     docs: {
       description: {
         story:
@@ -522,4 +552,7 @@ function DensityInheritanceExample() {
     </main>
   );
 }
-export const DensityInheritance: StoryObj = { render: () => <DensityInheritanceExample /> };
+export const DensityInheritance: StoryObj = {
+  parameters: { controls: { disable: true } },
+  render: () => <DensityInheritanceExample />,
+};

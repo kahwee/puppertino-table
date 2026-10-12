@@ -97,11 +97,19 @@ function FinderDemo({
   initialDark = false,
   initialDensity = 'compact',
   initialPreview = true,
+  selectable = true,
+  resizable = true,
+  disabled = false,
+  manualSorting = false,
 }: {
   initialView?: FinderView;
   initialDark?: boolean;
   initialDensity?: 'compact' | 'comfortable';
   initialPreview?: boolean;
+  selectable?: boolean;
+  resizable?: boolean;
+  disabled?: boolean;
+  manualSorting?: boolean;
 }) {
   const [files, setFiles] = useState(initialFiles);
   const [folder, setFolder] = useState('Projects');
@@ -291,8 +299,10 @@ function FinderDemo({
                 getRowId={(file) => file.id}
                 getRowLabel={(file) => file.name}
                 ariaLabel="Project files"
-                selectable
-                manualSorting={false}
+                selectable={selectable}
+                resizable={resizable}
+                disabled={disabled}
+                manualSorting={manualSorting}
                 getRowProps={(row) => ({
                   tabIndex: 0,
                   ...menu.getTriggerProps(row.id),
@@ -529,6 +539,10 @@ const meta = {
     initialDark: false,
     initialDensity: 'compact',
     initialPreview: true,
+    selectable: true,
+    resizable: true,
+    disabled: false,
+    manualSorting: false,
   },
   render: (args) => (
     <FinderDemo
@@ -538,20 +552,57 @@ const meta = {
   ),
   argTypes: {
     initialView: {
+      name: 'Starting view',
+      table: { category: 'Workspace setup' },
       control: 'inline-radio',
       options: ['icons', 'list', 'columns', 'gallery'],
       description: 'Starting view. Changing a starting control restarts the fictional workspace.',
     },
     initialPreview: {
+      name: 'Select first preview',
+      table: { category: 'Workspace setup' },
+      if: { arg: 'initialView', eq: 'columns' },
       control: 'boolean',
-      description: 'Start column/gallery views with the first file preview selected.',
+      description:
+        'Start column view with the first file preview selected. Gallery always shows a preview.',
     },
-    initialDark: { control: 'boolean', description: 'Start with the Puppertino dark theme.' },
+    initialDark: {
+      name: 'Start in dark mode',
+      control: 'boolean',
+      table: { category: 'Workspace setup' },
+      description: 'Start with the Puppertino dark theme. Changing this restarts the workspace.',
+    },
     initialDensity: {
+      name: 'Starting density',
+      table: { category: 'Workspace setup' },
       control: 'inline-radio',
       options: ['compact', 'comfortable'],
       description:
         'Starting CSS density. The in-app selector changes density without resetting files.',
+    },
+    selectable: {
+      control: 'boolean',
+      description: 'Show row checkboxes. Updates without resetting the workspace.',
+      if: { arg: 'initialView', eq: 'list' },
+      table: { category: 'Table behavior' },
+    },
+    resizable: {
+      control: 'boolean',
+      description: 'Enable pointer and keyboard column resizing.',
+      if: { arg: 'initialView', eq: 'list' },
+      table: { category: 'Table behavior' },
+    },
+    disabled: {
+      control: 'boolean',
+      description: 'Disable table sorting, selection and resizing.',
+      if: { arg: 'initialView', eq: 'list' },
+      table: { category: 'Table behavior' },
+    },
+    manualSorting: {
+      control: 'boolean',
+      description: 'Keep app-owned row order when sorting changes; disable for local sorting.',
+      if: { arg: 'initialView', eq: 'list' },
+      table: { category: 'Table behavior' },
     },
   },
   parameters: {
