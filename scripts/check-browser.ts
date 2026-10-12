@@ -106,7 +106,7 @@ try {
   await page.frameLocator('#storybook-preview-iframe').getByRole('table').waitFor();
   await page.getByRole('link', { name: 'Default', exact: true }).waitFor();
   await page.screenshot({ path: `${evidence}/storybook-pages.png` });
-  for (const story of ['default', 'selection', 'keyboard-resize', 'dark', 'narrow', 'empty', 'disabled', 'read-only', 'server-owned-order', 'different-schema', 'grouped-headers', 'standalone-resize', 'customized-rows', 'leading-rows-when-empty', 'hook-layout', 'independent-tables', 'uncontrolled-state']) {
+  for (const story of ['default', 'selection', 'keyboard-resize', 'dark', 'narrow', 'empty', 'disabled', 'read-only', 'server-owned-order', 'different-schema', 'grouped-headers', 'standalone-resize', 'customized-rows', 'leading-rows-when-empty', 'hook-layout', 'independent-tables', 'uncontrolled-state', 'checkbox-primitive']) {
     if (story === 'standalone-resize') await page.addInitScript(() => {
       const target = window as any;
       const listeners = { keydown: new Set(), blur: new Set() };
@@ -161,11 +161,11 @@ try {
     if (story === 'hook-layout') {
       const table = page.getByRole('table', { name: 'Hook layout', exact: true });
       const first = await table.locator('tbody tr').first().textContent();
-      await page.getByRole('button', { name: 'Score', exact: true }).click();
+      await page.getByRole('button', { name: 'Sort by Score', exact: true }).click();
       assert.notEqual(await table.locator('tbody tr').first().textContent(), first, 'hook enables opt-in local sorting');
       await page.getByRole('checkbox').first().check();
       assert.equal(await page.getByRole('checkbox').first().isChecked(), true);
-      const handle = page.getByRole('separator', { name: 'Resize name column', exact: true });
+      const handle = page.getByRole('separator', { name: 'Resize Name column', exact: true });
       const before = Number(await handle.getAttribute('aria-valuenow'));
       await handle.press('ArrowRight');
       assert.equal(Number(await handle.getAttribute('aria-valuenow')), before + 16);
@@ -199,6 +199,12 @@ try {
       assert.equal(await table.locator('tbody tr').first().locator('td').getAttribute('colspan'), '5');
       assert.equal(await table.locator('tr[data-row-id]').first().getAttribute('data-column-count'), '5');
       assert.equal(await table.locator('td[data-selectable]').first().getAttribute('data-selectable'), 'true');
+    }
+    if (story === 'checkbox-primitive') {
+      const checkboxes = page.getByRole('table', { name: 'Custom checkbox layout' }).getByRole('checkbox');
+      await checkboxes.first().click(); await checkboxes.nth(2).click({ modifiers: ['Shift'] });
+      assert.equal(await page.locator('#storybook-root input:checked').count(), 3);
+      await checkboxes.nth(1).press('Space'); assert.equal(await checkboxes.nth(1).isChecked(), false);
     }
     if (story === 'empty') assert.ok(await page.getByText('No people match this view.').isVisible());
     if (story === 'disabled') assert.equal(await page.getByRole('checkbox').first().isDisabled(), true);
@@ -246,5 +252,5 @@ try {
     }
   }
   await page.close(); assert.deepEqual(errors, []);
-  console.log(process.env.PUPPERTINO_STORIES_ONLY ? 'Seventeen Storybook stories, customization, hook layouts and shared resize controllers passed.' : '512 repeated pointer drags, geometry, limits, keyboard/reset/cancellation/persistence, selection, disabled/unmount recovery, standalone-control cancellation, 267 rows across six pages, six light/dark axe layouts and seventeen Storybook stories, customization, hook layouts and shared resize controllers passed.');
+  console.log(process.env.PUPPERTINO_STORIES_ONLY ? 'Eighteen Storybook stories, customization, hook layouts and shared resize controllers passed.' : '512 repeated pointer drags, geometry, limits, keyboard/reset/cancellation/persistence, selection, disabled/unmount recovery, standalone-control cancellation, 267 rows across six pages, six light/dark axe layouts and eighteen Storybook stories, customization, hook layouts and shared resize controllers passed.');
 } finally { await browser.close(); await demo.close(); await stories.close(); }

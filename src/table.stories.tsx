@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useTable, type RowSelectionState, type SortingState } from '@tanstack/react-table';
-import { PuppertinoTable, usePuppertinoTable, ColumnResizeHandle, puppertinoTableFeatures, type PuppertinoTableProps, type PuppertinoColumnDef } from './index.js';
+import { type RowSelectionState, type SortingState } from '@tanstack/react-table';
+import { PuppertinoTable, usePuppertinoTable, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, type PuppertinoTableProps, type PuppertinoColumnDef } from './index.js';
 import { people, personColumns, products, productColumns, type Person } from '../demo/fixtures.js';
 import { expect, userEvent, within } from 'storybook/test';
 
@@ -54,9 +54,7 @@ const standaloneColumns: readonly PuppertinoColumnDef<Person>[] = [
 function StandaloneResizeExample() {
   const [controls, setControls] = useState(true);
   const [nameHandle, setNameHandle] = useState(true);
-  const table = useTable({ features: puppertinoTableFeatures, columns: standaloneColumns, data: people.slice(0, 2), getRowId: row => row.id,
-    state: { sorting: [] as SortingState, rowSelection: {} as RowSelectionState },
-  }, state => ({ sorting: state.sorting, rowSelection: state.rowSelection }));
+  const table = usePuppertinoTable({ columns: standaloneColumns, data: people.slice(0, 2), getRowId: row => row.id });
   return <>
     <button type="button" onClick={() => setNameHandle(!nameHandle)}>{nameHandle ? 'Remove' : 'Mount'} name handle</button>
     <button type="button" onClick={() => setControls(!controls)}>{controls ? 'Remove' : 'Mount'} resize controls</button>
@@ -95,16 +93,10 @@ function HookLayoutExample() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const table = usePuppertinoTable({ data: people.slice(0, 3), columns: personColumns, getRowId: row => row.id,
     sorting, onSortingChange: setSorting, selectable: true, manualSorting: false, rowSelection: readOnly ? {} : undefined });
-  return <><button type="button" onClick={() => setReadOnly(!readOnly)}>Toggle read-only selection</button><table.Subscribe source={table.atoms.columnSizing}>{() => <table className="p-table pt-table" aria-label="Hook layout" style={{ width: table.getTotalSize() }}>
-    <colgroup>{table.getAllLeafColumns().map(column => <col key={column.id} style={{ width: column.getSize() }} />)}</colgroup>
-    <thead>{table.getHeaderGroups().map(group => <tr key={group.id}>{group.headers.map(header => <th key={header.id} scope="col">
-      <button type="button" onClick={() => header.column.toggleSorting()}><table.FlexRender header={header} /></button>
-      <ColumnResizeHandle table={table} header={header} label={header.column.id} />
-    </th>)}</tr>)}</thead>
-    <tbody>{table.getRowModel().rows.map(row => <tr key={row.id}>
-      {row.getAllCells().map((cell, index) => <td key={cell.id}>{index === 0 && <input type="checkbox" aria-label={`Select ${row.original.name}`} checked={row.getIsSelected()} disabled={!row.getCanSelect()} onChange={row.getToggleSelectedHandler()} />}
-        <table.FlexRender cell={cell} /></td>)}
-    </tr>)}</tbody>
+  return <><button type="button" onClick={() => setReadOnly(!readOnly)}>Toggle read-only selection</button><table.Subscribe source={table.atoms.columnSizing}>{() => <table className="p-table pt-table" aria-label="Hook layout" style={{ width: table.getTotalSize() + 36 }}>
+    <colgroup><col style={{ width: 36 }} />{table.getAllLeafColumns().map(column => <col key={column.id} style={{ width: column.getSize() }} />)}</colgroup>
+    <TableHeader table={table} selectable />
+    <TableBody table={table} selectable getRowLabel={row => row.name} />
   </table>}</table.Subscribe></>;
 }
 export const HookLayout: Story = { render: () => <HookLayoutExample /> };
@@ -127,3 +119,11 @@ function UncontrolledStateExample() {
   </>;
 }
 export const UncontrolledState: Story = { render: () => <UncontrolledStateExample /> };
+
+function CheckboxPrimitiveExample() {
+  const table = usePuppertinoTable({ data: people.slice(0, 3), columns: personColumns, getRowId: row => row.id, selectable: true });
+  return <table className="p-table" aria-label="Custom checkbox layout"><thead><tr><th scope="col">Person</th><th scope="col">Select</th></tr></thead>
+    <tbody>{table.getRowModel().rows.map(row => <tr key={row.id}><td>{row.original.name}</td><td><RowSelectionCheckbox row={row} label={row.original.name} /></td></tr>)}</tbody>
+  </table>;
+}
+export const CheckboxPrimitive: Story = { render: () => <CheckboxPrimitiveExample /> };

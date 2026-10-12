@@ -1,6 +1,12 @@
-export { PuppertinoTable, type PuppertinoTableProps, type PuppertinoRow, type PuppertinoCell, type PuppertinoRowProps, type PuppertinoCellProps, type PuppertinoDataAttributes, type PuppertinoBodyContext } from './table.js';
+export { PuppertinoTable } from './table.js';
+export type { PuppertinoTableProps, PuppertinoRow, PuppertinoCell, PuppertinoRowProps, PuppertinoCellProps, PuppertinoDataAttributes, PuppertinoBodyContext, PuppertinoBodyOptions, TableHeaderProps, TableBodyProps, RowSelectionCheckboxProps } from './table-types.js';
+export { TableHeader } from './table-header.js';
+export { TableBody } from './table-body.js';
+export { RowSelectionCheckbox } from './row-selection-checkbox.js';
 export { createPuppertinoColumnHelper, puppertinoTableFeatures, type PuppertinoTableInstance, type PuppertinoColumnDef } from './model.js';
-export { useColumnResize, type ColumnResizeOptions } from './use-column-resize.js';
-export { ColumnResizeHandle, type ColumnResizeHandleProps } from './resize-handle.js';
+export { useColumnResize } from './use-column-resize.js';
+export { ColumnResizeHandle } from './resize-handle.js';
+export type { ColumnResizeOptions, ColumnResizeHandleProps } from './resize-types.js';
 export { readColumnSizing, columnSizeBounds, clampSize, type ColumnSizeBounds } from './sizing.js';
-export { usePuppertinoTable, type PuppertinoTableOptions } from './use-puppertino-table.js';
+export { usePuppertinoTable } from './use-puppertino-table.js';
+export type { PuppertinoTableOptions } from './table-options.js';

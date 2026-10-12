@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 — 2026-10-12
+
+- Require the latest stable React 19 at release time (19.3.0, peer range `^19.3.0`); remove React 18 compatibility coverage.
+
+- Extract a React-independent resize gesture controller, browser-effects adapter and persistence module; keep the hook focused on lifecycle and event adaptation.
+- Compose the complete table from exported `TableHeader`, memoized `TableBody`, `RowSelectionCheckbox` and `ColumnResizeHandle` primitives.
+- Separate public state, row/cell customization, body context and resize type contracts from rendering modules; preserve existing root exports.
+- Replace duplicated custom-layout examples with shared primitives, document the contracts, and add controller unit tests plus checkbox Storybook coverage.
+
 ## 0.2.0 — 2026-10-12
 
 - Add typed row/cell DOM customization callbacks and a leading-rows slot to the complete table.

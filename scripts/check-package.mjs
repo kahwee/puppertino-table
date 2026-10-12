@@ -21,18 +21,20 @@ const tarball = path.join(output, packed.filename);
 const installSpec = process.argv.includes('--from-registry') ? `${manifest.name}@${manifest.version}` : tarball;
 const consumer = await mkdtemp(path.join(tmpdir(), 'puppertino-consumer-'));
 try {
-  for (const react of ['18', '19']) {
+  assert.match(manifest.devDependencies.react, /^19\.\d+\.\d+$/);
+  assert.equal(manifest.peerDependencies.react, '^' + manifest.devDependencies.react);
+  for (const react of [manifest.devDependencies.react]) {
     const directory = path.join(consumer, react);
     await mkdir(directory);
     await writeFile(path.join(directory, 'package.json'), JSON.stringify({ private: true, type: 'module' }));
     execFileSync('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--registry=https://registry.npmjs.org/', installSpec,
-      `react@${react}`, `react-dom@${react}`, `@types/react@${react}`, `@types/react-dom@${react}`,
+      `react@${react}`, `react-dom@${react}`, `@types/react@${manifest.devDependencies['@types/react'].replace('^', '')}`, `@types/react-dom@${manifest.devDependencies['@types/react-dom'].replace('^', '')}`,
       `typescript@${manifest.devDependencies.typescript.replace('^', '')}`], { cwd: directory, stdio: 'pipe' });
     await writeFile(path.join(directory, 'consumer.tsx'), `
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { PuppertinoBodyContext, PuppertinoRowProps, ColumnResizeHandleProps } from 'puppertino-table';
-import { PuppertinoTable, usePuppertinoTable, ColumnResizeHandle, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
+import type { PuppertinoBodyContext, PuppertinoRowProps, ColumnResizeHandleProps, TableHeaderProps, TableBodyProps, RowSelectionCheckboxProps, PuppertinoTableOptions } from 'puppertino-table';
+import { PuppertinoTable, usePuppertinoTable, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
 type Item = { id: string; title: string; price: number };
 const helper = createPuppertinoColumnHelper<Item>();
 const columns = helper.columns([
@@ -54,11 +56,16 @@ if (!customized.includes('custom-row') || customized.indexOf('Folder') > customi
 function HookConsumer() {
   const table = usePuppertinoTable({ data, columns, getRowId: item => item.id, initialSorting: [{ id: 'price', desc: false }], manualSorting: false, selectable: true });
   const header = table.getHeaderGroups()[0].headers[0];
-  return createElement('table', null, createElement('thead', null, createElement('tr', null, createElement('th', null,
-    createElement(ColumnResizeHandle<Item>, { table, header })))));
+  const headerProps: TableHeaderProps<Item> = { table, selectable: true };
+  const bodyProps: TableBodyProps<Item> = { table, selectable: true, getRowLabel: row => row.title };
+  const checkboxProps: RowSelectionCheckboxProps<Item> = { row: table.getRowModel().rows[0], label: 'Standalone item' };
+  return createElement('div', null,
+    createElement('table', null, createElement(TableHeader<Item>, headerProps), createElement(TableBody<Item>, bodyProps)),
+    createElement(RowSelectionCheckbox<Item>, checkboxProps));
 }
 const attributes: PuppertinoRowProps = { 'data-row-id': 'example' };
-if (!renderToStaticMarkup(createElement(HookConsumer)).includes('Resize Title column')) throw new Error('Hook consumer failed');
+const primitiveMarkup = renderToStaticMarkup(createElement(HookConsumer));
+if (!primitiveMarkup.includes('Resize Title column') || !primitiveMarkup.includes('Select Standalone item') || primitiveMarkup.indexOf('Two') > primitiveMarkup.indexOf('Ten')) throw new Error('Shared primitive consumer failed');
 if (!markup.includes('aria-label="Inventory"')) throw new Error('Missing table label');
 if (markup.indexOf('Two') >= markup.indexOf('Ten')) throw new Error('Numeric sorting failed');
 if (clampSize(500, { id: 'price', minSize: 100, maxSize: 300, size: 200 }) !== 300) throw new Error('Sizing export failed');

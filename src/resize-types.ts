@@ -1,0 +1,16 @@
+import type { RowData, Header } from '@tanstack/react-table';
+import type { PuppertinoTableInstance, puppertinoTableFeatures } from './model.js';
+export interface ColumnResizeOptions {
+  enabled?: boolean;
+  storageKey?: string;
+  storage?: Pick<Storage, 'setItem'>;
+  cancelMediaQuery?: string;
+  dragClassName?: string;
+}
+export interface ColumnResizeHandleProps<T extends RowData> {
+  table: PuppertinoTableInstance<T>;
+  header: Header<typeof puppertinoTableFeatures, T>;
+  /** Defaults to a string header or the stable column ID. */
+  label?: string;
+  options?: ColumnResizeOptions;
+}

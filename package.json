@@ -1,6 +1,6 @@
 {
   "name": "puppertino-table",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": false,
   "publishConfig": {
     "access": "public",
@@ -45,7 +45,7 @@
   "peerDependencies": {
     "@codedgar/puppertino": "^2.0.0",
     "@tanstack/react-table": "9.2.8",
-    "react": ">=18"
+    "react": "^19.3.0"
   },
   "devDependencies": {
     "@codedgar/puppertino": "2.0.0",

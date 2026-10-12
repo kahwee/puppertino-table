@@ -5,24 +5,8 @@ import { useCallback, useMemo, useState } from 'react';
 import { puppertinoTableFeatures, type PuppertinoColumnDef, type PuppertinoTableInstance } from './model.js';
 import { columnSizeBounds, readColumnSizing } from './sizing.js';
 
-export interface PuppertinoTableOptions<T extends RowData> {
-  data: readonly T[];
-  columns: readonly PuppertinoColumnDef<T>[];
-  getRowId: (row: T, index: number) => string;
-  /** Omit for local state. Supply a callback alongside controlled sorting to allow edits. */
-  sorting?: SortingState;
-  onSortingChange?: OnChangeFn<SortingState>;
-  initialSorting?: SortingState;
-  initialRowSelection?: RowSelectionState;
-  /** Preserve host-owned order by default, including server-paginated data. */
-  manualSorting?: boolean;
-  rowSelection?: RowSelectionState;
-  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
-  selectable?: boolean;
-  disabled?: boolean;
-  storageKey?: string;
-  storage?: Pick<Storage, 'getItem' | 'setItem'>;
-}
+import type { PuppertinoTableOptions } from './table-options.js';
+export type { PuppertinoTableOptions } from './table-options.js';
 
 /** Shared state wiring for complete tables and custom semantic layouts. */
 export function usePuppertinoTable<T extends RowData>({ data, columns, getRowId, sorting: controlledSorting, onSortingChange, initialSorting = [], initialRowSelection = {},

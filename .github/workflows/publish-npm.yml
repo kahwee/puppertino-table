@@ -97,5 +97,5 @@ jobs:
         with:
           node-version: 24.21.0
       - run: pnpm install --frozen-lockfile
-      - name: Clean registry consumers with React 18 and 19, types, rendering and CSS
+      - name: Clean registry consumers with pinned React 19, types, rendering and CSS
         run: node scripts/check-package.mjs --from-registry
