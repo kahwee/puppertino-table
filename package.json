@@ -1,0 +1,65 @@
+{
+  "name": "@kahwee/puppertino-table",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "license": "MIT",
+  "description": "Accessible Puppertino React tables backed by TanStack Table sizing, sorting and selection.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kahwee/puppertino-table.git"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "node scripts/build.mjs",
+    "build:demo": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "test:browser": "tsx scripts/check-browser.ts",
+    "check": "pnpm typecheck && pnpm test && pnpm build && pnpm build:demo && pnpm build:storybook && pnpm test:browser",
+    "storybook": "storybook dev -p 6006 --no-open",
+    "build:storybook": "storybook build --disable-telemetry"
+  },
+  "peerDependencies": {
+    "@codedgar/puppertino": "^2.0.0",
+    "@tanstack/react-table": "9.2.8",
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "@codedgar/puppertino": "2.0.0",
+    "@storybook/addon-a11y": "10.6.1",
+    "@storybook/addon-docs": "10.6.1",
+    "@storybook/react-vite": "10.6.1",
+    "@tanstack/react-table": "9.2.8",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "axe-core": "4.14.0",
+    "playwright": "^1.64.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "storybook": "10.6.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "packageManager": "pnpm@11.25.0"
+}

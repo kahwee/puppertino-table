@@ -1,0 +1,32 @@
+name: Verify library and Storybook
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm check
+      - name: Verify checked-in build
+        run: git diff --exit-code -- dist
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: storybook-and-browser-evidence
+          path: |
+            storybook-static/
+            test-results/
