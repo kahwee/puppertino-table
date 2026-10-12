@@ -1,6 +1,6 @@
 # Releasing Puppertino Table
 
-The initial candidate is `puppertino-table@0.1.0`. Preparation does not publish the package or create a release tag.
+`puppertino-table@0.1.0` is published and verified from npm. Preparation commands do not publish another version or create a release tag.
 
 ## Prepare
 

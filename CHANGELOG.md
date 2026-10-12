@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.1.0 — Unreleased
+## 0.1.1 — 2026-10-12
+
+- Correct npm installation and publication-status documentation.
+- Add a guarded GitHub Release publishing workflow with exact tag, commit, version and tarball validation.
+- Run adversarial release-guard tests in CI and verify registry consumers after publishing.
+
+## 0.1.0 — 2026-10-12
 
 - Publish the requested unscoped `puppertino-table` package.
 - Restore pre-gesture widths when standalone resize controls unmount or their cancellation settings change.

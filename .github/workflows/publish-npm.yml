@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify:
-    if: github.repository == 'kahwee/puppertino-table' && !github.event.release.draft && !github.event.release.prerelease
+    if: github.repository == 'kahwee/puppertino-table' && !github.event.release.draft && !github.event.release.prerelease && github.event.release.tag_name != 'v0.1.0'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     outputs:

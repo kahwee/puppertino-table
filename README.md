@@ -12,10 +12,10 @@ A generic React table styled with [Puppertino](https://puppertino.com/) and powe
 
 ## Install
 
-The package includes built ESM and TypeScript declarations. The first npm release is pending; once published, install it with:
+The package includes built ESM and TypeScript declarations. Install it from npm:
 
 ```sh
-pnpm add puppertino-table@0.1.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react react-dom
+pnpm add puppertino-table@0.1.1 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react react-dom
 ```
 
 React, TanStack Table and Puppertino are peer dependencies; the library does not bundle another copy of them. For Git-based installation, use `github:kahwee/puppertino-table` and pin a commit or tag for reproducibility.
@@ -104,13 +104,13 @@ Checks include TypeScript, preference/schema unit tests, library/demo/Storybook 
 
 GitHub Actions runs the same checks and uploads Storybook plus browser evidence as an artifact. Browser tests use fictional data and do not claim Safari, physical-device or latency coverage.
 
-## npm release preparation
+## npm releases
 
-The release candidate is **`puppertino-table@0.1.0`**, with public access on the npm registry. No npm release has been published yet.
+The unscoped **`puppertino-table`** package is public on npm. Stable releases use the guarded GitHub Release workflow described in [RELEASING.md](https://github.com/kahwee/puppertino-table/blob/main/RELEASING.md), including verified package preparation and clean registry consumers.
 
 ```sh
 pnpm check
-npm publish test-results/package/puppertino-table-0.1.0.tgz --dry-run --ignore-scripts --access public
+npm publish test-results/package/puppertino-table-0.1.1.tgz --dry-run --ignore-scripts --access public
 ```
 
 `pnpm check` builds and packs the library, checks the tarball file list, and installs it in isolated React 18 and React 19 consumers. `prepack` rebuilds JavaScript and declarations so a locally packed release cannot silently use stale output. Only the compiled library, CSS, package metadata, README, changelog and MIT license ship; Storybook, the demo and tests stay out of the npm package.
