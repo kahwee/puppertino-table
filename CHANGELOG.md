@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add opt-in anchored row-selection gestures for custom layouts, with mixed leading/data items, Command/Ctrl toggles, shrinking Shift ranges and controlled/atom/disabled ownership guards.
+- Export a React-independent selection reducer and whole-column browser geometry helper, with unit, Storybook, browser and packed-consumer checks. Existing checkbox selection remains unchanged.
+
 - Extract hydration-safe preference restoration into a dedicated persistence lifecycle hook.
 - Add typed external atom ownership for sorting, selection and sizing; reject conflicting owners and changed bindings without a remount.
 - Add external-atom integration docs, Storybook coverage and production pointer profiling with cell-render regression checks.

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useCreateAtom, useSelector } from '@tanstack/react-store';
 import type { ColumnSizingState, RowSelectionState, SortingState } from '@tanstack/react-table';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 import { type Person, people, personColumns, productColumns, products } from '../demo/fixtures.js';
 import {
@@ -14,6 +14,7 @@ import {
   TableBody,
   TableHeader,
   usePuppertinoTable,
+  useRowSelectionGestures,
 } from './index.js';
 
 function Example(args: Partial<PuppertinoTableProps<Person>>) {
@@ -59,6 +60,122 @@ const meta = {
 } satisfies Meta<typeof Example>;
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+function ItemGestureExample({ ownership }: { ownership: 'controlled' | 'local' | 'atom' }) {
+  const [selection, setSelection] = useState<RowSelectionState>({});
+  const selectionAtom = useCreateAtom<RowSelectionState>({});
+  const [disabled, setDisabled] = useState(false);
+  const [gesturesDisabled, setGesturesDisabled] = useState(false);
+  const [readOnly, setReadOnly] = useState(false);
+  const [cards, setCards] = useState(false);
+  const anchor = useRef<string | null>(null);
+  const data = people.slice(0, 5);
+  const table = usePuppertinoTable({
+    data,
+    columns: personColumns,
+    getRowId: (row) => row.id,
+    selectable: true,
+    disabled,
+    ...(ownership === 'controlled'
+      ? { rowSelection: selection, onRowSelectionChange: readOnly ? undefined : setSelection }
+      : {}),
+    ...(ownership === 'atom' ? { atoms: { rowSelection: selectionAtom } } : {}),
+  });
+  const items = [{ id: 'folder', name: 'Example folder' }, ...data];
+  const { select, clearSelection } = useRowSelectionGestures(table, {
+    orderedIds: items.map((item) => item.id),
+    anchor,
+    disabled: gesturesDisabled,
+  });
+  return (
+    <main className="demo-shell">
+      <h1>Anchored item selection</h1>
+      <p>Click an item. Command/Ctrl toggles; Shift extends or shrinks the original range.</p>
+      <label>
+        <input
+          type="checkbox"
+          checked={disabled}
+          onChange={(event) => setDisabled(event.target.checked)}
+        />
+        Disable gestures
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={gesturesDisabled}
+          onChange={(event) => setGesturesDisabled(event.target.checked)}
+        />
+        Disable gesture hook
+      </label>
+      {ownership === 'controlled' && (
+        <label>
+          <input
+            type="checkbox"
+            checked={readOnly}
+            onChange={(event) => setReadOnly(event.target.checked)}
+          />
+          Read-only selection
+        </label>
+      )}
+      <button type="button" className="p-button" onClick={() => setCards(!cards)}>
+        Switch layout
+      </button>
+      <button
+        type="button"
+        className="p-button"
+        aria-disabled={disabled || readOnly || gesturesDisabled}
+        onClick={clearSelection}
+      >
+        Clear selection
+      </button>
+      <table.Subscribe source={table.atoms.rowSelection}>
+        {(selected) => (
+          <>
+            <ul
+              className="p-list demo-gesture-list"
+              aria-label="Selectable items"
+              style={
+                cards
+                  ? { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }
+                  : undefined
+              }
+            >
+              {items.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    className={`p-list-row demo-gesture-row ${selected[item.id] ? 'p-selected' : ''}`}
+                    aria-pressed={!!selected[item.id]}
+                    aria-disabled={disabled || readOnly || gesturesDisabled}
+                    onClick={(event) =>
+                      select(item.id, {
+                        shift: event.shiftKey,
+                        toggle: event.metaKey || event.ctrlKey,
+                      })
+                    }
+                  >
+                    {item.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <output aria-label="Gesture selection count">
+              {Object.values(selected).filter(Boolean).length} selected
+            </output>
+          </>
+        )}
+      </table.Subscribe>
+    </main>
+  );
+}
+
+export const ItemSelectionGestures: Story = {
+  render: () => <ItemGestureExample ownership="controlled" />,
+};
+export const UncontrolledItemGestures: Story = {
+  render: () => <ItemGestureExample ownership="local" />,
+};
+export const AtomItemGestures: Story = { render: () => <ItemGestureExample ownership="atom" /> };
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

@@ -103,6 +103,57 @@ function ItemsTable() {
 
 `PuppertinoTableAtoms` is exported for typed custom integrations. A state slice has one owner: supplying an atom together with that slice's value or callback throws a clear error. Different slices may use different ownership modes. Atom bindings must stay identical for the lifetime of the table, as required by the installed v9 adapter; changing bindings requires remounting with a new React `key`. You may recreate the map when it contains the same atom instances. Initial sorting/selection values apply only to internally owned slices; initialize app atoms yourself. Atom-owned sizing bypasses automatic preference restoration, and the complete component also disables automatic saving. In primitive layouts, omit `storageKey` from resize options when the app owns sizing restoration and saving. Read with `atom.get()` for a snapshot, or use `useSelector(atom)` in the smallest component that needs reactive state. No callback is needed for atom-owned slices. Width changes retain the existing geometry subscription rather than rerendering the table's row body.
 
+### Anchored item selection in custom layouts
+
+`useRowSelectionGestures(table, options)` adds opt-in desktop item selection to a custom list, card grid or table. A normal click replaces the selection, Command/Ctrl-click toggles one item, and Shift-click extends or shrinks a range from its original anchor. Shift with a toggle modifier adds a range. This policy is separate from the existing checkbox range behavior.
+
+```tsx
+import { useRef } from 'react';
+import { usePuppertinoTable, useRowSelectionGestures } from 'puppertino-table';
+
+function ItemList() {
+  const table = usePuppertinoTable({ data: items, columns, getRowId: item => item.id, selectable: true });
+  const anchor = useRef<string | null>(null);
+  const { select, clearSelection } = useRowSelectionGestures(table, { anchor });
+  return (
+    <table.Subscribe source={table.atoms.rowSelection}>
+      {selected => <>
+        {table.getRowModel().rows.map(row => <button
+          key={row.id} type="button" aria-pressed={!!selected[row.id]}
+          disabled={!row.getCanSelect()}
+          onClick={event => select(row.id, { shift: event.shiftKey, toggle: event.metaKey || event.ctrlKey })}
+        >{row.original.name}</button>)}
+        <button type="button" onClick={clearSelection}>Clear selection</button>
+      </>}
+    </table.Subscribe>
+  );
+}
+```
+
+The hook works with uncontrolled state, React-controlled state and external selection atoms. Disabled or read-only tables reject gestures without moving the anchor; `options.disabled` also disables just this hook. Nonselectable rows are excluded from ranges. `select` accepts an item ID and `{ shift?, toggle? }`, rather than a DOM event. Call it from native button activation or your own keyboard controller; the hook does not install keyboard listeners, move focus, open items or choose ARIA roles.
+
+`options.orderedIds` supplies a caller-owned visible order, including leading items outside the table row model. The default is the current rendered row order. Extra IDs are supported with boolean row-selection eligibility; a table's row predicate cannot authorize an item outside its data model. The caller still owns rendering and selected-state announcements. Share `options.anchor` between layouts to retain the original range anchor. `clearSelection()` clears selection and anchor; `resetAnchor()` only clears the anchor, useful when replacing a collection or changing its order. Without an external ref, the anchor lasts for this hook's mount.
+
+`applySelectionGesture(orderedIds, selection, anchor, id, modifiers)` exports the same pure reducer without React. It returns `{ selection, anchor }`, never mutates caller inputs and ignores unknown target IDs. A stale anchor becomes the clicked item. Toggle gestures preserve selected IDs outside the supplied order; replacing gestures clear them. Only the caller-supplied IDs participate in a range; the package never assumes a loaded page is the entire dataset. Selection does not authorize application actions.
+
+### Whole-column browser geometry
+
+`fitColumnBrowser({ availableWidth, ancestorWidth, ancestorCount, minimumCurrentWidth })` is a pure helper for a caller-rendered hierarchical column browser. It returns `{ currentWidth, scrollLeft, visibleAncestors }`. Use the current width for the final panel and the scroll offset to reveal that panel beside whole ancestors, avoiding a cut-off filename at the left edge after resizing.
+
+```ts
+import { fitColumnBrowser } from 'puppertino-table';
+
+const layout = fitColumnBrowser({
+  availableWidth: 724,
+  ancestorWidth: 224,
+  ancestorCount: 3,
+  minimumCurrentWidth: 288,
+});
+// { currentWidth: 500, scrollLeft: 448, visibleAncestors: 1 }
+```
+
+Widths are outer panel widths in CSS pixels; use border-box panels and measure the available scroll surface. The final panel takes spare room and fits surfaces narrower than its preferred minimum. A root with no ancestors takes the entire width. Dimensions must be finite and nonnegative, the ancestor width positive, and the count an integer; invalid inputs throw `RangeError`. The helper provides geometry only. The caller owns resize observation, scrolling, styling, hierarchy, loading and data access; no new column-browser component or folder API is implied.
+
 ### Resizing
 
 Drag a header's right edge. Double-click or Enter resets that column to its definition's initial size. Left/Right adjusts 16 pixels; Shift uses 40 pixels. Home/End reaches its limits, and Escape cancels an unfinished gesture. Pointer cancellation, losing window focus, unmounting, or disabling resizing also cancels.

@@ -75,7 +75,7 @@ import { createAtom } from '@tanstack/react-store';
 import type { ColumnSizingState, SortingState, RowSelectionState } from '@tanstack/react-table';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { PuppertinoBodyContext, PuppertinoRowProps, ColumnResizeHandleProps, TableHeaderProps, TableBodyProps, RowSelectionCheckboxProps, PuppertinoTableOptions, PuppertinoTableAtoms } from 'puppertino-table';
-import { PuppertinoTable, usePuppertinoTable, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
+import { PuppertinoTable, usePuppertinoTable, useRowSelectionGestures, applySelectionGesture, fitColumnBrowser, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
 type Item = { id: string; title: string; price: number };
 const helper = createPuppertinoColumnHelper<Item>();
 const columns = helper.columns([
@@ -96,6 +96,8 @@ const customized = renderToStaticMarkup(createElement(PuppertinoTable<Item>, {
 if (!customized.includes('custom-row') || customized.indexOf('Folder') > customized.indexOf('Ten')) throw new Error('Custom rows failed');
 function HookConsumer() {
   const table = usePuppertinoTable({ data, columns, getRowId: item => item.id, initialSorting: [{ id: 'price', desc: false }], manualSorting: false, selectable: true });
+  const gestures = useRowSelectionGestures(table);
+  if (typeof gestures.select !== 'function') throw new Error('Selection gesture hook export failed');
   const header = table.getHeaderGroups()[0].headers[0];
   const headerProps: TableHeaderProps<Item> = { table, selectable: true };
   const bodyProps: TableBodyProps<Item> = { table, selectable: true, getRowLabel: row => row.title };
@@ -119,6 +121,8 @@ if (!primitiveMarkup.includes('Resize Title column') || !primitiveMarkup.include
 if (!markup.includes('aria-label="Inventory"')) throw new Error('Missing table label');
 if (markup.indexOf('Two') >= markup.indexOf('Ten')) throw new Error('Numeric sorting failed');
 if (clampSize(500, { id: 'price', minSize: 100, maxSize: 300, size: 200 }) !== 300) throw new Error('Sizing export failed');
+if (applySelectionGesture(['ten', 'two'], { ten: true }, 'ten', 'two', { shift: true }).selection.two !== true) throw new Error('Selection gesture export failed');
+if (fitColumnBrowser({ availableWidth: 724, ancestorWidth: 224, ancestorCount: 3, minimumCurrentWidth: 288 }).scrollLeft !== 448) throw new Error('Column geometry export failed');
 console.log('React ${react}: typed imports and server rendering passed');
 `,
     );
