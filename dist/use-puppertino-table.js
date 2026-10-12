@@ -1,10 +1,10 @@
 'use client';
 import { useTable } from '@tanstack/react-table';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { puppertinoTableFeatures, } from './model.js';
 import { columnSizeBounds, readColumnSizing } from './sizing.js';
 /** Shared state wiring for complete tables and custom semantic layouts. */
-export function usePuppertinoTable({ data, columns, getRowId, sorting: controlledSorting, onSortingChange, initialSorting = [], initialRowSelection = {}, manualSorting = true, rowSelection: controlledSelection, onRowSelectionChange, selectable = false, disabled = false, storageKey, storage, }) {
+export function usePuppertinoTable({ data, columns, getRowId, sorting: controlledSorting, onSortingChange, initialSorting = [], initialRowSelection = {}, manualSorting = true, rowSelection: controlledSelection, onRowSelectionChange, selectable = false, disabled = false, columnSizing, onColumnSizingChange, storageKey, storage, }) {
     const [localSelection, setLocalSelection] = useState(() => initialRowSelection);
     const [localSorting, setLocalSorting] = useState(() => initialSorting);
     const sorting = controlledSorting ?? localSorting;
@@ -31,14 +31,7 @@ export function usePuppertinoTable({ data, columns, getRowId, sorting: controlle
         });
         return decorate(columns);
     }, [columns, bounds]);
-    const [initialWidths] = useState(() => {
-        try {
-            return readColumnSizing(bounds, storageKey, storage || localStorage);
-        }
-        catch {
-            return readColumnSizing(bounds);
-        }
-    });
+    const controlledSizing = columnSizing !== undefined;
     const table = useTable({
         features: puppertinoTableFeatures,
         columns: sizedColumns,
@@ -50,10 +43,39 @@ export function usePuppertinoTable({ data, columns, getRowId, sorting: controlle
         enableSortingRemoval: false,
         enableRowSelection: canSelect,
         enableSubRowSelection: false,
-        initialState: { columnSizing: initialWidths },
-        state: { sorting, rowSelection },
+        initialState: controlledSizing ? undefined : { columnSizing: readColumnSizing(bounds) },
+        state: { sorting, rowSelection, ...(controlledSizing ? { columnSizing } : {}) },
+        onColumnSizingChange: (update) => {
+            if (controlledSizing)
+                onColumnSizingChange?.(update);
+            else
+                table.baseAtoms.columnSizing.set((old) => typeof update === 'function' ? update(old) : update);
+        },
         onSortingChange: changeSorting,
         onRowSelectionChange: changeSelection,
     }, (state) => ({ sorting: state.sorting, rowSelection: state.rowSelection }));
+    const sizingAtom = table.baseAtoms.columnSizing;
+    const restored = useRef(null);
+    // Restore only after hydration. This is initialization, not a user resize or storage write.
+    useEffect(() => {
+        if (controlledSizing) {
+            restored.current = null;
+            return;
+        }
+        const schema = JSON.stringify(bounds);
+        if (restored.current?.schema === schema &&
+            restored.current.key === storageKey &&
+            restored.current.adapter === storage)
+            return;
+        restored.current = { schema, key: storageKey, adapter: storage };
+        let widths = readColumnSizing(bounds);
+        try {
+            widths = readColumnSizing(bounds, storageKey, storage ?? window.localStorage);
+        }
+        catch {
+            widths = readColumnSizing(bounds);
+        }
+        sizingAtom.set(widths);
+    }, [sizingAtom, bounds, storageKey, storage, controlledSizing]);
     return table;
 }

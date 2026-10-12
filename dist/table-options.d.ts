@@ -1,4 +1,4 @@
-import type { OnChangeFn, RowData, RowSelectionState, SortingState } from '@tanstack/react-table';
+import type { ColumnSizingState, OnChangeFn, RowData, RowSelectionState, SortingState } from '@tanstack/react-table';
 import type { PuppertinoColumnDef } from './model.js';
 /** Shared state contract for complete tables and custom layouts. */
 export interface PuppertinoTableOptions<T extends RowData> {
@@ -17,6 +17,10 @@ export interface PuppertinoTableOptions<T extends RowData> {
     onRowSelectionChange?: OnChangeFn<RowSelectionState>;
     selectable?: boolean;
     disabled?: boolean;
+    /** App-owned widths; saved preferences are ignored in controlled mode. */
+    columnSizing?: ColumnSizingState;
+    /** Receives a value or functional updater. Controlled widths without this are read-only. */
+    onColumnSizingChange?: OnChangeFn<ColumnSizingState>;
     storageKey?: string;
     storage?: Pick<Storage, 'getItem' | 'setItem'>;
 }

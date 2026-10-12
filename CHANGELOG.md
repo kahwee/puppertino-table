@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Restore saved widths after hydration and reload preferences when the storage key, adapter or column schema changes.
+- Add app-owned `columnSizing` and `onColumnSizingChange`, including read-only sizing and controlled/uncontrolled transition coverage.
+
 - Add pinned Biome formatting, import organization and recommended lint checks to local and CI verification.
 - Format maintained code, resolve lint findings and document narrow accessibility/gesture exceptions.
 

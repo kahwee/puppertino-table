@@ -31,6 +31,8 @@ export function PuppertinoTable<T extends RowData>({
   selectable = false,
   disabled = false,
   resizable = true,
+  columnSizing,
+  onColumnSizingChange,
   storageKey,
   storage,
   cancelMediaQuery,
@@ -55,6 +57,8 @@ export function PuppertinoTable<T extends RowData>({
     onRowSelectionChange,
     selectable,
     disabled,
+    columnSizing,
+    onColumnSizingChange,
     storageKey,
     storage,
   });
@@ -84,8 +88,12 @@ export function PuppertinoTable<T extends RowData>({
               table={table}
               selectable={selectable}
               disabled={disabled}
-              resizable={resizable}
-              resizeOptions={{ storageKey, storage, cancelMediaQuery }}
+              resizable={resizable && (columnSizing === undefined || !!onColumnSizingChange)}
+              resizeOptions={{
+                storageKey: columnSizing === undefined ? storageKey : undefined,
+                storage,
+                cancelMediaQuery,
+              }}
             />
             <TableBody
               table={table}

@@ -69,11 +69,26 @@ The example uses local sorting and uncontrolled checkbox selection. Pass both `r
 
 `manualSorting` defaults to `true`: the table reports sort changes and renders rows in the order provided. Your caller can sort/filter/page locally or request data from any backend. The component makes no network calls, has no endpoint conventions, and does not treat a loaded page as the full dataset. Pagination controls belong to the caller. Use `manualSorting={false}` to let TanStack sort all supplied rows locally.
 
+### Controlled column sizing
+
+Pass `columnSizing` and `onColumnSizingChange` to either `PuppertinoTable` or `usePuppertinoTable`:
+
+```tsx
+const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({ name: 240 });
+// Import ColumnSizingState from @tanstack/react-table.
+<PuppertinoTable
+  data={items} columns={columns} getRowId={(row) => row.id} ariaLabel="Items"
+  columnSizing={columnSizing} onColumnSizingChange={setColumnSizing}
+/>;
+```
+
+The callback receives a value or functional updater, like a React state setter. Supplying widths without a callback makes sizing read-only. The callback is used only with controlled widths; omit both props for TanStack-owned sizing and its fine-grained geometry subscription. Controlled widths ignore saved preferences: the app owns restoration and persistence, so omit `storageKey` from controlled resize handles. React-controlled sizing rerenders its state owner; for high-frequency custom layouts, TanStack v9 also supports external atoms through `useTable`.
+
 ### Resizing
 
 Drag a header's right edge. Double-click or Enter resets that column to its definition's initial size. Left/Right adjusts 16 pixels; Shift uses 40 pixels. Home/End reaches its limits, and Escape cancels an unfinished gesture. Pointer cancellation, losing window focus, unmounting, or disabling resizing also cancels.
 
-`storageKey` enables persistence; without it no preferences are stored. Supply `storage` to use a compatible storage adapter. Malformed values, unknown column IDs and blocked browser storage fall back safely. Use stable column IDs or string accessor keys. Change the component's React `key` when switching schemas or persistence keys so initialization reads the new configuration.
+`storageKey` enables persistence; without it no preferences are stored. Supply `storage` to use a compatible storage adapter. Malformed values, unknown column IDs and blocked browser storage fall back safely. Use stable column IDs or string accessor keys. Saved widths restore after mounting so the server and first browser render match. Changing `storageKey`, `storage` or the column schema reloads preferences without remounting; missing or invalid preferences reset to column defaults. Restoration does not write storage.
 
 `cancelMediaQuery` is optional: set it when your layout removes the table at a responsive breakpoint. A narrow table that remains visible can simply scroll horizontally.
 
@@ -234,7 +249,7 @@ pnpm format # apply formatting, import organization and safe lint fixes
 pnpm check
 ```
 
-Checks include TypeScript, independent controller ownership/cancellation/persistence tests, preference/schema unit tests, library/demo/Storybook builds, and Chromium regression tests. The browser suite exercises 512 repeated pointer drags, width limits, reset/cancellation/persistence, selection, unmount/disabled recovery, standalone-control removal and grouped-header resizing, all 267 demo rows across six pages, six light/dark accessibility layouts, all eighteen Storybook stories, and tarball installation with typed imports, server rendering and CSS exports in fresh React 19.3.0 consumers. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to a system Chromium path, or install a browser with `pnpm exec playwright install chromium`.
+Checks include TypeScript, independent controller ownership/cancellation/persistence tests, preference/schema unit tests, real SSR hydration and controlled-sizing browser tests, library/demo/Storybook builds, and Chromium regression tests. The browser suite exercises 512 repeated pointer drags, width limits, reset/cancellation/persistence, selection, unmount/disabled recovery, standalone-control removal and grouped-header resizing, all 267 demo rows across six pages, six light/dark accessibility layouts, all nineteen Storybook stories, and tarball installation with typed imports, server rendering and CSS exports in fresh React 19.3.0 consumers. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to a system Chromium path, or install a browser with `pnpm exec playwright install chromium`.
 
 GitHub Actions runs the same checks and uploads Storybook plus browser evidence as an artifact. Browser tests use fictional data and do not claim Safari, physical-device or latency coverage.
 

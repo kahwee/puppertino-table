@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { RowSelectionState, SortingState } from '@tanstack/react-table';
+import type { ColumnSizingState, RowSelectionState, SortingState } from '@tanstack/react-table';
 import { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 import { type Person, people, personColumns, productColumns, products } from '../demo/fixtures.js';
@@ -372,3 +372,35 @@ function CheckboxPrimitiveExample() {
   );
 }
 export const CheckboxPrimitive: Story = { render: () => <CheckboxPrimitiveExample /> };
+
+function ControlledSizingExample() {
+  const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({ name: 280 });
+  return (
+    <>
+      <button type="button" onClick={() => setColumnSizing({ name: 200 })}>
+        Set name width to 200
+      </button>
+      <PuppertinoTable
+        data={people.slice(0, 5)}
+        columns={personColumns}
+        getRowId={(row) => row.id}
+        ariaLabel="Controlled widths"
+        columnSizing={columnSizing}
+        onColumnSizingChange={setColumnSizing}
+      />
+      <output aria-label="Name width">{columnSizing.name}</output>
+    </>
+  );
+}
+export const ControlledSizing: Story = {
+  render: () => <ControlledSizingExample />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const edge = canvas.getByRole('separator', { name: 'Resize Name column' });
+    edge.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(canvas.getByLabelText('Name width')).toHaveTextContent('296');
+    await userEvent.click(canvas.getByRole('button', { name: 'Set name width to 200' }));
+    await expect(edge).toHaveAttribute('aria-valuenow', '200');
+  },
+};

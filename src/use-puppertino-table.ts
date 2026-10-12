@@ -1,7 +1,7 @@
 'use client';
 import type { OnChangeFn, RowData, RowSelectionState, SortingState } from '@tanstack/react-table';
 import { useTable } from '@tanstack/react-table';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   type PuppertinoColumnDef,
   type PuppertinoTableInstance,
@@ -27,6 +27,8 @@ export function usePuppertinoTable<T extends RowData>({
   onRowSelectionChange,
   selectable = false,
   disabled = false,
+  columnSizing,
+  onColumnSizingChange,
   storageKey,
   storage,
 }: PuppertinoTableOptions<T>): PuppertinoTableInstance<T> {
@@ -64,13 +66,7 @@ export function usePuppertinoTable<T extends RowData>({
       });
     return decorate(columns);
   }, [columns, bounds]);
-  const [initialWidths] = useState(() => {
-    try {
-      return readColumnSizing(bounds, storageKey, storage || localStorage);
-    } catch {
-      return readColumnSizing(bounds);
-    }
-  });
+  const controlledSizing = columnSizing !== undefined;
   const table = useTable(
     {
       features: puppertinoTableFeatures,
@@ -83,12 +79,47 @@ export function usePuppertinoTable<T extends RowData>({
       enableSortingRemoval: false,
       enableRowSelection: canSelect,
       enableSubRowSelection: false,
-      initialState: { columnSizing: initialWidths },
-      state: { sorting, rowSelection },
+      initialState: controlledSizing ? undefined : { columnSizing: readColumnSizing(bounds) },
+      state: { sorting, rowSelection, ...(controlledSizing ? { columnSizing } : {}) },
+      onColumnSizingChange: (update) => {
+        if (controlledSizing) onColumnSizingChange?.(update);
+        else
+          table.baseAtoms.columnSizing.set((old) =>
+            typeof update === 'function' ? update(old) : update,
+          );
+      },
       onSortingChange: changeSorting,
       onRowSelectionChange: changeSelection,
     },
     (state) => ({ sorting: state.sorting, rowSelection: state.rowSelection }),
   );
+  const sizingAtom = table.baseAtoms.columnSizing;
+  const restored = useRef<{
+    schema: string;
+    key: typeof storageKey;
+    adapter: typeof storage;
+  } | null>(null);
+  // Restore only after hydration. This is initialization, not a user resize or storage write.
+  useEffect(() => {
+    if (controlledSizing) {
+      restored.current = null;
+      return;
+    }
+    const schema = JSON.stringify(bounds);
+    if (
+      restored.current?.schema === schema &&
+      restored.current.key === storageKey &&
+      restored.current.adapter === storage
+    )
+      return;
+    restored.current = { schema, key: storageKey, adapter: storage };
+    let widths = readColumnSizing(bounds);
+    try {
+      widths = readColumnSizing(bounds, storageKey, storage ?? window.localStorage);
+    } catch {
+      widths = readColumnSizing(bounds);
+    }
+    sizingAtom.set(widths);
+  }, [sizingAtom, bounds, storageKey, storage, controlledSizing]);
   return table;
 }
