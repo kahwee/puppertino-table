@@ -64,6 +64,8 @@ export function useColumnResize(table, { enabled = true, storageKey, storage, ca
                 markDrag(dragClassName, -1);
             if (active?.target.hasPointerCapture(active.pointer))
                 active.target.releasePointerCapture(active.pointer);
+            if (active)
+                table.setColumnSizing(active.before);
         };
     }, [table.atoms.columnSizing, cancelMediaQuery, dragClassName]);
     return { handle: (id) => ({

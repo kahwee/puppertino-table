@@ -11,7 +11,7 @@ export function ColumnResizeHandle<T extends RowData>({ table, header, label, op
   label: string; options?: ColumnResizeOptions;
 }) {
   const { handle } = useColumnResize(table, options);
-  if (options?.enabled === false) return null;
+  if (options?.enabled === false || header.isPlaceholder || header.column.columns.length > 0) return null;
   return <span className="pt-resizer" role="separator" tabIndex={0} aria-orientation="vertical" aria-label={`Resize ${label} column`}
     aria-valuemin={header.column.columnDef.minSize ?? 20} aria-valuemax={header.column.columnDef.maxSize ?? 1200}
     aria-valuenow={header.getSize()} aria-valuetext={`${header.getSize()} pixels`}

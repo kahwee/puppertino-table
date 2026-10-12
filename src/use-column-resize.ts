@@ -52,6 +52,7 @@ export function useColumnResize<T extends RowData>(table: PuppertinoTableInstanc
       const active = drag.current; drag.current = null;
       if (active) markDrag(dragClassName, -1);
       if (active?.target.hasPointerCapture(active.pointer)) active.target.releasePointerCapture(active.pointer);
+      if (active) table.setColumnSizing(active.before);
     };
   }, [table.atoms.columnSizing, cancelMediaQuery, dragClassName]);
   return { handle: (id: string) => ({

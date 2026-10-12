@@ -106,7 +106,7 @@ try {
   await page.frameLocator('#storybook-preview-iframe').getByRole('table').waitFor();
   await page.getByRole('link', { name: 'Default', exact: true }).waitFor();
   await page.screenshot({ path: `${evidence}/storybook-pages.png` });
-  for (const story of ['default', 'selection', 'keyboard-resize', 'dark', 'narrow', 'empty', 'disabled', 'read-only', 'server-owned-order', 'different-schema', 'grouped-headers']) {
+  for (const story of ['default', 'selection', 'keyboard-resize', 'dark', 'narrow', 'empty', 'disabled', 'read-only', 'server-owned-order', 'different-schema', 'grouped-headers', 'standalone-resize']) {
     await page.goto(`${stories.base}/iframe.html?id=puppertino-table--${story}&viewMode=story`);
     await page.getByRole('table').waitFor();
     assert.equal(await page.locator('#storybook-root').getByRole('table').count(), 1);
@@ -120,7 +120,24 @@ try {
     if (story === 'empty') assert.ok(await page.getByText('No people match this view.').isVisible());
     if (story === 'disabled') assert.equal(await page.getByRole('checkbox').first().isDisabled(), true);
     if (story === 'different-schema') assert.ok(await page.getByRole('table', { name: 'Inventory' }).isVisible());
+    if (story === 'standalone-resize') {
+      assert.equal(await page.getByRole('separator').count(), 2, 'only two leaf headers expose standalone handles');
+      assert.equal(await page.getByRole('separator', { name: 'Resize identity column', exact: true }).count(), 0);
+      const handle = page.getByRole('separator', { name: 'Resize name column', exact: true });
+      const initial = Number(await handle.getAttribute('aria-valuenow'));
+      await handle.scrollIntoViewIfNeeded(); const box = (await handle.boundingBox())!;
+      await page.mouse.move(box.x + 6, box.y + box.height / 2); await page.mouse.down();
+      await page.mouse.move(box.x + 66, box.y + box.height / 2);
+      assert.equal(Number(await page.getByLabel('Standalone name width').textContent()), initial + 60);
+      await page.getByRole('button', { name: 'Remove resize controls', exact: true }).evaluate(el => (el as HTMLButtonElement).click());
+      await page.mouse.up();
+      assert.equal(Number(await page.getByLabel('Standalone name width').textContent()), initial, 'removing controls cancels preview sizing in a surviving table');
+      assert.equal(await page.locator('.pt-resizing').count(), 0);
+      await page.getByRole('button', { name: 'Mount resize controls', exact: true }).click();
+      await handle.focus(); await handle.press('ArrowRight');
+      assert.equal(Number(await handle.getAttribute('aria-valuenow')), initial + 16, 'remounted controls remain usable');
+    }
   }
   await page.close(); assert.deepEqual(errors, []);
-  console.log(process.env.PUPPERTINO_STORIES_ONLY ? 'Eleven Storybook stories passed.' : '512 repeated pointer drags, geometry, limits, keyboard/reset/cancellation/persistence, selection, disabled/unmount recovery, 267 rows across six pages, six light/dark axe layouts and eleven Storybook stories passed.');
+  console.log(process.env.PUPPERTINO_STORIES_ONLY ? 'Twelve Storybook stories including standalone-control cancellation passed.' : '512 repeated pointer drags, geometry, limits, keyboard/reset/cancellation/persistence, selection, disabled/unmount recovery, standalone-control cancellation, 267 rows across six pages, six light/dark axe layouts and twelve Storybook stories passed.');
 } finally { await browser.close(); await demo.close(); await stories.close(); }

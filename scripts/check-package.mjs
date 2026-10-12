@@ -18,19 +18,20 @@ for (const { path: file } of packed.files) {
 assert.equal(manifest.publishConfig.access, 'public');
 assert.equal(manifest.publishConfig.registry, 'https://registry.npmjs.org/');
 const tarball = path.join(output, packed.filename);
+const installSpec = process.argv.includes('--from-registry') ? `${manifest.name}@${manifest.version}` : tarball;
 const consumer = await mkdtemp(path.join(tmpdir(), 'puppertino-consumer-'));
 try {
   for (const react of ['18', '19']) {
     const directory = path.join(consumer, react);
     await mkdir(directory);
     await writeFile(path.join(directory, 'package.json'), JSON.stringify({ private: true, type: 'module' }));
-    execFileSync('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--registry=https://registry.npmjs.org/', tarball,
+    execFileSync('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--registry=https://registry.npmjs.org/', installSpec,
       `react@${react}`, `react-dom@${react}`, `@types/react@${react}`, `@types/react-dom@${react}`,
       `typescript@${manifest.devDependencies.typescript.replace('^', '')}`], { cwd: directory, stdio: 'pipe' });
     await writeFile(path.join(directory, 'consumer.tsx'), `
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { PuppertinoTable, createPuppertinoColumnHelper, clampSize } from '@kahwee/puppertino-table';
+import { PuppertinoTable, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
 type Item = { id: string; title: string; price: number };
 const helper = createPuppertinoColumnHelper<Item>();
 const columns = helper.columns([
@@ -51,7 +52,7 @@ console.log('React ${react}: typed imports and server rendering passed');
     execFileSync(path.join(directory, 'node_modules/.bin/tsc'), ['consumer.tsx', '--outDir', 'compiled', '--module', 'NodeNext', '--moduleResolution', 'NodeNext', '--target', 'ES2023', '--jsx', 'react-jsx', '--strict', '--skipLibCheck', '--types', 'react,react-dom'], { cwd: directory, stdio: 'inherit' });
     execFileSync(process.execPath, ['compiled/consumer.js'], { cwd: directory, stdio: 'inherit' });
     // CSS must be consumable through the public export, without copying package internals.
-    execFileSync(process.execPath, ['--input-type=module', '-e', "import { readFileSync } from 'node:fs'; import assert from 'node:assert/strict'; const css = readFileSync(new URL(import.meta.resolve('@kahwee/puppertino-table/style.css')), 'utf8'); assert.match(css, /\\.pt-/);"], { cwd: directory, stdio: 'inherit' });
+    execFileSync(process.execPath, ['--input-type=module', '-e', "import { readFileSync } from 'node:fs'; import assert from 'node:assert/strict'; const css = readFileSync(new URL(import.meta.resolve('puppertino-table/style.css')), 'utf8'); assert.match(css, /\\.pt-/);"], { cwd: directory, stdio: 'inherit' });
   }
 } finally {
   await rm(consumer, { recursive: true, force: true });

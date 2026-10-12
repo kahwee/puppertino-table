@@ -15,7 +15,7 @@ A generic React table styled with [Puppertino](https://puppertino.com/) and powe
 The package includes built ESM and TypeScript declarations. The first npm release is pending; once published, install it with:
 
 ```sh
-pnpm add @kahwee/puppertino-table@0.1.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react react-dom
+pnpm add puppertino-table@0.1.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react react-dom
 ```
 
 React, TanStack Table and Puppertino are peer dependencies; the library does not bundle another copy of them. For Git-based installation, use `github:kahwee/puppertino-table` and pin a commit or tag for reproducibility.
@@ -26,11 +26,11 @@ React, TanStack Table and Puppertino are peer dependencies; the library does not
 'use client';
 import { useState } from 'react';
 import type { SortingState } from '@tanstack/react-table';
-import { PuppertinoTable, createPuppertinoColumnHelper } from '@kahwee/puppertino-table';
+import { PuppertinoTable, createPuppertinoColumnHelper } from 'puppertino-table';
 import '@codedgar/puppertino/colors';
 import '@codedgar/puppertino/lists';
 import '@codedgar/puppertino/forms';
-import '@kahwee/puppertino-table/style.css';
+import 'puppertino-table/style.css';
 
 type Item = { id: string; name: string; score: number };
 const helper = createPuppertinoColumnHelper<Item>();
@@ -100,17 +100,17 @@ Stories cover local sorting, host-owned order, range selection, keyboard resizin
 pnpm check
 ```
 
-Checks include TypeScript, preference/schema unit tests, library/demo/Storybook builds, and Chromium regression tests. The browser suite exercises 512 repeated pointer drags, width limits, reset/cancellation/persistence, selection, unmount/disabled recovery, all 267 demo rows across six pages, six light/dark accessibility layouts, all eleven Storybook stories, and tarball installation with typed imports, server rendering and CSS exports in fresh React 18 and React 19 consumers. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to a system Chromium path, or install a browser with `pnpm exec playwright install chromium`.
+Checks include TypeScript, preference/schema unit tests, library/demo/Storybook builds, and Chromium regression tests. The browser suite exercises 512 repeated pointer drags, width limits, reset/cancellation/persistence, selection, unmount/disabled recovery, standalone-control removal and grouped-header resizing, all 267 demo rows across six pages, six light/dark accessibility layouts, all twelve Storybook stories, and tarball installation with typed imports, server rendering and CSS exports in fresh React 18 and React 19 consumers. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to a system Chromium path, or install a browser with `pnpm exec playwright install chromium`.
 
 GitHub Actions runs the same checks and uploads Storybook plus browser evidence as an artifact. Browser tests use fictional data and do not claim Safari, physical-device or latency coverage.
 
 ## npm release preparation
 
-The release candidate is **`@kahwee/puppertino-table@0.1.0`**, with public access on the npm registry. No npm release has been published yet.
+The release candidate is **`puppertino-table@0.1.0`**, with public access on the npm registry. No npm release has been published yet.
 
 ```sh
 pnpm check
-npm publish test-results/package/kahwee-puppertino-table-0.1.0.tgz --dry-run --ignore-scripts --access public
+npm publish test-results/package/puppertino-table-0.1.0.tgz --dry-run --ignore-scripts --access public
 ```
 
 `pnpm check` builds and packs the library, checks the tarball file list, and installs it in isolated React 18 and React 19 consumers. `prepack` rebuilds JavaScript and declarations so a locally packed release cannot silently use stale output. Only the compiled library, CSS, package metadata, README, changelog and MIT license ship; Storybook, the demo and tests stay out of the npm package.
