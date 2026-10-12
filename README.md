@@ -192,6 +192,8 @@ Keep `loadPage` stable (for example, a module-level function or `useCallback`). 
 
 The package adds scoped `.pt-*` enhancements to Puppertino's `p-table` styles. Import Puppertino's CSS in your application, then the package stylesheet. Theme tokens remain owned by Puppertino and your application. Include Puppertino's dark-mode stylesheet when using its dark theme.
 
+Puppertino owns separated borders, rounded row stripes, numeric alignment and active-header weight. The package adds scroll/sticky geometry, sort-button and resize-target behavior, plus contrast-safe text. Override `--pt-table-secondary` for secondary/header text and `--pt-table-text` for data-cell text using your application's Puppertino theme tokens. Selection reads `--p-list-selection` and `--p-list-selection-text` in every hover state.
+
 ## Storybook and demo
 
 GitHub Pages is configured to publish [Storybook 10](https://kahwee.github.io/puppertino-table/) from `storybook-static/` after the checks on main pass. The Pages artifact contains only Storybook and its examples. Pull requests run verification without deploying. For repository setup, select **Settings → Pages → Source → GitHub Actions**; the workflow also attempts to enable Pages automatically.
@@ -219,11 +221,13 @@ GitHub Actions runs the same checks and uploads Storybook plus browser evidence 
 
 ## npm releases
 
+The next release candidate is **0.2.1**, prepared on main and not yet published. The installation example above uses the current **0.2.0** release.
+
 The unscoped **`puppertino-table`** package is public on npm. Stable releases use the guarded GitHub Release workflow described in [RELEASING.md](https://github.com/kahwee/puppertino-table/blob/main/RELEASING.md), including verified package preparation and clean registry consumers.
 
 ```sh
 pnpm check
-npm publish test-results/package/puppertino-table-0.2.0.tgz --dry-run --ignore-scripts --access public
+npm publish test-results/package/puppertino-table-0.2.1.tgz --dry-run --ignore-scripts --access public
 ```
 
 `pnpm check` builds and packs the library, checks the tarball file list, and installs it in isolated React 18 and React 19 consumers. `prepack` rebuilds JavaScript and declarations so a locally packed release cannot silently use stale output. Only the compiled library, CSS, package metadata, README, changelog and MIT license ship; Storybook, the demo and tests stay out of the npm package.

@@ -1,26 +1,32 @@
 /* Scoped enhancements; import Puppertino's table/color/control styles separately. */
 .pt-scroll { max-width: 100%; min-width: 0; overflow: auto; }
-.pt-scroll:focus-visible { outline: 2px solid var(--p-control-accent, #0069d9); outline-offset: 2px; }
-.pt-table { table-layout: fixed; padding: 0; border-collapse: collapse; }
-.pt-table thead { position: sticky; top: 0; z-index: 1; background: var(--p-window-bg, #fff); }
+.pt-scroll:focus-visible { outline: 2px solid var(--p-control-accent); outline-offset: 2px; }
+/* Puppertino owns separated borders, rounded stripes, font and cell spacing.
+   Keep secondary text contrast-safe while deriving it from the active theme. */
+.pt-table { --p-list-text-dim: var(--pt-table-secondary, color-mix(in srgb, var(--p-list-text) 85%, var(--p-window-bg, var(--p-bg-primary)))); table-layout: fixed; padding: 0; }
+.pt-table thead { position: sticky; top: 0; z-index: 1; background: var(--p-window-bg, var(--p-bg-primary)); }
 .pt-table th { position: relative; }
 .pt-table th[aria-sort]::before { display: none; }
 .pt-table :is(th, td) { box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; overflow-wrap: anywhere; }
-.pt-sort { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 4px; min-height: 28px; border: 0; background: none; padding: 0 10px 0 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
-.pt-sort:focus-visible { outline: 2px solid var(--p-control-accent, #0069d9); outline-offset: -2px; border-radius: 3px; }
-.pt-sort-arrow { flex: 0 0 10px; }
+.pt-sort { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 4px; min-height: 19px; border: 0; background: none; padding: 0 10px 0 0; font: inherit; color: inherit; text-align: inherit; cursor: pointer; }
+.pt-sort:focus-visible { outline: 2px solid var(--p-control-accent); outline-offset: -2px; border-radius: 3px; }
+.pt-sort-arrow { flex: 0 0 9px; color: var(--p-list-text-dim); font-size: 9px; font-weight: 510; }
+.p-table-num .pt-sort { justify-content: flex-end; }
 .pt-sort-arrow[data-direction=asc] { transform: rotate(180deg); }
 .pt-sort-arrow[data-direction=none] { visibility: hidden; }
 .pt-resizer { position: absolute; right: -5px; top: 0; bottom: 0; width: 12px; cursor: col-resize; touch-action: none; z-index: 2; }
-.pt-resizer::after { content: ''; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 1px; background: var(--p-text-secondary, #666); opacity: .3; }
-.pt-resizer:hover::after, .pt-resizer:focus-visible::after { width: 2px; background: var(--p-control-accent, #0069d9); opacity: 1; }
-.pt-resizer:focus-visible { outline: 2px solid var(--p-control-accent, #0069d9); outline-offset: -2px; }
+.pt-resizer::after { content: ''; position: absolute; left: 5px; top: 4px; bottom: 8px; width: 1px; background: var(--p-table-divider); }
+.pt-resizer:hover::after, .pt-resizer:focus-visible::after { width: 2px; background: var(--p-control-accent); opacity: 1; }
+.pt-resizer:focus-visible { outline: 2px solid var(--p-control-accent); outline-offset: -2px; }
 .pt-resizing, .pt-resizing * { cursor: col-resize !important; user-select: none !important; }
 .pt-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
-/* Primary text contrast applies to every data column, including after selection. */
-.pt-table :is(th, td) { color: var(--pt-table-text, var(--p-list-text, #252525)); }
-.pt-table tr.p-selected td { background: var(--p-list-selection, #0069d9); color: var(--p-list-selection-text, #fff); }
-@media (forced-colors: active) { .pt-table tr.p-selected td { background: Highlight; color: HighlightText; } }
+/* Keep data text readable; native header colors indicate the active sort.
+   Match the hover selector so selected rows retain their Puppertino tint. */
+.pt-table td { color: var(--pt-table-text, var(--p-list-text)); }
+.pt-table td.pt-selection + td { color: var(--p-list-text); }
+.pt-table th.pt-selection + th::after { content: none; }
+.pt-table tbody tr.p-selected td { background: var(--p-list-selection); color: var(--p-list-selection-text); }
+@media (forced-colors: active) { .pt-table tbody tr.p-selected td { background: Highlight; color: HighlightText; } }
 
 .pt-table .pt-selection { padding: 0; text-align: center; overflow: visible; }
 .pt-table .pt-selection input { margin: 0; vertical-align: middle; }

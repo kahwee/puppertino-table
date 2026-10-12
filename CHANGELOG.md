@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1 — Unreleased
+
+- Preserve Puppertino's separated borders, rounded stripes, native header emphasis and numeric alignment.
+- Derive secondary text, focus rings and resize dividers from Puppertino theme tokens; keep selected-row colors through hover.
+- Match the compact desktop header band and group the selection cell with its first data column.
+
 ## 0.2.0 — 2026-10-12
 
 - Add typed row/cell DOM customization callbacks and a leading-rows slot to the complete table.
