@@ -2,7 +2,7 @@
 
 Finder-style React tables and column browsers, built on [Puppertino](https://puppertino.com/) and [TanStack Table](https://tanstack.com/table). Bring your own data, icons and app actions.
 
-[Live demos](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--file-table) · [API guide](https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md) · [npm](https://www.npmjs.com/package/puppertino-table)
+[Storybook guide](https://kahwee.github.io/puppertino-table/?path=/docs/start-here-overview--docs) · [API guide](https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md) · [npm](https://www.npmjs.com/package/puppertino-table)
 
 ![Compact file table with sortable headers and bounded resize handles](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/table-light.png)
 
@@ -77,7 +77,7 @@ React 19 (`^19.3.0`), TanStack Table and Puppertino are peer dependencies. Sorti
 
 [Watch MP4](https://kahwee.github.io/puppertino-table/media/drag-drop.mp4). This demo composes native HTML drag/drop with the table and browser items. Moves are in-memory and app-owned; the package does not implement file operations or a drag/drop engine. The Move menu command provides a keyboard alternative.
 
-All media records the working Storybook apps with fictional data in Chromium. The pointer and captions are recording overlays. [Demo source](https://github.com/kahwee/puppertino-table/blob/main/src/finder.stories.tsx).
+[Watch and try each feature in Storybook](https://kahwee.github.io/puppertino-table/?path=/docs/examples-finder--docs). All media records the working apps with fictional data in Chromium. The pointer and captions are recording overlays. [Demo source](https://github.com/kahwee/puppertino-table/blob/main/src/finder.stories.tsx).
 
 ## Develop
 

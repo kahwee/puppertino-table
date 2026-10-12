@@ -1,0 +1,95 @@
+import { Canvas, Controls, Meta, Source } from '@storybook/addon-docs/blocks';
+import * as Finder from './finder.stories';
+
+<Meta of={Finder} />
+
+# Finder walkthrough
+
+Watch a gesture, try it in the app below, then copy the integration recipe. All files are fictional; moves update only the example's in-memory state. Videos have controls and never autoplay.
+
+## File table
+
+Click a sortable header, select checkboxes (Shift-click extends a range), and switch density or theme. Drag a divider, then double-click it to reset. Right-click a row for commands. **Reset demo** restores files, selection and widths while preserving your current view, theme and density.
+
+<Canvas of={Finder.FileTable} sourceState="shown" />
+
+<Controls of={Finder.FileTable} />
+
+Starting controls restart the workspace when changed. The in-app controls let you compare views and density while keeping your file moves. In a narrow docs canvas, the table scrolls horizontally; open the story in its own canvas to see the full desktop layout.
+
+## Resize columns and panels
+
+<video controls playsInline preload="none" poster="./media/table-light.png" aria-label="Table and browser panel resizing screencast" style={{ width: '100%', borderRadius: 10 }}>
+  <source src="./media/resizing.mp4" type="video/mp4" />
+  <a href="./media/resizing.mp4">Download the resizing screencast</a>
+</video>
+
+The recording drags the Name divider, double-clicks to reset it, then switches to Columns and resizes an ancestor panel. Focus a separator and use arrows (Shift for larger steps), Home/End for limits, or Enter to reset. Escape cancels an unfinished drag. Save preferences from completion callbacks, rather than every preview.
+
+<Source language="tsx" code={`const [widths, setWidths] = useState({ workspace: 224 });
+<ColumnBrowser panels={panels} ariaLabel="Projects"
+  widths={widths} onWidthsChange={setWidths}
+  onWidthsCommit={committed => savePreferences(committed)} />;`} />
+
+Table resize options expose the matching `onCommit`. Supplying controlled widths without a change callback makes them read-only. <a href="./?path=/story/puppertino-resource-browser--controlled-panels" target="_top">Try controlled panels</a>.
+
+## Column browser
+
+Click a file to preview it. The two ancestor dividers resize independently; the current panel fills the remaining space. Panels have their own vertical scroll areas and the surface reveals the current panel horizontally.
+
+<Canvas of={Finder.ColumnWorkspace} />
+
+<Source language="tsx" code={`<DensityScope density="compact">
+  <ColumnBrowser ariaLabel="Workspace" panels={[
+    { id: 'folders', label: 'Folders', content: folderItems },
+    { id: 'files', label: 'Project files', content: fileItems },
+    { id: 'preview', label: 'Preview', content: <Preview file={selectedFile} /> },
+  ]} />
+</DensityScope>`} />
+
+Use native `href` items for links or `onClick` items for buttons. Stable panel IDs preserve sizing. Give the browser a bounded height. Navigation and preview content belong to your app; a browser panel is not an automatic filesystem view.
+
+## Right-click and keyboard menus
+
+<video controls playsInline preload="none" poster="./media/context-menu.png" aria-label="Right-click and keyboard context menu screencast" style={{ width: '100%', borderRadius: 10 }}>
+  <source src="./media/context-menu.mp4" type="video/mp4" />
+  <a href="./media/context-menu.mp4">Download the context-menu screencast</a>
+</video>
+
+The recording opens a file menu at 125% zoom, chooses Get Info, then opens another menu with Shift+F10 and closes it with Escape. Focus a row before trying Shift+F10. Arrows/Home/End navigate enabled commands; disabled entries and separators are skipped. Escape restores focus to the invoking target. Shortcut hints are labels; your app binds any actual shortcuts.
+
+<Source language="tsx" code={`const menu = useContextMenu<string>();
+<ColumnBrowserItem {...menu.getTriggerProps(file.id)}>{file.name}</ColumnBrowserItem>
+<ContextMenu ariaLabel="File actions" position={menu.state?.position ?? null}
+  returnFocus={menu.state?.returnFocus} onClose={menu.close}
+  actions={menu.state ? commandsFor(menu.state.context) : []} />;`} />
+
+For tables, spread trigger props in `getRowProps` and include `tabIndex: 0`. Compose existing key handlers with the trigger's `onKeyDown`. Keep menus in the same themed subtree as their triggers. Commands and right-click selection policy stay caller-owned.
+
+## App-owned drag and drop
+
+<video controls playsInline preload="none" poster="./media/table-light.png" aria-label="Drag a fictional file into Archive screencast" style={{ width: '100%', borderRadius: 10 }}>
+  <source src="./media/drag-drop.mp4" type="video/mp4" />
+  <a href="./media/drag-drop.mp4">Download the drag-and-drop screencast</a>
+</video>
+
+Drag Project brief.pdf from a row onto **Archive** in Favorites. The highlighted folder is the drop target. After dropping, open Archive to find the moved item. For the keyboard alternative, focus the row, press Shift+F10, then choose **Move to Archive**. Reset demo lets you repeat either route.
+
+The example supplies `draggable`, `onDragStart`, `onDragOver` and `onDrop` to table rows and browser items. It validates the ID against its own in-memory items before changing folders. The package supplies composable rows/items, not a drag/drop engine or file operations. <a href="https://github.com/kahwee/puppertino-table/blob/main/src/finder.stories.tsx" target="_blank" rel="noopener noreferrer">Read the complete example</a>.
+
+## Compare spacing and themes
+
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
+  <figure style={{ margin: 0 }}><img src="./media/table-selection.png" alt="Compact table with selected files" style={{ width: '100%' }} /><figcaption>Compact with selection</figcaption></figure>
+  <figure style={{ margin: 0 }}><img src="./media/table-comfortable.png" alt="Comfortable table spacing" style={{ width: '100%' }} /><figcaption>Comfortable spacing</figcaption></figure>
+  <figure style={{ margin: 0 }}><img src="./media/table-dark.png" alt="Dark table with selected files" style={{ width: '100%' }} /><figcaption>Puppertino dark theme</figcaption></figure>
+  <figure style={{ margin: 0 }}><img src="./media/columns-preview.png" alt="Columns with a document preview" style={{ width: '100%' }} /><figcaption>Columns with app-owned preview</figcaption></figure>
+</div>
+
+<Canvas of={Finder.ComfortableTable} />
+
+Set density once on the parent scope; table rows, browser items and `.pt-icon` artwork inherit it. Metrics change geometry, not sorting or saved widths. <a href="./?path=/story/puppertino-resource-browser--density-inheritance" target="_top">Explore nested density overrides</a>.
+
+## Next steps
+
+<a href="./?path=/docs/puppertino-table--docs" target="_top">Table API stories</a> · <a href="./?path=/docs/puppertino-resource-browser--docs" target="_top">Resource browser stories</a> · <a href="https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md" target="_blank" rel="noopener noreferrer">Full integration guide</a>

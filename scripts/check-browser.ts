@@ -6,6 +6,7 @@ import path from 'node:path';
 import axe from 'axe-core';
 import { chromium } from 'playwright';
 import { checkResourceWorkspaces } from './check-resource-workspaces.js';
+import { checkStorybookDocs } from './check-storybook-docs.js';
 
 async function serve(directory: string, mount = '/') {
   const root = path.resolve(directory);
@@ -28,6 +29,8 @@ async function serve(directory: string, mount = '/') {
         '.css': 'text/css',
         '.json': 'application/json',
         '.svg': 'image/svg+xml',
+        '.png': 'image/png',
+        '.mp4': 'video/mp4',
       };
       const bytes = await readFile(file);
       response.setHeader('Content-Type', types[path.extname(file)] || 'application/octet-stream');
@@ -626,6 +629,7 @@ try {
     await page.screenshot({ path: `${evidence}/${story}.png` });
   }
   await checkResourceWorkspaces(page, stories.base, evidence);
+  await checkStorybookDocs(page, stories.base, evidence);
   await page.close();
   assert.deepEqual(errors, []);
   console.log(

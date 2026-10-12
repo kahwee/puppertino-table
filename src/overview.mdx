@@ -1,0 +1,55 @@
+import { Meta, Source } from '@storybook/addon-docs/blocks';
+
+<Meta title="Start here/Overview" />
+
+# Puppertino Table
+
+Finder-style React tables and column browsers, with typed TanStack data and Puppertino styling. Start with a working app, then explore individual controls and state ownership.
+
+<img src="./media/table-light.png" alt="Compact file table with sortable headers and resize separators" style={{ width: '100%', borderRadius: 10 }} />
+
+## Choose an example
+
+| Goal | Start here | What to try |
+| --- | --- | --- |
+| Build a Finder-style app | <a href="./?path=/docs/examples-finder--docs" target="_top">Finder walkthrough</a> | Videos, live table, columns, and integration recipes |
+| Explore table APIs | <a href="./?path=/docs/puppertino-table--docs" target="_top">Table</a> | Sorting, checkbox ranges, grouped headers, controlled state and external atoms |
+| Compose a custom browser | <a href="./?path=/docs/puppertino-resource-browser--docs" target="_top">Resource browser</a> | Controlled panel widths, native links, richer menus and density inheritance |
+
+Open a story from the sidebar for its full interactive canvas. **Controls** change its starting options; **Accessibility** checks the rendered example. In docs, **Show code** reveals source snippets and the canvas toolbar opens the story separately. The Finder app's **Reset demo** restores its fictional files and geometry after an experiment.
+
+## Install
+
+<Source language="bash" code="pnpm add puppertino-table @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0" />
+
+<Source language="tsx" code={`import { PuppertinoTable, createPuppertinoColumnHelper } from 'puppertino-table';
+import '@codedgar/puppertino/colors';
+import '@codedgar/puppertino/lists';
+import '@codedgar/puppertino/forms';
+import 'puppertino-table/style.css';
+
+const helper = createPuppertinoColumnHelper<{ id: string; name: string }>();
+const columns = helper.columns([
+  helper.accessor('name', { header: 'Name', size: 280, minSize: 160 }),
+]);
+const files = [{ id: 'brief', name: 'Project brief.pdf' }];
+
+export function Files() {
+  return <PuppertinoTable data={files} columns={columns}
+    getRowId={file => file.id} getRowLabel={file => file.name}
+    ariaLabel="Files" density="compact" selectable manualSorting={false} />;
+}`} />
+
+## Choose the right ownership
+
+Sorting defaults to caller-owned row order. Use `manualSorting={false}` only when the supplied rows are the complete local dataset you want to sort. Keep manual sorting for a server page.
+
+The library owns table semantics, column/panel sizing gestures, selection primitives, density and menu behavior. Your app owns data fetching, folder routes, file moves, preview content and command authorization. Drag/drop in the Finder example uses native HTML events and in-memory state.
+
+Omitted density inherits an enclosing `DensityScope` through CSS custom properties. Explicit presets start a new scope; partial metrics override just the supplied values. Scoped table rules require CSS `@scope` support: Chrome/Edge 118+, Safari 17.4+, Firefox 146+.
+
+React 19 (`^19.3.0`), TanStack Table and Puppertino are peers. Import Puppertino's dark-mode CSS when using `.p-dark-mode`. No React provider is needed for density.
+
+## More detail
+
+<a href="https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md" target="_blank" rel="noopener noreferrer">API and integration guide</a> · <a href="https://github.com/kahwee/puppertino-table" target="_blank" rel="noopener noreferrer">Source</a> · <a href="https://www.npmjs.com/package/puppertino-table" target="_blank" rel="noopener noreferrer">npm</a>

@@ -102,15 +102,18 @@ const columns = helper.columns([
 function FinderDemo({
   initialView = 'list',
   initialDark = false,
+  initialDensity = 'compact',
 }: {
   initialView?: 'list' | 'columns';
   initialDark?: boolean;
+  initialDensity?: 'compact' | 'comfortable';
 }) {
   const [files, setFiles] = useState(initialFiles);
   const [folder, setFolder] = useState('Projects');
   const [view, setView] = useState(initialView);
   const [dark, setDark] = useState(initialDark);
-  const [density, setDensity] = useState<TableDensity>('compact');
+  const [density, setDensity] = useState<TableDensity>(initialDensity);
+  const [revision, setRevision] = useState(0);
   const [detail, setDetail] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
   const [over, setOver] = useState<string | null>(null);
@@ -218,6 +221,7 @@ function FinderDemo({
           <div className="finder-demo-content">
             {view === 'list' ? (
               <PuppertinoTable
+                key={revision}
                 data={visible}
                 columns={columns}
                 getRowId={(file) => file.id}
@@ -234,6 +238,7 @@ function FinderDemo({
               />
             ) : (
               <ColumnBrowser
+                key={revision}
                 ariaLabel="Workspace columns"
                 panels={[
                   {
@@ -308,6 +313,21 @@ function FinderDemo({
         </DensityScope>
         <footer className="finder-demo-status">
           <span role="status">{message}</span>
+          <button
+            type="button"
+            onClick={() => {
+              menu.close();
+              setFiles(initialFiles);
+              setFolder('Projects');
+              setDetail(null);
+              setDragging(null);
+              setOver(null);
+              setMessage('6 items · Fictional workspace');
+              setRevision((value) => value + 1);
+            }}
+          >
+            Reset demo
+          </button>
         </footer>
         <ContextMenu
           ariaLabel="File actions"
@@ -358,9 +378,47 @@ function FinderDemo({
 const meta = {
   title: 'Examples/Finder',
   component: FinderDemo,
+  tags: ['!autodocs'],
+  args: { initialView: 'list', initialDark: false, initialDensity: 'compact' },
+  render: (args) => (
+    <FinderDemo key={`${args.initialView}-${args.initialDark}-${args.initialDensity}`} {...args} />
+  ),
+  argTypes: {
+    initialView: {
+      control: 'inline-radio',
+      options: ['list', 'columns'],
+      description: 'Starting view. Changing a starting control restarts the fictional workspace.',
+    },
+    initialDark: { control: 'boolean', description: 'Start with the Puppertino dark theme.' },
+    initialDensity: {
+      control: 'inline-radio',
+      options: ['compact', 'comfortable'],
+      description:
+        'Starting CSS density. The in-app selector changes density without resetting files.',
+    },
+  },
   parameters: {
     layout: 'fullscreen',
     docs: {
+      source: {
+        language: 'tsx',
+        type: 'code',
+        code: `import { PuppertinoTable, createPuppertinoColumnHelper } from 'puppertino-table';
+
+type FileItem = { id: string; name: string; kind: string };
+const helper = createPuppertinoColumnHelper<FileItem>();
+const columns = helper.columns([
+  helper.accessor('name', { header: 'Name', size: 280, minSize: 160 }),
+  helper.accessor('kind', { header: 'Kind', size: 160 }),
+]);
+const files: FileItem[] = [{ id: 'brief', name: 'Project brief.pdf', kind: 'PDF' }];
+
+export function FileTable() {
+  return <PuppertinoTable data={files} columns={columns}
+    getRowId={file => file.id} getRowLabel={file => file.name}
+    ariaLabel="Files" selectable density="compact" manualSorting={false} />;
+}`,
+      },
       description: {
         component:
           'Small fictional Finder-style apps. Shared table, column browser, density and menus; native HTML drag/drop and in-memory moves are owned by this example. The Move menu command is the keyboard alternative. No filesystem access.',
@@ -370,6 +428,63 @@ const meta = {
 } satisfies Meta<typeof FinderDemo>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-export const FileTable: Story = {};
-export const ColumnWorkspace: Story = { args: { initialView: 'columns' } };
-export const DarkTable: Story = { args: { initialDark: true } };
+export const FileTable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Sort Name, check rows (Shift-click for ranges), drag a header divider, or right-click a file. Drag a row to Archive; Reset demo restores files, selection and widths.',
+      },
+    },
+  },
+};
+export const ColumnWorkspace: Story = {
+  args: { initialView: 'columns' },
+  parameters: {
+    docs: {
+      source: {
+        language: 'tsx',
+        type: 'code',
+        code: `import { ColumnBrowser, ColumnBrowserItem, DensityScope } from 'puppertino-table';
+
+export function Workspace() {
+  return <DensityScope density="compact" style={{ height: 390 }}>
+    <ColumnBrowser ariaLabel="Workspace" panels={[
+      { id: 'folders', label: 'Folders', content: <ColumnBrowserItem href="#projects" pathSelected>Projects</ColumnBrowserItem> },
+      { id: 'files', label: 'Files', content: <ColumnBrowserItem href="#brief">Project brief.pdf</ColumnBrowserItem> },
+      { id: 'preview', label: 'Preview', content: <p>Your app-owned preview</p> },
+    ]} />
+  </DensityScope>;
+}`,
+      },
+      description: {
+        story:
+          'Click a file for the app-owned preview. Resize either ancestor divider; each panel keeps its own width. Right-click items for the same menu as the table.',
+      },
+    },
+  },
+};
+export const DarkTable: Story = {
+  args: { initialDark: true },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same semantic table using Puppertino dark tokens. Use the density selector and Light button to compare geometry and contrast.',
+      },
+    },
+  },
+};
+export const ComfortableTable: Story = {
+  args: { initialDensity: 'comfortable' },
+  parameters: {
+    docs: {
+      source: {
+        code: meta.parameters.docs.source.code.replace(
+          'density="compact"',
+          'density="comfortable"',
+        ),
+      },
+    },
+  },
+};

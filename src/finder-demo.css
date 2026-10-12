@@ -186,11 +186,31 @@
   color: #3386c8;
 }
 .finder-demo-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   border-top: 1px solid #80809030;
   padding: 10px 18px;
   color: var(--p-text-secondary);
   font-size: 11px;
   background: #80809008;
+}
+.finder-demo-status button {
+  color: inherit;
+  font: inherit;
+  background: transparent;
+  border: 1px solid #80809060;
+  border-radius: 5px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+.sbdocs .finder-demo-stage {
+  min-height: 0;
+  padding: 24px;
+}
+.sbdocs .finder-demo-workspace {
+  height: 340px;
 }
 @media (max-width: 760px) {
   .finder-demo-stage {
