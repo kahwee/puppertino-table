@@ -85,8 +85,6 @@ function ItemsTable() {
 
 ### Shared density
 
-The density, column-browser and context-menu APIs below are available starting in version 0.5.0.
-
 Complete tables accept `density="native" | "compact" | "comfortable"`. Omitting density inherits the nearest CSS scope. Outside a preset scope, tables retain native Puppertino geometry and column browsers use compact fallbacks. Explicit `native` resets metrics and opts tables out of an outer preset. Compact uses 24px minimum rows, 3px block padding, 8px inline padding and 16px icons. Comfortable uses 36px rows, 8px block padding, 12px inline padding and 20px icons. Content can make a row taller; text and icons are never clipped to force a height.
 
 Use `DensityScope` around layouts built with the table primitives, or pass `densityMetrics` to `PuppertinoTable` and `ColumnBrowser` for explicit overrides. Metrics are CSS pixels: `rowHeight`, `rowPaddingBlock`, `rowPaddingInline` and `iconSize`. `DensityScope` calls the same object `metrics`. Heights and icon sizes must be positive; padding may be zero. Styles stay scoped to each wrapper, so adjacent components can use different densities. Put caller-owned artwork in a `.pt-icon` span to share sizing; the library does not replace your icons.
@@ -100,7 +98,7 @@ Use `DensityScope` around layouts built with the table primitives, or pass `dens
 
 The corresponding CSS properties are `--pt-row-height`, `--pt-row-padding-block`, `--pt-row-padding-inline` and `--pt-icon-size`. Explicit metrics are applied on the scope; ordinary host CSS can customize them. Native density leaves default table header/cell styling intact unless metrics are explicitly supplied. Density changes layout only, not sorting, selection or saved widths.
 
-Density is a library term implemented with standard CSS custom properties, not a CSS `density` property or React provider/context. In 0.6.0, one parent scope applies to nested tables, browsers and transparent scopes:
+Density is a library term implemented with standard CSS custom properties, not a CSS `density` property or React provider/context. One parent scope applies to nested tables, browsers and transparent scopes:
 
 ```tsx
 <DensityScope density="comfortable">
@@ -129,9 +127,20 @@ import { ColumnBrowser, ColumnBrowserItem } from 'puppertino-table';
 ]} />
 ```
 
-Panels require unique stable `id`, an accessible `label` for their region, and caller-rendered `content`. Ancestors default to 224px, bounded to 120–640px. `minimumCurrentWidth` defaults to 288px. Give the component or its parent a bounded height; it fills that height. Standalone browser items use compact fallback metrics; omitted density inherits an enclosing scope. Optional `widths` and `onWidthsChange` provide controlled ancestor sizing. Widths without a callback are read-only and omit resize handles. `resizable={false}` or `resizeDisabled` cancels active gestures; `cancelMediaQuery` can cancel when a responsive layout removes the controls. Panel removal and changed bounds also cancel. Completed gestures remain in local state until unmount; the component does not write preferences. Change callbacks include previews and cancellations, so they are not approval or persistence receipts. Starting in 0.6.0, the `onWidthsCommit` callback supplies a copied snapshot after completed pointer, keyboard and reset operations only; use it to save app-owned preferences. Table resize options offer the matching `onCommit` callback. Storage failure does not suppress either callback.
+Panels require unique stable `id`, an accessible `label` for their region, and caller-rendered `content`. Ancestors default to 224px, bounded to 120–640px. `minimumCurrentWidth` defaults to 288px. Give the component or its parent a bounded height; it fills that height. Standalone browser items use compact fallback metrics; omitted density inherits an enclosing scope. Optional `widths` and `onWidthsChange` provide controlled ancestor sizing. Widths without a callback are read-only and omit resize handles. `resizable={false}` or `resizeDisabled` cancels active gestures; `cancelMediaQuery` can cancel when a responsive layout removes the controls. Panel removal and changed bounds also cancel. Uncontrolled widths remain local unless you supply a `storageKey` for automatic persistence. Controlled widths keep restoration and saving app-owned. Change callbacks include previews and cancellations. The `onWidthsCommit` callback supplies a copied snapshot after completed pointer, keyboard and reset operations only; use it to save app-owned preferences. Table resize options offer the matching `onCommit` callback. Storage failure does not suppress either callback.
 
 `ColumnBrowserItem` defaults to a native button with `icon`, `trailing`, `selected` and `pathSelected` slots/states. It shares density metrics, ellipsis, hover and keyboard-focus styling. Selection and path indication are separate. Standard button props provide actions, labels, disabled state and context-menu triggers. The browser does not fetch records, enter folders, select items or open documents. Compose your navigation, `useRowSelectionGestures`, and custom content around it. Its geometry is measured only after hydration; initial server markup uses deterministic panel widths.
+
+### Browser width persistence
+
+Uncontrolled `ColumnBrowser` accepts `storageKey` and an optional `storage` adapter with `getItem`/`setItem`. Restoration occurs after hydration; visible widths are clamped to each panel's bounds. Only completed pointer, keyboard and reset operations save. Escape, panel removal, changed bounds, storage-key/adapter changes and responsive cancellation discard previews. Storage failures preserve browsing and completion callbacks. Controlled `widths` ignore automatic restoration and saving: the caller remains the sole owner.
+
+```tsx
+<ColumnBrowser panels={panels} ariaLabel="Projects"
+  storageKey="my-app.browser.widths.v1" />
+```
+
+The cache keeps up to 100 recently committed panel IDs, including temporarily hidden ancestors. IDs must be nonempty and at most 1024 characters; saved values must be positive finite numbers. Unknown cached IDs do not create panels. Changing the key selects a separate preference namespace; no preferences are written during restoration. To reset saved preferences, remove the key and remount the browser.
 
 ### Right-click and keyboard context menus
 
@@ -147,9 +156,27 @@ const menu = useContextMenu<string>();
 
 For tables, spread trigger props in `getRowProps` and make the target keyboard-focusable, or attach them to a button inside a cell. `ContextMenu` accepts command actions with stable `id`, `label`, optional `disabled`, and `onSelect`. It fits the viewport, focuses the first enabled action, supports arrows/Home/End, skips disabled actions, closes on Escape/Tab/outside pointer/scroll/resize/blur, and restores the invoking target's focus. It uses a manual popover where supported so a table or panel's overflow does not clip it. Place it in the same themed DOM subtree as its trigger. Commands, right-click selection policy and authorization remain caller-owned; the component never invents file operations.
 
-### Browser links and richer menus
+### Delegated context-menu triggers
 
-These additions are available starting in version 0.6.0.
+One menu can serve a whole workspace, including dynamically rendered items:
+
+```tsx
+const menu = useContextMenu<string>();
+<div {...menu.getDelegatedTriggerProps({
+  resolveContext: (target, root) => {
+    const item = target.closest<HTMLElement>('[data-item-id]');
+    const id = item?.dataset.itemId;
+    return item && root.contains(item) && items.some(item => item.id === id) ? id : undefined;
+  },
+})}>
+  {items.map(item => <ColumnBrowserItem key={item.id} data-item-id={item.id}
+    aria-haspopup="menu">{item.name}</ColumnBrowserItem>)}
+</div>
+```
+
+`resolveContext(target, root)` owns matching and current-item validation. Return `null`/`undefined` for native-menu targets, editable fields or unknown items. Resolved false/zero/empty-string contexts are valid. The returned capture handlers open on right-click, Shift+F10 and the Context Menu key, respect already-prevented events, and preserve the nearest invoking control as the return-focus target. Keep per-item popup semantics (`aria-haspopup="menu"`) and keyboard focusability. Use the same `ContextMenu` rendering as individual triggers. Compose existing capture handlers instead of replacing either one; commands and selection policy remain caller-owned.
+
+### Browser links and richer menus
 
 ```tsx
 <ColumnBrowserItem href="/projects/alpine" pathSelected icon={<FolderIcon />}>
@@ -169,6 +196,36 @@ Supplying `href` renders a native anchor: `target`, `rel`, `download`, modifier-
 ```
 
 `ContextMenuItem` includes existing `ContextMenuAction` commands, `ContextMenuLink` links and `ContextMenuSeparator` entries. Arrows/Home/End skip separators and disabled entries. Links activate with Enter or Space and retain native modifier-click/target/download behavior. Icons and shortcut hints are decorative; shortcut bindings stay caller-owned. Existing command-only menus continue to work.
+
+### Stable item styling hooks
+
+Scope standard CSS custom properties on the browser or an enclosing density scope. No provider, global theme registration or custom CSS density property is needed.
+
+| Property | Default / purpose |
+| --- | --- |
+| `--pt-item-gap` | `6px`, icon/label/trailing spacing |
+| `--pt-item-radius` | `4px`, item corners |
+| `--pt-item-line-height` | `18px`, text line height |
+| `--pt-item-text` | Inherited text color |
+| `--pt-item-hover-bg` | Puppertino hover token |
+| `--pt-item-path-bg` | Puppertino hover token, inactive hierarchy path |
+| `--pt-item-selection-bg`, `--pt-item-selection-text` | Puppertino selection tokens |
+| `--pt-focus-color` | Puppertino control accent; selected items use selection text |
+| `--pt-divider-color` | Puppertino table divider |
+| `--pt-panel-padding` | `4px`, panel content inset |
+| `--pt-icon-color` | Inherited artwork color; selected item icons inherit selection text |
+| `--pt-secondary-text` | Puppertino secondary/dim text; selected items inherit selection text |
+
+The public presentation classes are `.pt-browser-item`, `.pt-item-label`, `.pt-icon`, `.pt-item-trailing`, `.pt-item-secondary`, `.pt-path-selected` and `.p-selected`. Use `.pt-item-secondary` for caller-rendered metadata. Icon/trailing slots size nested SVG or image artwork as well as direct children. State classes describe presentation, not authorization or navigation. Keep document badges, thumbnails and domain-specific metadata in the app.
+
+```css
+.my-browser {
+  --pt-divider-color: var(--app-separator);
+  --pt-icon-color: var(--app-accent);
+  --pt-secondary-text: var(--app-secondary);
+  --pt-item-gap: 8px;
+}
+```
 
 ### Anchored item selection in custom layouts
 
@@ -355,63 +412,3 @@ Keep `loadPage` stable (for example, a module-level function or `useCallback`). 
 The package adds scoped `.pt-*` enhancements to Puppertino's `p-table` styles. Import Puppertino's CSS in your application, then the package stylesheet. Theme tokens remain owned by Puppertino and your application. Include Puppertino's dark-mode stylesheet when using its dark theme.
 
 Puppertino owns separated borders, rounded row stripes, numeric alignment and active-header weight. The package adds scroll/sticky geometry, sort-button and resize-target behavior, plus contrast-safe text. Override `--pt-table-secondary` for secondary/header text and `--pt-table-text` for data-cell text using your application's Puppertino theme tokens. Selection reads `--p-list-selection` and `--p-list-selection-text` in every hover state.
-
-
-## Browser persistence and delegated triggers (0.7.0)
-
-Uncontrolled `ColumnBrowser` accepts `storageKey` and an optional `storage` adapter with `getItem`/`setItem`. Restoration occurs after hydration; visible widths are clamped to each panel's bounds. Only completed pointer, keyboard and reset operations save. Escape, panel removal, changed bounds, storage-key/adapter changes and responsive cancellation discard previews. Storage failures preserve browsing and completion callbacks. Controlled `widths` ignore automatic restoration and saving: the caller remains the sole owner.
-
-```tsx
-<ColumnBrowser panels={panels} ariaLabel="Projects"
-  storageKey="my-app.browser.widths.v1" />
-```
-
-The cache keeps up to 100 recently committed panel IDs, including temporarily hidden ancestors. IDs must be nonempty and at most 1024 characters; saved values must be positive finite numbers. Unknown cached IDs do not create panels. Changing the key selects a separate preference namespace; no preferences are written during restoration. To reset saved preferences, remove the key and remount the browser.
-
-One menu can serve a whole workspace, including dynamically rendered items:
-
-```tsx
-const menu = useContextMenu<string>();
-<div {...menu.getDelegatedTriggerProps({
-  resolveContext: (target, root) => {
-    const item = target.closest<HTMLElement>('[data-item-id]');
-    const id = item?.dataset.itemId;
-    return item && root.contains(item) && items.some(item => item.id === id) ? id : undefined;
-  },
-})}>
-  {items.map(item => <ColumnBrowserItem key={item.id} data-item-id={item.id}
-    aria-haspopup="menu">{item.name}</ColumnBrowserItem>)}
-</div>
-```
-
-`resolveContext(target, root)` owns matching and current-item validation. Return `null`/`undefined` for native-menu targets, editable fields or unknown items. Resolved false/zero/empty-string contexts are valid. The returned capture handlers open on right-click, Shift+F10 and the Context Menu key, respect already-prevented events, and preserve the nearest invoking control as the return-focus target. Keep per-item popup semantics (`aria-haspopup="menu"`) and keyboard focusability. Use the same `ContextMenu` rendering as individual triggers. Compose existing capture handlers instead of replacing either one; commands and selection policy remain caller-owned.
-
-## Stable item styling hooks (0.7.0)
-
-Scope standard CSS custom properties on the browser or an enclosing density scope. No provider, global theme registration or custom CSS density property is needed.
-
-| Property | Default / purpose |
-| --- | --- |
-| `--pt-item-gap` | `6px`, icon/label/trailing spacing |
-| `--pt-item-radius` | `4px`, item corners |
-| `--pt-item-line-height` | `18px`, text line height |
-| `--pt-item-text` | Inherited text color |
-| `--pt-item-hover-bg` | Puppertino hover token |
-| `--pt-item-path-bg` | Puppertino hover token, inactive hierarchy path |
-| `--pt-item-selection-bg`, `--pt-item-selection-text` | Puppertino selection tokens |
-| `--pt-focus-color` | Puppertino control accent; selected items use selection text |
-| `--pt-divider-color` | Puppertino table divider |
-| `--pt-panel-padding` | `4px`, panel content inset |
-| `--pt-icon-color` | Inherited artwork color; selected item icons inherit selection text |
-| `--pt-secondary-text` | Puppertino secondary/dim text; selected items inherit selection text |
-
-The public presentation classes are `.pt-browser-item`, `.pt-item-label`, `.pt-icon`, `.pt-item-trailing`, `.pt-item-secondary`, `.pt-path-selected` and `.p-selected`. Use `.pt-item-secondary` for caller-rendered metadata. Icon/trailing slots size nested SVG or image artwork as well as direct children. State classes describe presentation, not authorization or navigation. Keep document badges, thumbnails and domain-specific metadata in the app.
-
-```css
-.my-browser {
-  --pt-divider-color: var(--app-separator);
-  --pt-icon-color: var(--app-accent);
-  --pt-secondary-text: var(--app-secondary);
-  --pt-item-gap: 8px;
-}
-```

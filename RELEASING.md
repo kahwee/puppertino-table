@@ -1,6 +1,6 @@
 # Releasing Puppertino Table
 
-Stable versions of the public `puppertino-table` package publish through `.github/workflows/publish-npm.yml` when an authorized stable GitHub Release is published. The existing npm trusted publisher was validated by the successful 0.1.1 release. No npm token or additional trust setup is needed for subsequent releases.
+Stable versions of the public `puppertino-table` package publish through `.github/workflows/publish-npm.yml` when an authorized stable GitHub Release is published. The existing npm trusted publisher supplies OIDC authentication and provenance; no npm token or additional trust setup is needed.
 
 ## Prepare an authorized release
 
