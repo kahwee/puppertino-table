@@ -1,8 +1,8 @@
-import type { RowData, Row, Cell } from '@tanstack/react-table';
-import type { ReactNode, ComponentPropsWithoutRef } from 'react';
-import type { puppertinoTableFeatures, PuppertinoTableInstance } from './model.js';
-import type { PuppertinoTableOptions } from './table-options.js';
+import type { Cell, Row, RowData } from '@tanstack/react-table';
+import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import type { PuppertinoTableInstance, puppertinoTableFeatures } from './model.js';
 import type { ColumnResizeOptions } from './resize-types.js';
+import type { PuppertinoTableOptions } from './table-options.js';
 export type PuppertinoRow<T extends RowData> = Row<typeof puppertinoTableFeatures, T>;
 export type PuppertinoCell<T extends RowData> = Cell<typeof puppertinoTableFeatures, T>;
 export type PuppertinoDataAttributes = {

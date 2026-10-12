@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add pinned Biome formatting, import organization and recommended lint checks to local and CI verification.
+- Format maintained code, resolve lint findings and document narrow accessibility/gesture exceptions.
+
 ## 0.3.0 — 2026-10-12
 
 - Require the latest stable React 19 at release time (19.3.0, peer range `^19.3.0`); remove React 18 compatibility coverage.

@@ -1,4 +1,4 @@
-import type { RowData, Header } from '@tanstack/react-table';
+import type { Header, RowData } from '@tanstack/react-table';
 import type { PuppertinoTableInstance, puppertinoTableFeatures } from './model.js';
 export interface ColumnResizeOptions {
   enabled?: boolean;

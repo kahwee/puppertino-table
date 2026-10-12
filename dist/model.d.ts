@@ -1,5 +1,5 @@
 import type { RowData } from '@tanstack/react-table';
-import { type ReactTable, type SortingState, type RowSelectionState, type ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef, type ReactTable, type RowSelectionState, type SortingState } from '@tanstack/react-table';
 export declare const puppertinoTableFeatures: {
     rowSortingFeature: import("@tanstack/react-table").TableFeature;
     columnSizingFeature: import("@tanstack/react-table").TableFeature;

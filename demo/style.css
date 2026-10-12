@@ -1,28 +1,112 @@
-@import '@codedgar/puppertino/colors';
-@import '@codedgar/puppertino/typography';
-@import '@codedgar/puppertino/buttons';
-@import '@codedgar/puppertino/forms';
-@import '@codedgar/puppertino/lists';
-@import '@codedgar/puppertino/dark-mode';
-@import '../src/style.css';
-* { box-sizing: border-box; }
-body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-.demo-shell { --p-window-bg: #fff; --p-text-secondary: #555; --p-control-accent: #0064dc; min-height: 100vh; background: #f3f3f5; color: #252525; padding: clamp(20px, 4vw, 64px); }
-.demo-shell.p-dark-mode { --p-window-bg: #242426; --p-text-secondary: #ccc; --p-control-accent: #86b8ff; background: #171719; color: #eee; }
-.demo-shell header { display: flex; align-items: start; justify-content: space-between; gap: 24px; max-width: 1200px; margin: 0 auto 32px; }
-.demo-shell h1 { font-size: clamp(28px, 4vw, 44px); letter-spacing: -.04em; margin: 0 0 12px; }
-.demo-eyebrow { font-size: 12px; font-weight: 600; margin: 0 0 12px; }
-.demo-panel { max-width: 1200px; margin: auto; background: var(--p-window-bg); border: 1px solid #b8b8bd; border-radius: 12px; overflow: hidden; box-shadow: 0 12px 36px #00000008; }
-.demo-toolbar, .demo-panel footer { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px; }
-.demo-toolbar { border-bottom: 1px solid #b8b8bd; }
-.demo-panel footer { border-top: 1px solid #b8b8bd; }
-.demo-panel .pt-scroll { height: 580px; }
-.demo-panel .pt-table { font-size: 13px; }
-.demo-panel .pt-table td { height: 36px; }
-.demo-spacer { flex: 1; }
-.demo-help, .demo-shell > a { display: block; max-width: 1200px; margin: 20px auto; font-size: 13px; line-height: 1.6; }
-.demo-shell a { color: #075dba; }
-.demo-shell.p-dark-mode a { color: #a1c7ff; }
-.demo-number { font-variant-numeric: tabular-nums; }
-.demo-badge { display: inline-block; padding: 2px 7px; border: 1px solid currentColor; border-radius: 5px; font-size: 11px; }
-@media (max-width: 600px) { .demo-shell header { flex-direction: column; } }
+@import "@codedgar/puppertino/colors";
+@import "@codedgar/puppertino/typography";
+@import "@codedgar/puppertino/buttons";
+@import "@codedgar/puppertino/forms";
+@import "@codedgar/puppertino/lists";
+@import "@codedgar/puppertino/dark-mode";
+@import "../src/style.css";
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.demo-shell {
+  --p-window-bg: #fff;
+  --p-text-secondary: #555;
+  --p-control-accent: #0064dc;
+  min-height: 100vh;
+  background: #f3f3f5;
+  color: #252525;
+  padding: clamp(20px, 4vw, 64px);
+}
+.demo-shell.p-dark-mode {
+  --p-window-bg: #242426;
+  --p-text-secondary: #ccc;
+  --p-control-accent: #86b8ff;
+  background: #171719;
+  color: #eee;
+}
+.demo-shell header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto 32px;
+}
+.demo-shell h1 {
+  font-size: clamp(28px, 4vw, 44px);
+  letter-spacing: -0.04em;
+  margin: 0 0 12px;
+}
+.demo-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+.demo-panel {
+  max-width: 1200px;
+  margin: auto;
+  background: var(--p-window-bg);
+  border: 1px solid #b8b8bd;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 36px #00000008;
+}
+.demo-toolbar,
+.demo-panel footer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+}
+.demo-toolbar {
+  border-bottom: 1px solid #b8b8bd;
+}
+.demo-panel footer {
+  border-top: 1px solid #b8b8bd;
+}
+.demo-panel .pt-scroll {
+  height: 580px;
+}
+.demo-panel .pt-table {
+  font-size: 13px;
+}
+.demo-panel .pt-table td {
+  height: 36px;
+}
+.demo-spacer {
+  flex: 1;
+}
+.demo-help,
+.demo-shell > a {
+  display: block;
+  max-width: 1200px;
+  margin: 20px auto;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.demo-shell a {
+  color: #075dba;
+}
+.demo-shell.p-dark-mode a {
+  color: #a1c7ff;
+}
+.demo-number {
+  font-variant-numeric: tabular-nums;
+}
+.demo-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border: 1px solid currentColor;
+  border-radius: 5px;
+  font-size: 11px;
+}
+@media (max-width: 600px) {
+  .demo-shell header {
+    flex-direction: column;
+  }
+}

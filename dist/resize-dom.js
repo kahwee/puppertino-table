@@ -10,21 +10,30 @@ function markDrag(name, delta) {
 /** Browser effects are installed only when a mounted hook retains a controller. */
 export const resizeEnvironment = {
     listenCancel(cancel) {
-        const escape = (event) => { if (event.key === 'Escape' && cancel())
-            event.preventDefault(); };
-        const blur = () => { cancel(); };
-        window.addEventListener('keydown', escape);
+        const onEscape = (event) => {
+            if (event.key === 'Escape' && cancel())
+                event.preventDefault();
+        };
+        const blur = () => {
+            cancel();
+        };
+        window.addEventListener('keydown', onEscape);
         window.addEventListener('blur', blur);
-        return () => { window.removeEventListener('keydown', escape); window.removeEventListener('blur', blur); };
+        return () => {
+            window.removeEventListener('keydown', onEscape);
+            window.removeEventListener('blur', blur);
+        };
     },
-    isCompact: query => !!(query && window.matchMedia(query).matches),
+    isCompact: (query) => !!(query && window.matchMedia(query).matches),
     startGesture(target, pointer, className, query, cancel) {
         target.focus();
         target.setPointerCapture(pointer);
         markDrag(className, 1);
         const compact = query ? window.matchMedia(query) : undefined;
-        const change = () => { if (compact?.matches)
-            cancel(); };
+        const change = () => {
+            if (compact?.matches)
+                cancel();
+        };
         compact?.addEventListener('change', change);
         let released = false;
         return () => {

@@ -1,11 +1,13 @@
-import type { RowData, Row, Cell } from '@tanstack/react-table';
-import type { ReactNode, ComponentPropsWithoutRef } from 'react';
-import type { puppertinoTableFeatures, PuppertinoTableInstance } from './model.js';
-import type { PuppertinoTableOptions } from './table-options.js';
+import type { Cell, Row, RowData } from '@tanstack/react-table';
+import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import type { PuppertinoTableInstance, puppertinoTableFeatures } from './model.js';
 import type { ColumnResizeOptions } from './resize-types.js';
+import type { PuppertinoTableOptions } from './table-options.js';
 export type PuppertinoRow<T extends RowData> = Row<typeof puppertinoTableFeatures, T>;
 export type PuppertinoCell<T extends RowData> = Cell<typeof puppertinoTableFeatures, T>;
-export type PuppertinoDataAttributes = { [key: `data-${string}`]: string | number | boolean | null | undefined };
+export type PuppertinoDataAttributes = {
+  [key: `data-${string}`]: string | number | boolean | null | undefined;
+};
 export interface PuppertinoBodyContext<T extends RowData> {
   table: PuppertinoTableInstance<T>;
   /** Leaf columns plus the optional selection column. */
@@ -13,19 +15,31 @@ export interface PuppertinoBodyContext<T extends RowData> {
   selectable: boolean;
   disabled: boolean;
 }
-export type PuppertinoRowProps = PuppertinoDataAttributes & Omit<ComponentPropsWithoutRef<'tr'>, 'children' | 'dangerouslySetInnerHTML'>;
-export type PuppertinoCellProps = PuppertinoDataAttributes & Omit<ComponentPropsWithoutRef<'td'>, 'children' | 'dangerouslySetInnerHTML'>;
+export type PuppertinoRowProps = PuppertinoDataAttributes &
+  Omit<ComponentPropsWithoutRef<'tr'>, 'children' | 'dangerouslySetInnerHTML'>;
+export type PuppertinoCellProps = PuppertinoDataAttributes &
+  Omit<ComponentPropsWithoutRef<'td'>, 'children' | 'dangerouslySetInnerHTML'>;
 export interface PuppertinoBodyOptions<T extends RowData> {
   selectable?: boolean;
   disabled?: boolean;
   getRowLabel?: (row: T) => string;
   emptyContent?: ReactNode;
-  getRowProps?: (row: PuppertinoRow<T>, context: PuppertinoBodyContext<T>) => PuppertinoRowProps | undefined;
-  getCellProps?: (cell: PuppertinoCell<T>, context: PuppertinoBodyContext<T>) => PuppertinoCellProps | undefined;
+  getRowProps?: (
+    row: PuppertinoRow<T>,
+    context: PuppertinoBodyContext<T>,
+  ) => PuppertinoRowProps | undefined;
+  getCellProps?: (
+    cell: PuppertinoCell<T>,
+    context: PuppertinoBodyContext<T>,
+  ) => PuppertinoCellProps | undefined;
   /** Semantic <tr> elements before data rows, including when data is empty. */
-  leadingRows?: ReactNode | ((table: PuppertinoTableInstance<T>, context: PuppertinoBodyContext<T>) => ReactNode);
+  leadingRows?:
+    | ReactNode
+    | ((table: PuppertinoTableInstance<T>, context: PuppertinoBodyContext<T>) => ReactNode);
 }
-export interface PuppertinoTableProps<T extends RowData> extends PuppertinoTableOptions<T>, PuppertinoBodyOptions<T> {
+export interface PuppertinoTableProps<T extends RowData>
+  extends PuppertinoTableOptions<T>,
+    PuppertinoBodyOptions<T> {
   resizable?: boolean;
   cancelMediaQuery?: string;
   ariaLabel: string;
