@@ -44,7 +44,8 @@
     "test:package": "node scripts/check-package.mjs",
     "lint": "biome ci . --error-on-warnings",
     "format": "biome check --write .",
-    "profile:pointer": "tsx scripts/profile-pointer.ts"
+    "profile:pointer": "tsx scripts/profile-pointer.ts",
+    "capture:readme": "pnpm build:storybook && node scripts/capture-readme.mjs"
   },
   "peerDependencies": {
     "@codedgar/puppertino": "^2.0.0",
