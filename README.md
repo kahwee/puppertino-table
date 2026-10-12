@@ -227,6 +227,8 @@ Checks include TypeScript, independent controller ownership/cancellation/persist
 
 GitHub Actions runs the same checks and uploads Storybook plus browser evidence as an artifact. Browser tests use fictional data and do not claim Safari, physical-device or latency coverage.
 
+Dependabot opens weekly npm and GitHub Actions update PRs. Compatible npm minor/patch updates are grouped; major updates remain separate for review. The existing library, package-consumer and Storybook checks verify these PRs. No automated merge or npm publication is triggered by dependency updates.
+
 ## npm releases
 
 The unscoped **`puppertino-table`** package is public on npm. Stable releases use the guarded GitHub Release workflow described in [RELEASING.md](https://github.com/kahwee/puppertino-table/blob/main/RELEASING.md), including verified package preparation and clean registry consumers.
