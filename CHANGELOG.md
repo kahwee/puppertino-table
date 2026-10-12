@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.4.0 — 2026-10-12
+
 - Keep uncontrolled sorting and selection in TanStack atoms while preserving observer callbacks and the public selected-state contract.
 - Subscribe inside checkbox and resize primitives to prevent stale selection and sizing with stable memoized props.
 - Cancel only the dragged column and avoid repeating the completed resize preview update.

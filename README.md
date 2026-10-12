@@ -17,7 +17,7 @@ A generic React table styled with [Puppertino](https://puppertino.com/) and powe
 The package includes built ESM and TypeScript declarations. Install it from npm:
 
 ```sh
-pnpm add puppertino-table@0.3.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
+pnpm add puppertino-table@0.4.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
 ```
 
 React 19.3.0 or a compatible newer React 19 release is required (`^19.3.0`). React 18 and React 20 are outside the supported range. React, TanStack Table and Puppertino are peer dependencies; the library does not bundle another copy of them. For Git-based installation, use `github:kahwee/puppertino-table` and pin a commit or tag for reproducibility.
@@ -263,7 +263,7 @@ The unscoped **`puppertino-table`** package is public on npm. Stable releases us
 
 ```sh
 pnpm check
-npm publish test-results/package/puppertino-table-0.3.0.tgz --dry-run --ignore-scripts --access public
+npm publish test-results/package/puppertino-table-0.4.0.tgz --dry-run --ignore-scripts --access public
 ```
 
 `pnpm check` builds and packs the library, checks the tarball file list, and installs it in isolated React 19.3.0 consumers. `prepack` rebuilds JavaScript and declarations so a locally packed release cannot silently use stale output. Only the compiled library, CSS, package metadata, README, changelog and MIT license ship; Storybook, the demo and tests stay out of the npm package.
