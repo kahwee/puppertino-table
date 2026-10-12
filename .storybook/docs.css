@@ -19,3 +19,33 @@
 .storybook-guide-table th {
   background: #f5f7fa;
 }
+
+.sbdocs-wrapper {
+  padding: 40px 28px;
+}
+.sbdocs-content {
+  max-width: 1120px;
+}
+.sbdocs-content > p {
+  line-height: 1.7;
+}
+.sbdocs-content > h1 {
+  letter-spacing: -0.6px;
+}
+.sbdocs-content > h2 {
+  margin-top: 40px;
+}
+.sbdocs-content figure img {
+  border-radius: 8px;
+  border: 1px solid #dcdce0;
+}
+.sbdocs-content figcaption {
+  margin-top: 8px;
+  color: #65656b;
+  font-size: 12px;
+}
+@media (max-width: 640px) {
+  .sbdocs-wrapper {
+    padding: 24px 16px;
+  }
+}

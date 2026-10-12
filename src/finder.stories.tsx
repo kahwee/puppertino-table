@@ -2,6 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { DragEvent } from 'react';
 import { useState } from 'react';
 import {
+  FileArtwork,
+  FilePreview,
+  type FinderView,
+  Glyph,
+  ViewGlyph,
+} from '../demo/finder-artwork.js';
+import {
   ColumnBrowser,
   ColumnBrowserItem,
   ContextMenu,
@@ -65,20 +72,6 @@ const initialFiles = [
 ];
 type FileItem = (typeof initialFiles)[number];
 const helper = createPuppertinoColumnHelper<FileItem>();
-function Glyph({ folder = false }: { folder?: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.4">
-      {folder ? (
-        <path d="M2 6h8l2 3h10v12H2Z" fill="currentColor" fillOpacity=".25" />
-      ) : (
-        <>
-          <path d="M5 2h9l5 5v15H5Z" />
-          <path d="M14 2v5h5M8 12h8M8 16h6" />
-        </>
-      )}
-    </svg>
-  );
-}
 const columns = helper.columns([
   helper.accessor('name', {
     header: 'Name',
@@ -88,7 +81,7 @@ const columns = helper.columns([
     cell: (cell) => (
       <span className="finder-demo-filename">
         <span className="pt-icon">
-          <Glyph />
+          <Glyph kind={cell.row.original.kind} />
         </span>
         {cell.getValue()}
       </span>
@@ -103,10 +96,12 @@ function FinderDemo({
   initialView = 'list',
   initialDark = false,
   initialDensity = 'compact',
+  initialPreview = true,
 }: {
-  initialView?: 'list' | 'columns';
+  initialView?: FinderView;
   initialDark?: boolean;
   initialDensity?: 'compact' | 'comfortable';
+  initialPreview?: boolean;
 }) {
   const [files, setFiles] = useState(initialFiles);
   const [folder, setFolder] = useState('Projects');
@@ -114,13 +109,40 @@ function FinderDemo({
   const [dark, setDark] = useState(initialDark);
   const [density, setDensity] = useState<TableDensity>(initialDensity);
   const [revision, setRevision] = useState(0);
-  const [detail, setDetail] = useState<string | null>(null);
+  const [detail, setDetail] = useState<string | null>(
+    initialPreview && (initialView === 'columns' || initialView === 'gallery') ? 'brief' : null,
+  );
+  const [query, setQuery] = useState('');
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [history, setHistory] = useState({ folders: ['Projects'], index: 0 });
   const [dragging, setDragging] = useState<string | null>(null);
   const [over, setOver] = useState<string | null>(null);
   const [message, setMessage] = useState('6 items · Fictional workspace');
   const menu = useContextMenu<string>();
-  const visible = files.filter((file) => file.folder === folder);
-  const active = files.find((file) => file.id === detail);
+  const visible = files.filter(
+    (file) => file.folder === folder && file.name.toLowerCase().includes(query.toLowerCase()),
+  );
+  const active = visible.find((file) => file.id === detail);
+  const navigate = (name: string) => {
+    if (name !== folder)
+      setHistory((previous) => ({
+        folders: [...previous.folders.slice(0, previous.index + 1), name],
+        index: previous.index + 1,
+      }));
+    setFolder(name);
+    setDetail(null);
+    setInfoOpen(false);
+    setQuery('');
+  };
+  const travel = (delta: number) => {
+    const index = history.index + delta;
+    if (index < 0 || index >= history.folders.length) return;
+    setHistory({ ...history, index });
+    setFolder(history.folders[index]);
+    setDetail(null);
+    setInfoOpen(false);
+    setQuery('');
+  };
   const context = files.find((file) => file.id === menu.state?.context);
   const dragProps = (file: FileItem) => ({
     draggable: true,
@@ -162,7 +184,7 @@ function FinderDemo({
       icon={<Glyph folder />}
       pathSelected={folder === name}
       trailing="›"
-      onClick={() => setFolder(name)}
+      onClick={() => navigate(name)}
       {...dropProps(name)}
       className={over === name ? 'finder-demo-drop' : ''}
     >
@@ -173,50 +195,92 @@ function FinderDemo({
     <main className={`finder-demo-stage ${dark ? 'p-dark-mode' : ''}`}>
       <section className="finder-demo-window" aria-label="Finder-style demo">
         <header className="finder-demo-toolbar">
-          <span className="finder-demo-lights" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </span>
-          <div className="finder-demo-title">
-            <h1>{folder}</h1>
-            <span>Workspace / {folder}</span>
+          <div className="finder-demo-titlebar">
+            <span className="finder-demo-lights" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </span>
           </div>
-          <fieldset className="finder-demo-views" aria-label="View">
-            <button type="button" aria-pressed={view === 'list'} onClick={() => setView('list')}>
-              List
-            </button>
-            <button
-              type="button"
-              aria-pressed={view === 'columns'}
-              onClick={() => setView('columns')}
-            >
-              Columns
-            </button>
-          </fieldset>
-          <select
-            aria-label="Row density"
-            value={density}
-            onChange={(event) => setDensity(event.target.value as TableDensity)}
-          >
-            <option value="compact">Compact</option>
-            <option value="comfortable">Comfortable</option>
-          </select>
-          <button
-            type="button"
-            aria-label={`Toggle ${dark ? 'light' : 'dark'} theme`}
-            onClick={() => setDark(!dark)}
-          >
-            {dark ? 'Light' : 'Dark'}
-          </button>
+          <div className="finder-demo-toolbar-content">
+            <div className="finder-demo-history">
+              <button
+                type="button"
+                aria-label="Back"
+                title="Back"
+                disabled={history.index === 0}
+                onClick={() => travel(-1)}
+              >
+                <ViewGlyph view="back" />
+              </button>
+              <button
+                type="button"
+                aria-label="Forward"
+                title="Forward"
+                disabled={history.index === history.folders.length - 1}
+                onClick={() => travel(1)}
+              >
+                <ViewGlyph view="forward" />
+              </button>
+            </div>
+            <div className="finder-demo-title">
+              <h1>{folder}</h1>
+            </div>
+            <fieldset className="finder-demo-views" aria-label="View">
+              {(['icons', 'list', 'columns', 'gallery'] as const).map((next) => (
+                <button
+                  key={next}
+                  type="button"
+                  aria-label={next === 'icons' ? 'Icons' : next[0].toUpperCase() + next.slice(1)}
+                  title={
+                    next === 'icons' ? 'Icon view' : `${next[0].toUpperCase() + next.slice(1)} view`
+                  }
+                  aria-pressed={view === next}
+                  onClick={() => {
+                    setView(next);
+                    if ((next === 'columns' || next === 'gallery') && !detail)
+                      setDetail(visible[0]?.id ?? null);
+                  }}
+                >
+                  <ViewGlyph view={next} />
+                </button>
+              ))}
+            </fieldset>
+            <label className="finder-demo-search">
+              <ViewGlyph view="search" />
+              <input
+                type="search"
+                aria-label="Search files"
+                placeholder="Search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </label>
+          </div>
         </header>
         <DensityScope density={density} className="finder-demo-workspace">
           <nav className="finder-demo-sidebar" aria-label="Favorites">
             <h2>Favorites</h2>
             {['Projects', 'Archive'].map(folderButton)}
-            <h2>Workspace</h2>
-            <p>Design studio</p>
-            <p>Local demo</p>
+            <h2>Locations</h2>
+            <p>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                aria-hidden="true"
+              >
+                <path d="M3 4h18v13H3ZM8 21h8M12 17v4" />
+              </svg>
+              Design studio
+            </p>
+            <h2>Tags</h2>
+            <p>
+              <span className="finder-demo-tag" />
+              Project Alpine
+            </p>
+            <span className="finder-demo-sidebar-note">Fictional workspace</span>
           </nav>
           <div className="finder-demo-content">
             {view === 'list' ? (
@@ -234,9 +298,11 @@ function FinderDemo({
                   ...menu.getTriggerProps(row.id),
                   ...dragProps(row.original),
                 })}
-                emptyContent="Drop a file here from Projects."
+                emptyContent={
+                  query ? `No files match “${query}”.` : 'Drop a file here from Projects.'
+                }
               />
-            ) : (
+            ) : view === 'columns' ? (
               <ColumnBrowser
                 key={revision}
                 ariaLabel="Workspace columns"
@@ -260,7 +326,7 @@ function FinderDemo({
                       <ColumnBrowserItem
                         key={file.id}
                         selected={detail === file.id}
-                        icon={<Glyph />}
+                        icon={<Glyph kind={file.kind} />}
                         {...menu.getTriggerProps(file.id)}
                         {...dragProps(file)}
                         onClick={() => setDetail(file.id)}
@@ -269,31 +335,65 @@ function FinderDemo({
                       </ColumnBrowserItem>
                     )),
                   },
-                  {
-                    id: 'preview',
-                    label: 'Preview',
-                    content: (
-                      <div className="finder-demo-preview">
-                        <div className="finder-demo-paper">
-                          <Glyph />
-                          <strong>{active?.name ?? 'Select a file'}</strong>
-                          <span>PROJECT / ALPINE</span>
-                          <hr />
-                          <hr />
-                          <hr />
-                        </div>
-                        <p>{active?.kind ?? 'Click an item to preview it'}</p>
-                      </div>
-                    ),
-                  },
+                  ...(active
+                    ? [
+                        {
+                          id: 'preview',
+                          label: 'Preview',
+                          content: <FilePreview file={active} />,
+                        },
+                      ]
+                    : []),
                 ]}
               />
+            ) : view === 'icons' ? (
+              <section className="finder-demo-icon-grid" aria-label="Project file icons">
+                {visible.map((file) => (
+                  <button
+                    type="button"
+                    key={file.id}
+                    aria-pressed={detail === file.id}
+                    className="finder-demo-icon-item"
+                    {...menu.getTriggerProps(file.id)}
+                    {...dragProps(file)}
+                    onClick={() => setDetail(file.id)}
+                  >
+                    <FileArtwork file={file} />
+                    <span>{file.name}</span>
+                    <small>{file.kind}</small>
+                  </button>
+                ))}
+                {!visible.length && (
+                  <p className="finder-demo-no-results">
+                    {query ? `No files match “${query}”.` : 'No files in this folder.'}
+                  </p>
+                )}
+              </section>
+            ) : (
+              <section className="finder-demo-gallery" aria-label="Project file gallery">
+                <FilePreview file={active ?? visible[0]} />
+                <section className="finder-demo-filmstrip" aria-label="Gallery files">
+                  {visible.map((file) => (
+                    <button
+                      type="button"
+                      key={file.id}
+                      aria-label={file.name}
+                      aria-pressed={(active ?? visible[0])?.id === file.id}
+                      {...menu.getTriggerProps(file.id)}
+                      {...dragProps(file)}
+                      onClick={() => setDetail(file.id)}
+                    >
+                      <FileArtwork file={file} />
+                    </button>
+                  ))}
+                </section>
+              </section>
             )}
           </div>
-          {active && view === 'list' && (
+          {active && infoOpen && (
             <aside className="finder-demo-details" aria-label="File details">
               <span className="finder-demo-detail-icon">
-                <Glyph />
+                <Glyph kind={active.kind} />
               </span>
               <h2>{active.name}</h2>
               <p>{active.kind}</p>
@@ -305,29 +405,33 @@ function FinderDemo({
                 <dt>Folder</dt>
                 <dd>{active.folder}</dd>
               </dl>
-              <button type="button" onClick={() => setDetail(null)}>
+              <button type="button" onClick={() => setInfoOpen(false)}>
                 Close details
               </button>
             </aside>
           )}
         </DensityScope>
+        <nav className="finder-demo-path" aria-label="Current location">
+          <Glyph folder />
+          <span>Design studio</span>
+          <span aria-hidden="true">›</span>
+          <span>Workspace</span>
+          <span aria-hidden="true">›</span>
+          <strong>{folder}</strong>
+          {active && (
+            <>
+              <span aria-hidden="true">›</span>
+              <span className="finder-demo-path-file">{active.name}</span>
+            </>
+          )}
+        </nav>
         <footer className="finder-demo-status">
-          <span role="status">{message}</span>
-          <button
-            type="button"
-            onClick={() => {
-              menu.close();
-              setFiles(initialFiles);
-              setFolder('Projects');
-              setDetail(null);
-              setDragging(null);
-              setOver(null);
-              setMessage('6 items · Fictional workspace');
-              setRevision((value) => value + 1);
-            }}
-          >
-            Reset demo
-          </button>
+          <span role="status">
+            {message.startsWith('6 items')
+              ? `${visible.length} ${visible.length === 1 ? 'item' : 'items'} · Fictional workspace`
+              : message}
+          </span>
+          <span>{query ? `Search in ${folder}` : 'All changes stay in this demo'}</span>
         </footer>
         <ContextMenu
           ariaLabel="File actions"
@@ -342,7 +446,10 @@ function FinderDemo({
                     label: 'Get Info',
                     icon: <Glyph />,
                     shortcut: '⌘I',
-                    onSelect: () => setDetail(context.id),
+                    onSelect: () => {
+                      setDetail(context.id);
+                      setInfoOpen(true);
+                    },
                   },
                   { id: 'separator', type: 'separator' },
                   {
@@ -371,6 +478,44 @@ function FinderDemo({
           }
         />
       </section>
+      <fieldset className="finder-demo-controls" aria-label="Demo settings">
+        <span>Try the shared components</span>
+        <label>
+          Density{' '}
+          <select
+            aria-label="Row density"
+            value={density}
+            onChange={(event) => setDensity(event.target.value as TableDensity)}
+          >
+            <option value="compact">Compact</option>
+            <option value="comfortable">Comfortable</option>
+          </select>
+        </label>
+        <button
+          type="button"
+          aria-label={`Toggle ${dark ? 'light' : 'dark'} theme`}
+          onClick={() => setDark(!dark)}
+        >
+          {dark ? 'Light' : 'Dark'}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            menu.close();
+            setFiles(initialFiles);
+            setFolder('Projects');
+            setDetail(view === 'columns' || view === 'gallery' ? 'brief' : null);
+            setDragging(null);
+            setOver(null);
+            setQuery('');
+            setHistory({ folders: ['Projects'], index: 0 });
+            setMessage('6 items · Fictional workspace');
+            setRevision((value) => value + 1);
+          }}
+        >
+          Reset demo
+        </button>
+      </fieldset>
     </main>
   );
 }
@@ -379,15 +524,27 @@ const meta = {
   title: 'Examples/Finder',
   component: FinderDemo,
   tags: ['!autodocs'],
-  args: { initialView: 'list', initialDark: false, initialDensity: 'compact' },
+  args: {
+    initialView: 'list',
+    initialDark: false,
+    initialDensity: 'compact',
+    initialPreview: true,
+  },
   render: (args) => (
-    <FinderDemo key={`${args.initialView}-${args.initialDark}-${args.initialDensity}`} {...args} />
+    <FinderDemo
+      key={`${args.initialView}-${args.initialDark}-${args.initialDensity}-${args.initialPreview}`}
+      {...args}
+    />
   ),
   argTypes: {
     initialView: {
       control: 'inline-radio',
-      options: ['list', 'columns'],
+      options: ['icons', 'list', 'columns', 'gallery'],
       description: 'Starting view. Changing a starting control restarts the fictional workspace.',
+    },
+    initialPreview: {
+      control: 'boolean',
+      description: 'Start column/gallery views with the first file preview selected.',
     },
     initialDark: { control: 'boolean', description: 'Start with the Puppertino dark theme.' },
     initialDensity: {
@@ -484,6 +641,76 @@ export const ComfortableTable: Story = {
           'density="compact"',
           'density="comfortable"',
         ),
+      },
+    },
+  },
+};
+
+export const IconWorkspace: Story = {
+  args: { initialView: 'icons' },
+  parameters: {
+    docs: {
+      source: {
+        language: 'tsx',
+        type: 'code',
+        code: `// Your app owns the icon grid and selected item.
+const menu = useContextMenu<string>();
+<div className="my-icon-grid">{files.map(file => <button key={file.id}
+  type="button" aria-pressed={selectedId === file.id}
+  onClick={() => setSelectedId(file.id)} {...menu.getTriggerProps(file.id)}>
+  <FileArtwork file={file} /><span>{file.name}</span>
+</button>)}</div>;`,
+      },
+      description: {
+        story:
+          'App-owned icon layout using the same items, commands, search and drag/drop. File previews and layout belong to the application.',
+      },
+    },
+  },
+};
+export const GalleryWorkspace: Story = {
+  args: { initialView: 'gallery' },
+  parameters: {
+    docs: {
+      source: {
+        language: 'tsx',
+        type: 'code',
+        code: `// Your app renders the preview and filmstrip.
+<>
+<Preview file={files.find(file => file.id === selectedId)} />
+<section aria-label="Gallery files">{files.map(file => <button key={file.id}
+  type="button" aria-label={file.name} aria-pressed={selectedId === file.id}
+  onClick={() => setSelectedId(file.id)} {...menu.getTriggerProps(file.id)}>
+  <FileArtwork file={file} />
+</button>)}</section>
+</>;`,
+      },
+      description: {
+        story:
+          'A large app-owned preview and keyboard-focusable filmstrip. Select a thumbnail or right-click it for shared commands.',
+      },
+    },
+  },
+};
+export const DarkColumns: Story = {
+  args: { initialView: 'columns', initialDark: true },
+  parameters: { docs: { source: ColumnWorkspace.parameters?.docs?.source } },
+};
+export const NarrowColumns: Story = {
+  args: { initialView: 'columns', initialPreview: false },
+  render: (args) => (
+    <div className="finder-demo-frame">
+      <FinderDemo
+        key={`${args.initialView}-${args.initialDark}-${args.initialDensity}-${args.initialPreview}`}
+        {...args}
+      />
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Start with the file column; click a file to reveal its preview. Narrow windows keep ancestor columns accessible by horizontal scrolling. Use the canvas resize control to compare smaller widths.',
       },
     },
   },

@@ -5,6 +5,7 @@ import { createServer } from 'node:http';
 import path from 'node:path';
 import axe from 'axe-core';
 import { chromium } from 'playwright';
+import { checkFinderStories } from './check-finder-stories.js';
 import { checkResourceWorkspaces } from './check-resource-workspaces.js';
 import { checkStorybookDocs } from './check-storybook-docs.js';
 
@@ -630,6 +631,7 @@ try {
     await page.screenshot({ path: `${evidence}/${story}.png` });
   }
   await checkResourceWorkspaces(page, stories.base, evidence);
+  await checkFinderStories(page, stories.base, evidence);
   await checkStorybookDocs(page, stories.base, evidence);
   await page.close();
   assert.deepEqual(errors, []);

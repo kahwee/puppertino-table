@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.1 — 2026-10-12
+
+- Rebuild the Finder Storybook workspace with an aligned sidebar/titlebar, compact icon toolbar, search, folder history, path/status bars and original file artwork.
+- Add app-owned Icon and Gallery views, dark columns and a constrained narrow workspace alongside the shared table/column browser examples.
+- Refresh all ten documentation screenshots and three interaction screencasts; capture context-menu close-ups without scaling the menu coordinate system.
+- Expand browser coverage for four-view navigation, search, history, empty previews, keyboard menus, reset, narrow overflow and accessibility. Public runtime APIs remain unchanged.
+
 ## 0.7.0 — 2026-10-12
 
 - Add hydration-safe, completion-only column-browser width persistence with bounded hidden-panel preferences and controlled-state ownership.

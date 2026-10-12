@@ -50,13 +50,12 @@ async function accessibility(page) {
   );
   assert.deepEqual(violations, []);
 }
-async function open(story, recording = false) {
+async function open(story, recording = false, closeup = false) {
+  const viewport = closeup ? { width: 864, height: 512 } : { width: 1080, height: 640 };
   const context = await browser.newContext({
-    viewport: { width: 1080, height: 640 },
-    deviceScaleFactor: 1,
-    ...(recording
-      ? { recordVideo: { dir: 'test-results/readme-video', size: { width: 1080, height: 640 } } }
-      : {}),
+    viewport,
+    deviceScaleFactor: closeup ? 1.25 : 1,
+    ...(recording ? { recordVideo: { dir: 'test-results/readme-video', size: viewport } } : {}),
   });
   const page = await context.newPage();
   page.on('pageerror', (error) => errors.push(error.message));
@@ -101,6 +100,8 @@ async function finish(context, page, name) {
       '-y',
       '-i',
       input,
+      '-vf',
+      'scale=1080:640:flags=lanczos',
       '-c:v',
       'libvpx-vp9',
       '-b:v',
@@ -132,6 +133,8 @@ async function finish(context, page, name) {
       '-y',
       '-i',
       input,
+      '-vf',
+      'scale=1080:640:flags=lanczos',
       '-c:v',
       'libx264',
       '-pix_fmt',
@@ -181,6 +184,21 @@ try {
   await columns.page.screenshot({ path: path.join(media, 'columns-preview.png') });
   await columns.context.close();
 
+  for (const [story, name] of [
+    ['dark-columns', 'columns-dark'],
+    ['icon-workspace', 'icons-light'],
+    ['gallery-workspace', 'gallery-preview'],
+    ['narrow-columns', 'columns-narrow'],
+  ]) {
+    const capture = await open(story);
+    await accessibility(capture.page);
+    await (story === 'narrow-columns'
+      ? capture.page.locator('.finder-demo-frame')
+      : capture.page
+    ).screenshot({ path: path.join(media, `${name}.png`) });
+    await capture.context.close();
+  }
+
   const resize = await open('file-table', true);
   await caption(resize.page, 'Drag a table divider — rows stay aligned');
   await pause(resize.page);
@@ -196,11 +214,8 @@ try {
   await drag(resize.page, resize.page.locator('.pt-panel-resizer').first(), 70);
   await finish(resize.context, resize.page, 'resizing');
 
-  const menu = await open('file-table', true);
-  await menu.page.evaluate(() => {
-    document.querySelector('.finder-demo-stage').style.zoom = '1.25';
-  });
-  await caption(menu.page, 'Right-click a file — close-up at 125%');
+  const menu = await open('file-table', true, true);
+  await caption(menu.page, 'Right-click a file — 125% capture close-up');
   await pause(menu.page);
   await menu.page.getByText('Project brief.pdf', { exact: true }).click({ button: 'right' });
   await menu.page.getByRole('menu', { name: 'File actions' }).waitFor();
@@ -217,9 +232,6 @@ try {
   await menu.page.getByRole('menuitem', { name: 'Get Info', exact: true }).click();
   await menu.page.getByRole('complementary', { name: 'File details' }).waitFor();
   await pause(menu.page);
-  await menu.page.evaluate(() => {
-    document.querySelector('.finder-demo-stage').style.zoom = '1';
-  });
   await menu.page.getByRole('button', { name: 'Close details' }).click();
   await caption(menu.page, 'Keyboard: focus a row, then Shift+F10');
   await menu.page.getByRole('row').filter({ hasText: 'Research notes.txt' }).focus();
@@ -263,7 +275,7 @@ try {
   await pause(drop.page);
   await finish(drop.context, drop.page, 'drag-drop');
   assert.deepEqual(errors, []);
-  console.log('README media captured: six screenshots, three asserted interaction GIFs and MP4s.');
+  console.log('README media captured: ten screenshots, three asserted interaction GIFs and MP4s.');
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));

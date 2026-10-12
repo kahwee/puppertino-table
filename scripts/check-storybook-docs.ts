@@ -6,10 +6,10 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   console.log('Checking Storybook docs: render and readable source');
   await page.goto(`${base}/iframe.html?id=examples-finder--docs&viewMode=docs`);
   await page.locator('#finder-walkthrough').waitFor();
-  const app = page.locator('#story--examples-finder--file-table .finder-demo-window');
+  const app = page.locator('#story--examples-finder--file-table .finder-demo-stage');
   await app.getByRole('table', { name: 'Project files' }).waitFor();
   assert.equal(await page.locator('video').count(), 3);
-  assert.equal(await page.locator('img[src*="/media/"]').count(), 4);
+  assert.equal(await page.locator('img[src*="/media/"]').count(), 5);
   await page.waitForFunction(
     () => document.body.innerText.includes('createPuppertinoColumnHelper'),
     undefined,

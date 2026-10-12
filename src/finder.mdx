@@ -5,7 +5,7 @@ import * as Finder from './finder.stories';
 
 # Finder walkthrough
 
-Watch a gesture, try it in the app below, then copy the integration recipe. All files are fictional; moves update only the example's in-memory state. Videos have controls and never autoplay.
+Compare all four Finder-style views, watch a gesture, then try it and copy the integration recipe. All files are fictional; moves update only the example's in-memory state. Videos have controls and never autoplay.
 
 ## File table
 
@@ -16,6 +16,16 @@ Click a sortable header, select checkboxes (Shift-click extends a range), and sw
 <Controls of={Finder.FileTable} />
 
 Starting controls restart the workspace when changed. The in-app controls let you compare views and density while keeping your file moves. In a narrow docs canvas, the table scrolls horizontally; open the story in its own canvas to see the full desktop layout.
+
+## Icon and Gallery views
+
+Switch between **Icons**, **List**, **Columns**, and **Gallery** using the toolbar. Search filters the current folder in every view. Back and Forward follow folder history. The path bar keeps your location visible; controls below the window compare density and themes without cluttering the file toolbar.
+
+<Canvas of={Finder.IconWorkspace} />
+
+<Canvas of={Finder.GalleryWorkspace} />
+
+Icon grids, gallery filmstrips, file artwork, search, history and previews are app-owned examples. The library supplies table/browser geometry, items, density and menus. These examples show how to compose them without a provider or filesystem dependencies.
 
 ## Resize columns and panels
 
@@ -58,7 +68,7 @@ Use native `href` items for links or `onClick` items for buttons. Stable panel I
   <a href="./media/context-menu.mp4">Download the context-menu screencast</a>
 </video>
 
-The recording opens a file menu at 125% zoom, chooses Get Info, then opens another menu with Shift+F10 and closes it with Escape. Focus a row before trying Shift+F10. Arrows/Home/End navigate enabled commands; disabled entries and separators are skipped. Escape restores focus to the invoking target. Shortcut hints are labels; your app binds any actual shortcuts.
+The recording opens a file menu in a 125% capture close-up, chooses Get Info, then opens another menu with Shift+F10 and closes it with Escape. Focus a row before trying Shift+F10. Arrows/Home/End navigate enabled commands; disabled entries and separators are skipped. Escape restores focus to the invoking target. Shortcut hints are labels; your app binds any actual shortcuts.
 
 <Source language="tsx" code={`const menu = useContextMenu<string>();
 <ColumnBrowserItem {...menu.getTriggerProps(file.id)}>{file.name}</ColumnBrowserItem>
@@ -80,12 +90,21 @@ Drag Project brief.pdf from a row onto **Archive** in Favorites. The highlighted
 
 The example supplies `draggable`, `onDragStart`, `onDragOver` and `onDrop` to table rows and browser items. It validates the ID against its own in-memory items before changing folders. The package supplies composable rows/items, not a drag/drop engine or file operations. <a href="https://github.com/kahwee/puppertino-table/blob/main/src/finder.stories.tsx" target="_blank" rel="noopener noreferrer">Read the complete example</a>.
 
+## Dark and narrow columns
+
+<Canvas of={Finder.DarkColumns} />
+
+<Canvas of={Finder.NarrowColumns} />
+
+The narrow example constrains the same workspace to 620px. Its toolbar wraps and the browser scrolls internally to keep ancestors reachable. Dark mode uses shared theme tokens and preserves selected-text contrast.
+
 ## Compare spacing and themes
 
 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
   <figure style={{ margin: 0 }}><img src="./media/table-selection.png" alt="Compact table with selected files" style={{ width: '100%' }} /><figcaption>Compact with selection</figcaption></figure>
   <figure style={{ margin: 0 }}><img src="./media/table-comfortable.png" alt="Comfortable table spacing" style={{ width: '100%' }} /><figcaption>Comfortable spacing</figcaption></figure>
   <figure style={{ margin: 0 }}><img src="./media/table-dark.png" alt="Dark table with selected files" style={{ width: '100%' }} /><figcaption>Puppertino dark theme</figcaption></figure>
+  <figure style={{ margin: 0 }}><img src="./media/columns-dark.png" alt="Dark column browser with a selected document and preview" style={{ width: '100%' }} /><figcaption>Dark columns</figcaption></figure>
   <figure style={{ margin: 0 }}><img src="./media/columns-preview.png" alt="Columns with a document preview" style={{ width: '100%' }} /><figcaption>Columns with app-owned preview</figcaption></figure>
 </div>
 
@@ -126,6 +145,10 @@ Use shared item slots and scoped CSS variables to customize presentation:
 }`} />
 
 Selection preserves inherited icon and secondary-text contrast. <a href="./?path=/story/puppertino-resource-browser--custom-styling" target="_top">Try styling hooks</a> · <a href="https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md#stable-item-styling-hooks-070" target="_blank" rel="noopener noreferrer">See the full token and slot reference</a>.
+
+## Finder references
+
+The examples follow the sidebar, compact toolbar, four-view switcher and preview hierarchy in [Apple’s Finder guide](https://support.apple.com/guide/mac-help/organize-your-files-in-the-finder-mchle9f0a1b2/mac). Artwork is original fictional content; these are web composition examples, not native macOS controls.
 
 ## Next steps
 

@@ -16,7 +16,7 @@ Finder-style React tables and column browsers, built on [Puppertino](https://pup
 ## Install and use
 
 ```sh
-pnpm add puppertino-table@0.7.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
+pnpm add puppertino-table@0.7.1 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
 ```
 
 ```tsx
@@ -57,6 +57,18 @@ React 19 (`^19.3.0`), TanStack Table and Puppertino are peer dependencies. Sorti
 
 [Try the column app](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--column-workspace). The library owns panel geometry and resize gestures; the app supplies navigation, selection and preview content.
 
+![Dark column browser with selected file and preview](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/columns-dark.png)
+
+### All four Finder views
+
+![Icon view with file artwork](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/icons-light.png)
+
+![Gallery view with a large preview and filmstrip](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/gallery-preview.png)
+
+![Narrow column workspace with wrapping toolbar](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/columns-narrow.png)
+
+[Explore the Finder walkthrough](https://kahwee.github.io/puppertino-table/?path=/docs/examples-finder--docs). Search, folder history, icon/gallery layouts and previews are app-owned; all four demos compose the shared components.
+
 ### Resize table columns and browser panels
 
 ![Screencast of pointer resizing, double-click reset and independent browser panel resizing](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/resizing.gif)
@@ -65,7 +77,7 @@ React 19 (`^19.3.0`), TanStack Table and Puppertino are peer dependencies. Sorti
 
 ### Right-click, close up
 
-![Right-click menu at 125 percent zoom](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/context-menu.png)
+![Right-click menu in a 125 percent capture close-up](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/context-menu.png)
 
 ![Screencast of right-click Get Info and a keyboard-opened context menu](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/context-menu.gif)
 
