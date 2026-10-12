@@ -75,7 +75,7 @@ import { createAtom } from '@tanstack/react-store';
 import type { ColumnSizingState, SortingState, RowSelectionState } from '@tanstack/react-table';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { PuppertinoBodyContext, PuppertinoRowProps, ColumnResizeHandleProps, TableHeaderProps, TableBodyProps, RowSelectionCheckboxProps, PuppertinoTableOptions, PuppertinoTableAtoms } from 'puppertino-table';
-import { type ContextMenuItem, type ColumnBrowserItemLinkProps, PuppertinoTable, DensityScope, ColumnBrowser, ColumnBrowserItem, ContextMenu, useContextMenu, usePuppertinoTable, useRowSelectionGestures, applySelectionGesture, fitColumnBrowser, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
+import { type DelegatedContextMenuOptions, type ContextMenuItem, type ColumnBrowserItemLinkProps, PuppertinoTable, DensityScope, ColumnBrowser, ColumnBrowserItem, ContextMenu, useContextMenu, usePuppertinoTable, useRowSelectionGestures, applySelectionGesture, fitColumnBrowser, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
 type Item = { id: string; title: string; price: number };
 const helper = createPuppertinoColumnHelper<Item>();
 const columns = helper.columns([
@@ -84,7 +84,7 @@ const columns = helper.columns([
 ]);
 const data: Item[] = [{ id: 'ten', title: 'Ten', price: 10 }, { id: 'two', title: 'Two', price: 2 }];
 const browserMarkup = renderToStaticMarkup(createElement(DensityScope, { density: 'comfortable' }, createElement(ColumnBrowser, {
-  ariaLabel: 'Consumer browser', onWidthsCommit: widths => { const value: number | undefined = widths.root; void value; }, panels: [{ id: 'root', label: 'Root', content: createElement(ColumnBrowserItem, { selected: true }, 'Item') }],
+  storageKey: 'consumer.browser', storage: { getItem: () => { throw new Error('SSR read storage'); }, setItem: () => { throw new Error('SSR wrote storage'); } }, ariaLabel: 'Consumer browser', onWidthsCommit: widths => { const value: number | undefined = widths.root; void value; }, panels: [{ id: 'root', label: 'Root', content: createElement(ColumnBrowserItem, { selected: true }, 'Item') }, { id: 'current', label: 'Current', content: 'Current entries' }],
 })));
 const linkProps: ColumnBrowserItemLinkProps = { href: '/resources', target: '_blank', rel: 'noopener', pathSelected: true };
 const nativeLink = renderToStaticMarkup(createElement(ColumnBrowserItem, linkProps, 'Resources'));
@@ -108,6 +108,8 @@ function HookConsumer() {
   const table = usePuppertinoTable({ data, columns, getRowId: item => item.id, initialSorting: [{ id: 'price', desc: false }], manualSorting: false, selectable: true });
   const gestures = useRowSelectionGestures(table);
   const menu = useContextMenu<string>();
+  const delegated: DelegatedContextMenuOptions<string> = { resolveContext: (_target, _root) => 'ten' };
+  if (typeof menu.getDelegatedTriggerProps(delegated).onKeyDownCapture !== 'function') throw new Error('Delegated menu consumer failed');
   if (menu.state !== null || typeof menu.getTriggerProps('ten').onContextMenu !== 'function') throw new Error('Context menu hook consumer failed');
   if (typeof gestures.select !== 'function') throw new Error('Selection gesture hook export failed');
   const header = table.getHeaderGroups()[0].headers[0];

@@ -54,6 +54,7 @@ export function createResizeController(
     active.cleanup();
     if (cancel) {
       active.member.adapter.apply({
+        ...active.before,
         ...active.member.adapter.snapshot(),
         [active.id]: active.before[active.id],
       });

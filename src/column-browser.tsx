@@ -5,11 +5,11 @@ import {
   useEffect,
   useLayoutEffect,
   useRef,
-  useState,
 } from 'react';
 import { fitColumnPanels } from './column-browser-layout.js';
 import { type DensityMetrics, DensityScope, type TableDensity } from './density.js';
 import { clampSize, columnSizeBounds } from './sizing.js';
+import { useBrowserWidthPreferences } from './use-browser-width-preferences.js';
 import { useResizeGesture } from './use-resize-gesture.js';
 
 export interface ColumnBrowserPanel {
@@ -34,6 +34,9 @@ export interface ColumnBrowserProps {
   onWidthsChange?: (widths: ColumnBrowserWidths) => void;
   /** Completed resize/reset operations only, suitable for saving preferences. */
   onWidthsCommit?: (widths: ColumnBrowserWidths) => void;
+  /** Optional completion-only persistence for internally owned widths. Ignored when controlled. */
+  storageKey?: string;
+  storage?: Pick<Storage, 'getItem' | 'setItem'>;
   className?: string;
   style?: ComponentPropsWithoutRef<'div'>['style'];
 }
@@ -51,6 +54,8 @@ export function ColumnBrowser({
   widths: controlled,
   onWidthsChange,
   onWidthsCommit,
+  storageKey,
+  storage,
   className = '',
   style,
 }: ColumnBrowserProps) {
@@ -67,9 +72,13 @@ export function ColumnBrowser({
       maxSize: panel.maxWidth ?? 640,
     })),
   );
-  const [localWidths, setLocalWidths] = useState<ColumnBrowserWidths>({});
+  const appOwned = controlled !== undefined;
+  const preferences = useBrowserWidthPreferences({ appOwned, storageKey, storage });
   const widths = Object.fromEntries(
-    bounds.map((bound) => [bound.id, clampSize((controlled ?? localWidths)[bound.id], bound)]),
+    bounds.map((bound) => [
+      bound.id,
+      clampSize((controlled ?? preferences.widths)[bound.id], bound),
+    ]),
   );
   const snapshot = useRef(widths);
   const surface = useRef<HTMLDivElement>(null);
@@ -79,7 +88,7 @@ export function ColumnBrowser({
       bounds.map((bound) => [bound.id, clampSize(next[bound.id], bound)]),
     );
     snapshot.current = normalized;
-    if (controlled === undefined) setLocalWidths(normalized);
+    if (controlled === undefined) preferences.apply(normalized);
     onWidthsChange?.(normalized);
   };
   const resize = useResizeGesture(
@@ -98,7 +107,10 @@ export function ColumnBrowser({
     {
       enabled: resizable && !disabled && (controlled === undefined || !!onWidthsChange),
       cancelMediaQuery,
-      onCommit: onWidthsCommit,
+      onCommit: (next) => {
+        preferences.commit(next);
+        onWidthsCommit?.({ ...next });
+      },
     },
   );
   const schema = JSON.stringify(bounds);
@@ -108,6 +120,8 @@ export function ColumnBrowser({
   // Panel removal or changed bounds cancel a drag just as table schema changes do.
   // biome-ignore lint/correctness/useExhaustiveDependencies: Cancellation is keyed to stable schema values, not newly created handler objects.
   useEffect(() => () => resize.cancel(), [schema]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Switching preference ownership cancels before restoring the new key or adapter.
+  useEffect(() => () => resize.cancel(), [storageKey, storage, appOwned]);
   const geometry = JSON.stringify(bounds.map((bound) => widths[bound.id]));
   useLayoutEffect(() => {
     const element = surface.current;

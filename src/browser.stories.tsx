@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { useState } from 'react';
+import { type CSSProperties, useState } from 'react';
 import {
   ColumnBrowser,
   ColumnBrowserItem,
@@ -64,10 +64,14 @@ function ResourceBrowser({
   tableView = false,
   controlled = false,
   readOnly = false,
+  persistent = false,
+  delegated = false,
 }: {
   tableView?: boolean;
   controlled?: boolean;
   readOnly?: boolean;
+  persistent?: boolean;
+  delegated?: boolean;
 }) {
   const [density, setDensity] = useState<TableDensity>('compact');
   const [dark, setDark] = useState(false);
@@ -145,7 +149,8 @@ function ResourceBrowser({
           icon={<ResourceIcon />}
           title={resource.name}
           selected={selection[resource.id]}
-          {...menu.getTriggerProps(resource.id)}
+          data-resource-id={resource.id}
+          {...(!delegated ? menu.getTriggerProps(resource.id) : {})}
           onClick={(event) =>
             select(resource.id, { shift: event.shiftKey, toggle: event.metaKey || event.ctrlKey })
           }
@@ -213,6 +218,14 @@ function ResourceBrowser({
         <DensityScope
           density={density}
           className={`demo-browser-workspace ${inspect ? 'has-inspector' : ''}`}
+          {...(delegated
+            ? menu.getDelegatedTriggerProps({
+                resolveContext: (target) => {
+                  const id = target.closest<HTMLElement>('[data-resource-id]')?.dataset.resourceId;
+                  return resources.some((resource) => resource.id === id) ? id : undefined;
+                },
+              })
+            : {})}
         >
           {tableView ? (
             <PuppertinoTable
@@ -224,13 +237,18 @@ function ResourceBrowser({
               rowSelection={selection}
               onRowSelectionChange={setSelection}
               resizable={!resizeDisabled}
-              getRowProps={(row) => ({ tabIndex: 0, ...menu.getTriggerProps(row.id) })}
+              getRowProps={(row) => ({
+                tabIndex: 0,
+                'data-resource-id': row.id,
+                ...(!delegated ? menu.getTriggerProps(row.id) : {}),
+              })}
             />
           ) : (
             <ColumnBrowser
               panels={rootOnly ? panels.slice(0, 1) : panels}
               ariaLabel="Project folders"
               resizeDisabled={resizeDisabled}
+              storageKey={persistent ? 'puppertino.stories.panels.v1' : undefined}
               onWidthsCommit={(next) => {
                 setCommittedWidths(next);
                 setCommits((count) => count + 1);
@@ -348,6 +366,87 @@ export const ColumnWorkspace: Story = {};
 export const DensityTable: Story = { args: { tableView: true } };
 export const ControlledPanels: Story = { args: { controlled: true } };
 export const ReadOnlyPanels: Story = { args: { controlled: true, readOnly: true } };
+export const PersistentPanels: Story = {
+  args: { persistent: true },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Keyboard or pointer resize, navigate to the root, return, then reload. Only completed widths persist; hidden panel preferences survive navigation. Uses a story-specific localStorage key.',
+      },
+    },
+  },
+};
+export const DelegatedMenus: Story = {
+  args: { delegated: true },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'One workspace trigger handles nested resource artwork and labels, right-click and Shift+F10. Items without a resolved context retain their native context menu.',
+      },
+    },
+  },
+};
+export const DelegatedTableMenus: Story = { args: { delegated: true, tableView: true } };
+export const CustomStyling: StoryObj = {
+  render: () => (
+    <DensityScope
+      density="comfortable"
+      style={
+        {
+          height: 240,
+          maxWidth: 760,
+          '--pt-divider-color': '#8393a7',
+          '--pt-panel-padding': '8px',
+          '--pt-item-gap': '12px',
+          '--pt-item-radius': '8px',
+          '--pt-item-hover-bg': '#e8f2ff',
+          '--pt-item-path-bg': '#e8f2ff',
+          '--pt-icon-color': '#245e9c',
+          '--pt-secondary-text': '#435568',
+        } as CSSProperties
+      }
+    >
+      <ColumnBrowser
+        ariaLabel="Styled workspace"
+        panels={[
+          {
+            id: 'folders',
+            label: 'Folders',
+            content: (
+              <ColumnBrowserItem href="#projects" pathSelected icon={<ResourceIcon folder />}>
+                Projects
+              </ColumnBrowserItem>
+            ),
+          },
+          {
+            id: 'files',
+            label: 'Files',
+            content: (
+              <>
+                <ColumnBrowserItem href="#brief" selected icon={<ResourceIcon />}>
+                  Project brief.pdf<span className="pt-item-secondary">PDF · Updated today</span>
+                </ColumnBrowserItem>
+                <ColumnBrowserItem href="#notes" icon={<ResourceIcon />}>
+                  Research notes.txt<span className="pt-item-secondary">Text · Engineering</span>
+                </ColumnBrowserItem>
+              </>
+            ),
+          },
+        ]}
+      />
+    </DensityScope>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Style the public item slots with scoped CSS variables. Selected icons and secondary text inherit selection contrast; no provider or duplicated item markup is needed.',
+      },
+    },
+  },
+};
 
 function DensityInheritanceExample() {
   const [density, setDensity] = useState<TableDensity>('comfortable');

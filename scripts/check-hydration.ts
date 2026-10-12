@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import { chromium } from 'playwright';
 import { createServer as createViteServer } from 'vite';
 import type { hydrate } from '../tests/sizing-hydration.fixture.js';
+import { checkBrowserPreferences } from './check-browser-preferences.js';
 
 declare global {
   interface Window {
@@ -12,6 +13,7 @@ declare global {
 const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'custom' });
 const fixture = await vite.ssrLoadModule('/tests/sizing-hydration.fixture.tsx');
 const html = fixture.serverHTML() as string;
+const browserFixture = await vite.ssrLoadModule('/tests/browser-preferences.fixture.tsx');
 assert.match(html, />150</);
 const server = createServer(async (req, res) => {
   if (req.url === '/__sizing') {
@@ -20,6 +22,14 @@ const server = createServer(async (req, res) => {
       await vite.transformIndexHtml(
         '/__sizing',
         `<div id="root">${html}</div><script type="module">import { hydrate } from '/tests/sizing-hydration.fixture.tsx'; window.sizing = await hydrate();</script>`,
+      ),
+    );
+  } else if (req.url === '/__browser') {
+    res.setHeader('Content-Type', 'text/html');
+    res.end(
+      await vite.transformIndexHtml(
+        '/__browser',
+        `<div id="root">${browserFixture.serverHTML()}</div><script type="module">import { hydrate } from '/tests/browser-preferences.fixture.tsx'; window.browserPreferences = await hydrate();</script>`,
       ),
     );
   } else vite.middlewares(req, res);
@@ -125,6 +135,7 @@ try {
   assert.equal(await blocked.locator('#width').textContent(), '150');
   assert.deepEqual(await blocked.evaluate(() => window.sizing.errors), []);
   await blocked.close();
+  await checkBrowserPreferences(page, `http://127.0.0.1:${address.port}`);
   assert.deepEqual(errors, []);
   console.log(
     'SSR hydration, persisted key changes, invalid preferences, controlled updater, read-only sizing and memoized primitive subscriptions passed.',

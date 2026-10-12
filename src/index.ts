@@ -17,6 +17,7 @@ export {
   type ContextMenuPosition,
   type ContextMenuProps,
   type ContextMenuSeparator,
+  type DelegatedContextMenuOptions,
   useContextMenu,
 } from './context-menu.js';
 export {

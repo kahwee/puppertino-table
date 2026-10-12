@@ -1,12 +1,13 @@
 'use client';
 import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useEffect, useLayoutEffect, useRef, useState, } from 'react';
+import { useEffect, useLayoutEffect, useRef, } from 'react';
 import { fitColumnPanels } from './column-browser-layout.js';
 import { DensityScope } from './density.js';
 import { clampSize, columnSizeBounds } from './sizing.js';
+import { useBrowserWidthPreferences } from './use-browser-width-preferences.js';
 import { useResizeGesture } from './use-resize-gesture.js';
 /** Caller-rendered hierarchy. No fetching, navigation, selection or application commands. */
-export function ColumnBrowser({ panels, ariaLabel, density, densityMetrics, minimumCurrentWidth = 288, resizable = true, resizeDisabled: disabled = false, cancelMediaQuery, widths: controlled, onWidthsChange, onWidthsCommit, className = '', style, }) {
+export function ColumnBrowser({ panels, ariaLabel, density, densityMetrics, minimumCurrentWidth = 288, resizable = true, resizeDisabled: disabled = false, cancelMediaQuery, widths: controlled, onWidthsChange, onWidthsCommit, storageKey, storage, className = '', style, }) {
     const ids = panels.map((panel) => panel.id);
     if (ids.some((id) => !id) || new Set(ids).size !== ids.length)
         throw new Error('Browser panels need unique stable IDs.');
@@ -18,8 +19,12 @@ export function ColumnBrowser({ panels, ariaLabel, density, densityMetrics, mini
         minSize: panel.minWidth ?? 120,
         maxSize: panel.maxWidth ?? 640,
     })));
-    const [localWidths, setLocalWidths] = useState({});
-    const widths = Object.fromEntries(bounds.map((bound) => [bound.id, clampSize((controlled ?? localWidths)[bound.id], bound)]));
+    const appOwned = controlled !== undefined;
+    const preferences = useBrowserWidthPreferences({ appOwned, storageKey, storage });
+    const widths = Object.fromEntries(bounds.map((bound) => [
+        bound.id,
+        clampSize((controlled ?? preferences.widths)[bound.id], bound),
+    ]));
     const snapshot = useRef(widths);
     const surface = useRef(null);
     const owner = useRef({});
@@ -27,7 +32,7 @@ export function ColumnBrowser({ panels, ariaLabel, density, densityMetrics, mini
         const normalized = Object.fromEntries(bounds.map((bound) => [bound.id, clampSize(next[bound.id], bound)]));
         snapshot.current = normalized;
         if (controlled === undefined)
-            setLocalWidths(normalized);
+            preferences.apply(normalized);
         onWidthsChange?.(normalized);
     };
     const resize = useResizeGesture(owner.current, {
@@ -43,7 +48,10 @@ export function ColumnBrowser({ panels, ariaLabel, density, densityMetrics, mini
     }, {
         enabled: resizable && !disabled && (controlled === undefined || !!onWidthsChange),
         cancelMediaQuery,
-        onCommit: onWidthsCommit,
+        onCommit: (next) => {
+            preferences.commit(next);
+            onWidthsCommit?.({ ...next });
+        },
     });
     const schema = JSON.stringify(bounds);
     useLayoutEffect(() => {
@@ -52,6 +60,8 @@ export function ColumnBrowser({ panels, ariaLabel, density, densityMetrics, mini
     // Panel removal or changed bounds cancel a drag just as table schema changes do.
     // biome-ignore lint/correctness/useExhaustiveDependencies: Cancellation is keyed to stable schema values, not newly created handler objects.
     useEffect(() => () => resize.cancel(), [schema]);
+    // biome-ignore lint/correctness/useExhaustiveDependencies: Switching preference ownership cancels before restoring the new key or adapter.
+    useEffect(() => () => resize.cancel(), [storageKey, storage, appOwned]);
     const geometry = JSON.stringify(bounds.map((bound) => widths[bound.id]));
     useLayoutEffect(() => {
         const element = surface.current;

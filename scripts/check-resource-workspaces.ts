@@ -6,6 +6,32 @@ import type { Page } from 'playwright';
 /** Shared example page checks, separate from the table gesture stress suite. */
 export async function checkResourceWorkspaces(page: Page, base: string, evidence: string) {
   await page.goto(
+    `${base}/iframe.html?id=puppertino-resource-browser--custom-styling&viewMode=story`,
+  );
+  const styled = page.getByRole('region', { name: 'Styled workspace' });
+  await styled.waitFor();
+  const selected = styled.locator('.pt-browser-item.p-selected');
+  assert.equal(await selected.evaluate((element) => getComputedStyle(element).gap), '12px');
+  assert.equal(await selected.evaluate((element) => getComputedStyle(element).borderRadius), '8px');
+  assert.equal(
+    await selected.locator('.pt-icon').evaluate((element) => getComputedStyle(element).color),
+    await selected.evaluate((element) => getComputedStyle(element).color),
+  );
+  assert.equal(
+    await selected
+      .locator('.pt-item-secondary')
+      .evaluate((element) => getComputedStyle(element).color),
+    await selected.evaluate((element) => getComputedStyle(element).color),
+  );
+  assert.equal(
+    await styled
+      .locator('.pt-browser-panel')
+      .first()
+      .evaluate((element) => getComputedStyle(element).borderRightColor),
+    'rgb(131, 147, 167)',
+  );
+  await page.screenshot({ path: `${evidence}/custom-styling.png` });
+  await page.goto(
     `${base}/iframe.html?id=puppertino-resource-browser--density-inheritance&viewMode=story`,
   );
   const inherited = page.getByRole('table', { name: 'Inherited table', exact: true });
@@ -65,14 +91,72 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
   await page.getByLabel('Workspace density').selectOption('native');
   assert.equal(await padding('Inherited table'), nativePadding);
   await page.screenshot({ path: `${evidence}/density-inheritance.png` });
+  await page.goto(
+    `${base}/iframe.html?id=puppertino-resource-browser--persistent-panels&viewMode=story`,
+  );
+  await page.getByRole('region', { name: 'Project folders' }).waitFor();
+  await page.evaluate(() =>
+    localStorage.setItem(
+      'puppertino.stories.panels.v1',
+      JSON.stringify({ workspace: 300, projects: 310, hidden: 280 }),
+    ),
+  );
+  await page.reload();
+  const rootHandle = page.getByRole('separator', { name: 'Resize Workspace panel', exact: true });
+  const projectHandle = page.getByRole('separator', { name: 'Resize Projects panel', exact: true });
+  await page.waitForFunction(
+    () => document.querySelector('.pt-panel-resizer')?.getAttribute('aria-valuenow') === '300',
+  );
+  await rootHandle.press('ArrowRight');
+  await projectHandle.press('ArrowRight');
+  const stored = await page.evaluate(() => localStorage.getItem('puppertino.stories.panels.v1'));
+  assert.deepEqual(JSON.parse(stored || '{}'), { hidden: 280, workspace: 316, projects: 326 });
+  const bounds = await projectHandle.boundingBox();
+  assert.ok(bounds);
+  await page.mouse.move(bounds.x + 4, bounds.y + 20);
+  await page.mouse.down();
+  await page.mouse.move(bounds.x + 44, bounds.y + 20);
+  assert.equal(
+    await page.evaluate(() => localStorage.getItem('puppertino.stories.panels.v1')),
+    stored,
+  );
+  await page
+    .getByRole('button', { name: 'Toggle root view' })
+    .evaluate((element) => (element as HTMLButtonElement).click());
+  await page.mouse.up();
+  assert.equal(
+    await page.evaluate(() => localStorage.getItem('puppertino.stories.panels.v1')),
+    stored,
+  );
+  await page.getByRole('button', { name: 'Toggle root view' }).click();
+  assert.equal(await projectHandle.getAttribute('aria-valuenow'), '326');
+  await rootHandle.press('ArrowRight');
+  await page.reload();
+  await page.waitForFunction(
+    () => document.querySelector('.pt-panel-resizer')?.getAttribute('aria-valuenow') === '332',
+  );
+  assert.equal(
+    await projectHandle.getAttribute('aria-valuenow'),
+    '326',
+    'Cancelled hidden-panel previews never become saved widths',
+  );
+  assert.equal(
+    JSON.parse(
+      (await page.evaluate(() => localStorage.getItem('puppertino.stories.panels.v1'))) || '{}',
+    ).hidden,
+    280,
+  );
+  await page.screenshot({ path: `${evidence}/persistent-panels.png` });
   for (const story of [
     'column-workspace',
     'density-table',
     'controlled-panels',
     'read-only-panels',
+    'delegated-menus',
+    'delegated-table-menus',
   ]) {
     await page.goto(`${base}/iframe.html?id=puppertino-resource-browser--${story}&viewMode=story`);
-    const tableView = story === 'density-table';
+    const tableView = story === 'density-table' || story === 'delegated-table-menus';
     const target = tableView
       ? page.getByRole('row').filter({ hasText: 'Project brief.pdf' })
       : page.getByRole('button', { name: 'Project brief.pdf', exact: true });

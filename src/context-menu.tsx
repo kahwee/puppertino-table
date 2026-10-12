@@ -46,6 +46,10 @@ export interface ContextMenuProps {
   onClose(): void;
   returnFocus?: HTMLElement | null;
 }
+export interface DelegatedContextMenuOptions<T> {
+  /** Resolve only app-owned items. Return undefined/null to preserve the native menu. */
+  resolveContext(target: Element, root: HTMLElement): T | null | undefined;
+}
 export function useContextMenu<T>() {
   const [state, setState] = useState<{
     context: T;
@@ -88,6 +92,25 @@ export function useContextMenu<T>() {
           open(context, event);
       },
     }),
+    getDelegatedTriggerProps: ({ resolveContext }: DelegatedContextMenuOptions<T>) => {
+      const resolve = (event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
+        if (
+          event.defaultPrevented ||
+          !(event.target instanceof Element) ||
+          !event.currentTarget.contains(event.target)
+        )
+          return;
+        const context = resolveContext(event.target, event.currentTarget);
+        if (context !== undefined && context !== null) open(context, event);
+      };
+      return {
+        onContextMenuCapture: (event: MouseEvent<HTMLElement>) => resolve(event),
+        onKeyDownCapture: (event: KeyboardEvent<HTMLElement>) => {
+          if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10'))
+            resolve(event);
+        },
+      };
+    },
   };
 }
 

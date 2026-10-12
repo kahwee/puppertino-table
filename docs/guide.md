@@ -356,3 +356,62 @@ The package adds scoped `.pt-*` enhancements to Puppertino's `p-table` styles. I
 
 Puppertino owns separated borders, rounded row stripes, numeric alignment and active-header weight. The package adds scroll/sticky geometry, sort-button and resize-target behavior, plus contrast-safe text. Override `--pt-table-secondary` for secondary/header text and `--pt-table-text` for data-cell text using your application's Puppertino theme tokens. Selection reads `--p-list-selection` and `--p-list-selection-text` in every hover state.
 
+
+## Browser persistence and delegated triggers (0.7.0)
+
+Uncontrolled `ColumnBrowser` accepts `storageKey` and an optional `storage` adapter with `getItem`/`setItem`. Restoration occurs after hydration; visible widths are clamped to each panel's bounds. Only completed pointer, keyboard and reset operations save. Escape, panel removal, changed bounds, storage-key/adapter changes and responsive cancellation discard previews. Storage failures preserve browsing and completion callbacks. Controlled `widths` ignore automatic restoration and saving: the caller remains the sole owner.
+
+```tsx
+<ColumnBrowser panels={panels} ariaLabel="Projects"
+  storageKey="my-app.browser.widths.v1" />
+```
+
+The cache keeps up to 100 recently committed panel IDs, including temporarily hidden ancestors. IDs must be nonempty and at most 1024 characters; saved values must be positive finite numbers. Unknown cached IDs do not create panels. Changing the key selects a separate preference namespace; no preferences are written during restoration. To reset saved preferences, remove the key and remount the browser.
+
+One menu can serve a whole workspace, including dynamically rendered items:
+
+```tsx
+const menu = useContextMenu<string>();
+<div {...menu.getDelegatedTriggerProps({
+  resolveContext: (target, root) => {
+    const item = target.closest<HTMLElement>('[data-item-id]');
+    const id = item?.dataset.itemId;
+    return item && root.contains(item) && items.some(item => item.id === id) ? id : undefined;
+  },
+})}>
+  {items.map(item => <ColumnBrowserItem key={item.id} data-item-id={item.id}
+    aria-haspopup="menu">{item.name}</ColumnBrowserItem>)}
+</div>
+```
+
+`resolveContext(target, root)` owns matching and current-item validation. Return `null`/`undefined` for native-menu targets, editable fields or unknown items. Resolved false/zero/empty-string contexts are valid. The returned capture handlers open on right-click, Shift+F10 and the Context Menu key, respect already-prevented events, and preserve the nearest invoking control as the return-focus target. Keep per-item popup semantics (`aria-haspopup="menu"`) and keyboard focusability. Use the same `ContextMenu` rendering as individual triggers. Compose existing capture handlers instead of replacing either one; commands and selection policy remain caller-owned.
+
+## Stable item styling hooks (0.7.0)
+
+Scope standard CSS custom properties on the browser or an enclosing density scope. No provider, global theme registration or custom CSS density property is needed.
+
+| Property | Default / purpose |
+| --- | --- |
+| `--pt-item-gap` | `6px`, icon/label/trailing spacing |
+| `--pt-item-radius` | `4px`, item corners |
+| `--pt-item-line-height` | `18px`, text line height |
+| `--pt-item-text` | Inherited text color |
+| `--pt-item-hover-bg` | Puppertino hover token |
+| `--pt-item-path-bg` | Puppertino hover token, inactive hierarchy path |
+| `--pt-item-selection-bg`, `--pt-item-selection-text` | Puppertino selection tokens |
+| `--pt-focus-color` | Puppertino control accent; selected items use selection text |
+| `--pt-divider-color` | Puppertino table divider |
+| `--pt-panel-padding` | `4px`, panel content inset |
+| `--pt-icon-color` | Inherited artwork color; selected item icons inherit selection text |
+| `--pt-secondary-text` | Puppertino secondary/dim text; selected items inherit selection text |
+
+The public presentation classes are `.pt-browser-item`, `.pt-item-label`, `.pt-icon`, `.pt-item-trailing`, `.pt-item-secondary`, `.pt-path-selected` and `.p-selected`. Use `.pt-item-secondary` for caller-rendered metadata. Icon/trailing slots size nested SVG or image artwork as well as direct children. State classes describe presentation, not authorization or navigation. Keep document badges, thumbnails and domain-specific metadata in the app.
+
+```css
+.my-browser {
+  --pt-divider-color: var(--app-separator);
+  --pt-icon-color: var(--app-accent);
+  --pt-secondary-text: var(--app-secondary);
+  --pt-item-gap: 8px;
+}
+```

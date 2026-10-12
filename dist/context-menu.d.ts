@@ -34,6 +34,10 @@ export interface ContextMenuProps {
     onClose(): void;
     returnFocus?: HTMLElement | null;
 }
+export interface DelegatedContextMenuOptions<T> {
+    /** Resolve only app-owned items. Return undefined/null to preserve the native menu. */
+    resolveContext(target: Element, root: HTMLElement): T | null | undefined;
+}
 export declare function useContextMenu<T>(): {
     state: {
         context: T;
@@ -46,6 +50,10 @@ export declare function useContextMenu<T>(): {
         'aria-haspopup': 'menu';
         onContextMenu: (event: MouseEvent<HTMLElement>) => void;
         onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
+    };
+    getDelegatedTriggerProps: ({ resolveContext }: DelegatedContextMenuOptions<T>) => {
+        onContextMenuCapture: (event: MouseEvent<HTMLElement>) => void;
+        onKeyDownCapture: (event: KeyboardEvent<HTMLElement>) => void;
     };
 };
 /** Caller-owned commands; popover placement, keyboard navigation and focus stay shared. */

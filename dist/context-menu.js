@@ -35,6 +35,24 @@ export function useContextMenu() {
                     open(context, event);
             },
         }),
+        getDelegatedTriggerProps: ({ resolveContext }) => {
+            const resolve = (event) => {
+                if (event.defaultPrevented ||
+                    !(event.target instanceof Element) ||
+                    !event.currentTarget.contains(event.target))
+                    return;
+                const context = resolveContext(event.target, event.currentTarget);
+                if (context !== undefined && context !== null)
+                    open(context, event);
+            };
+            return {
+                onContextMenuCapture: (event) => resolve(event),
+                onKeyDownCapture: (event) => {
+                    if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10'))
+                        resolve(event);
+                },
+            };
+        },
     };
 }
 /** Caller-owned commands; popover placement, keyboard navigation and focus stay shared. */

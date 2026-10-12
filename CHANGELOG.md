@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add hydration-safe, completion-only column-browser width persistence with bounded hidden-panel preferences and controlled-state ownership.
+- Add delegated context-menu capture handlers with caller-owned context resolution and native-menu fallthrough.
+- Document scoped item, divider, focus, icon and secondary-text styling hooks; support nested artwork in shared slots.
+- Preserve sibling widths when a schema change cancels a drag; expand persistence, hydration and delegated-menu regression coverage and Storybook recipes.
+
 ## 0.6.0 — 2026-10-12
 
 - Inherit density through CSS custom properties and scoped table rules when no preset is supplied; preserve standalone defaults, explicit native/compact/comfortable overrides and partial metrics without React context.

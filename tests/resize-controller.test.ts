@@ -274,3 +274,15 @@ test('commits report intended controlled widths even before the owner rerenders 
     'Commit snapshots do not mutate the resize owner',
   );
 });
+
+test('schema cancellation retains sibling widths missing from the new snapshot', () => {
+  const f = fixture();
+  const member = f.member();
+  f.controller.retain(member);
+  f.controller.begin(member, 'name', 0, 1, f.target, 0);
+  f.controller.move(member, 1, 60);
+  member.adapter = { ...member.adapter, snapshot: () => ({}) };
+  f.controller.cancelMember(member);
+  assert.deepEqual(f.widths(), { name: 200, score: 100 });
+  assert.deepEqual(f.saved, []);
+});

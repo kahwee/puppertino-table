@@ -22,11 +22,14 @@ export interface ColumnBrowserProps {
     onWidthsChange?: (widths: ColumnBrowserWidths) => void;
     /** Completed resize/reset operations only, suitable for saving preferences. */
     onWidthsCommit?: (widths: ColumnBrowserWidths) => void;
+    /** Optional completion-only persistence for internally owned widths. Ignored when controlled. */
+    storageKey?: string;
+    storage?: Pick<Storage, 'getItem' | 'setItem'>;
     className?: string;
     style?: ComponentPropsWithoutRef<'div'>['style'];
 }
 /** Caller-rendered hierarchy. No fetching, navigation, selection or application commands. */
-export declare function ColumnBrowser({ panels, ariaLabel, density, densityMetrics, minimumCurrentWidth, resizable, resizeDisabled: disabled, cancelMediaQuery, widths: controlled, onWidthsChange, onWidthsCommit, className, style, }: ColumnBrowserProps): import("react").JSX.Element;
+export declare function ColumnBrowser({ panels, ariaLabel, density, densityMetrics, minimumCurrentWidth, resizable, resizeDisabled: disabled, cancelMediaQuery, widths: controlled, onWidthsChange, onWidthsCommit, storageKey, storage, className, style, }: ColumnBrowserProps): import("react").JSX.Element;
 interface BrowserItemPresentation {
     icon?: ReactNode;
     trailing?: ReactNode;
