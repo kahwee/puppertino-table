@@ -4,5 +4,6 @@ const config: StorybookConfig = {
   addons: ['@storybook/addon-docs', '@storybook/addon-a11y'],
   framework: '@storybook/react-vite',
   core: { disableTelemetry: true },
+  viteFinal: async config => ({ ...config, base: './' }),
 };
 export default config;

@@ -6,12 +6,14 @@ import path from 'node:path';
 import { chromium } from 'playwright';
 import axe from 'axe-core';
 
-async function serve(directory: string) {
+async function serve(directory: string, mount = '/') {
   const root = path.resolve(directory);
   const server = createServer(async (request, response) => {
     try {
       const pathname = decodeURIComponent(new URL(request.url!, 'http://localhost').pathname);
-      const file = path.resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));
+      if (!pathname.startsWith(mount)) { response.writeHead(404).end(); return; }
+      const relative = pathname.slice(mount.length) || 'index.html';
+      const file = path.resolve(root, relative);
       if (!file.startsWith(root + path.sep)) { response.writeHead(403).end(); return; }
       const types: Record<string, string> = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml' };
       const bytes = await readFile(file); response.setHeader('Content-Type', types[path.extname(file)] || 'application/octet-stream'); response.end(bytes);
@@ -19,9 +21,9 @@ async function serve(directory: string) {
   });
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
   const address = server.address(); assert.ok(address && typeof address !== 'string');
-  return { base: `http://127.0.0.1:${address.port}`, close: () => new Promise<void>(resolve => server.close(() => resolve())) };
+  return { base: `http://127.0.0.1:${address.port}${mount.slice(0, -1)}`, close: () => new Promise<void>(resolve => server.close(() => resolve())) };
 }
-const demo = await serve('demo-dist'); const stories = await serve('storybook-static');
+const demo = await serve('demo-dist'); const stories = await serve('storybook-static', '/puppertino-table/');
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || (existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : chromium.executablePath()) });
 const evidence = 'test-results/browser'; await mkdir(evidence, { recursive: true });
 const errors: string[] = [];
@@ -100,6 +102,10 @@ try {
   }
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   page.on('pageerror', error => errors.push(error.message));
+  await page.goto(`${stories.base}/?path=/story/puppertino-table--default`);
+  await page.frameLocator('#storybook-preview-iframe').getByRole('table').waitFor();
+  await page.getByRole('link', { name: 'Default', exact: true }).waitFor();
+  await page.screenshot({ path: `${evidence}/storybook-pages.png` });
   for (const story of ['default', 'selection', 'keyboard-resize', 'dark', 'narrow', 'empty', 'disabled', 'read-only', 'server-owned-order', 'different-schema', 'grouped-headers']) {
     await page.goto(`${stories.base}/iframe.html?id=puppertino-table--${story}&viewMode=story`);
     await page.getByRole('table').waitFor();

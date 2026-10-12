@@ -81,6 +81,8 @@ The package adds scoped `.pt-*` enhancements to Puppertino's `p-table` styles. I
 
 ## Storybook and demo
 
+GitHub Pages is configured to publish [Storybook 10](https://kahwee.github.io/puppertino-table/) from `storybook-static/` after the checks on main pass. The Pages artifact contains only Storybook and its examples. Pull requests run verification without deploying. For repository setup, select **Settings → Pages → Source → GitHub Actions**; the workflow also attempts to enable Pages automatically.
+
 Use Node 20.19+ or 22.12+ and pnpm 11.25.0.
 
 ```sh
