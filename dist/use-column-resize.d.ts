@@ -1,6 +1,6 @@
 import type { RowData } from '@tanstack/react-table';
 import { type PointerEvent, type KeyboardEvent } from 'react';
-import type { PuppertinoTableInstance } from "./model.js";
+import type { PuppertinoTableInstance } from './model.js';
 export interface ColumnResizeOptions {
     enabled?: boolean;
     storageKey?: string;
@@ -8,7 +8,7 @@ export interface ColumnResizeOptions {
     cancelMediaQuery?: string;
     dragClassName?: string;
 }
-export declare function useColumnResize<T extends RowData>(table: PuppertinoTableInstance<T>, { enabled, storageKey, storage, cancelMediaQuery, dragClassName }?: ColumnResizeOptions): {
+export declare function useColumnResize<T extends RowData>(table: PuppertinoTableInstance<T>, options?: ColumnResizeOptions): {
     handle: (id: string) => {
         onPointerDown: (event: PointerEvent<HTMLElement>) => void;
         onPointerMove: (event: PointerEvent<HTMLElement>) => void;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useTable, type RowSelectionState, type SortingState } from '@tanstack/react-table';
-import { PuppertinoTable, ColumnResizeHandle, puppertinoTableFeatures, type PuppertinoTableProps, type PuppertinoColumnDef } from './index.js';
+import { PuppertinoTable, usePuppertinoTable, ColumnResizeHandle, puppertinoTableFeatures, type PuppertinoTableProps, type PuppertinoColumnDef } from './index.js';
 import { people, personColumns, products, productColumns, type Person } from '../demo/fixtures.js';
 import { expect, userEvent, within } from 'storybook/test';
 
@@ -53,18 +53,60 @@ const standaloneColumns: readonly PuppertinoColumnDef<Person>[] = [
 ];
 function StandaloneResizeExample() {
   const [controls, setControls] = useState(true);
+  const [nameHandle, setNameHandle] = useState(true);
   const table = useTable({ features: puppertinoTableFeatures, columns: standaloneColumns, data: people.slice(0, 2), getRowId: row => row.id,
     state: { sorting: [] as SortingState, rowSelection: {} as RowSelectionState },
   }, state => ({ sorting: state.sorting, rowSelection: state.rowSelection }));
   return <>
+    <button type="button" onClick={() => setNameHandle(!nameHandle)}>{nameHandle ? 'Remove' : 'Mount'} name handle</button>
     <button type="button" onClick={() => setControls(!controls)}>{controls ? 'Remove' : 'Mount'} resize controls</button>
     <table.Subscribe source={table.atoms.columnSizing}>{() => <>
       <output aria-label="Standalone name width">{table.getColumn('name')!.getSize()}</output>
       <table className="p-table pt-table" aria-label="Standalone resize table"><thead>{table.getHeaderGroups().map(group => <tr key={group.id}>{group.headers.map(header => <th key={header.id} colSpan={header.colSpan}>
         {!header.isPlaceholder && <table.FlexRender header={header} />}
-        {controls && <ColumnResizeHandle table={table} header={header} label={header.column.id} />}
+        {controls && (nameHandle || header.column.id !== 'name') && <ColumnResizeHandle table={table} header={header} label={header.column.id} />}
       </th>)}</tr>)}</thead><tbody>{table.getRowModel().rows.map(row => <tr key={row.id}>{row.getAllCells().map(cell => <td key={cell.id}><table.FlexRender cell={cell} /></td>)}</tr>)}</tbody></table>
     </>}</table.Subscribe>
   </>;
 }
 export const StandaloneResize: Story = { render: () => <StandaloneResizeExample /> };
+
+function CustomizedRowsExample({ empty = false }: { empty?: boolean }) {
+  const [active, setActive] = useState('');
+  const [context, setContext] = useState('');
+  const [sorting, setSorting] = useState<SortingState>([]);
+  return <>
+    <PuppertinoTable data={empty ? [] : people.slice(0, 2)} columns={personColumns} getRowId={row => row.id}
+      sorting={sorting} onSortingChange={setSorting} ariaLabel="Customized people" selectable
+      getRowProps={row => ({ className: active === row.id ? 'active-row' : undefined,
+        'aria-current': active === row.id ? 'true' : undefined,
+        onClick: () => setActive(row.id), onContextMenu: event => { event.preventDefault(); setContext(row.original.name); } })}
+      getCellProps={cell => ({ title: `${cell.column.id}: ${cell.getValue()}`, onDoubleClick: () => setContext(cell.column.id) })}
+      leadingRows={table => <tr><td colSpan={table.getAllLeafColumns().length + 1}><button type="button" onClick={() => setContext('Folder opened')}>Open folder</button></td></tr>} />
+    <output aria-label="Context action">{context}</output>
+    <output aria-label="Active row">{active}</output>
+  </>;
+}
+export const CustomizedRows: Story = { render: () => <CustomizedRowsExample /> };
+export const LeadingRowsWhenEmpty: Story = { render: () => <CustomizedRowsExample empty /> };
+
+function HookLayoutExample() {
+  const [readOnly, setReadOnly] = useState(false);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const table = usePuppertinoTable({ data: people.slice(0, 3), columns: personColumns, getRowId: row => row.id,
+    sorting, onSortingChange: setSorting, selectable: true, manualSorting: false, rowSelection: readOnly ? {} : undefined });
+  return <><button type="button" onClick={() => setReadOnly(!readOnly)}>Toggle read-only selection</button><table.Subscribe source={table.atoms.columnSizing}>{() => <table className="p-table pt-table" aria-label="Hook layout" style={{ width: table.getTotalSize() }}>
+    <colgroup>{table.getAllLeafColumns().map(column => <col key={column.id} style={{ width: column.getSize() }} />)}</colgroup>
+    <thead>{table.getHeaderGroups().map(group => <tr key={group.id}>{group.headers.map(header => <th key={header.id} scope="col">
+      <button type="button" onClick={() => header.column.toggleSorting()}><table.FlexRender header={header} /></button>
+      <ColumnResizeHandle table={table} header={header} label={header.column.id} />
+    </th>)}</tr>)}</thead>
+    <tbody>{table.getRowModel().rows.map(row => <tr key={row.id}>
+      {row.getAllCells().map((cell, index) => <td key={cell.id}>{index === 0 && <input type="checkbox" aria-label={`Select ${row.original.name}`} checked={row.getIsSelected()} disabled={!row.getCanSelect()} onChange={row.getToggleSelectedHandler()} />}
+        <table.FlexRender cell={cell} /></td>)}
+    </tr>)}</tbody>
+  </table>}</table.Subscribe></>;
+}
+export const HookLayout: Story = { render: () => <HookLayoutExample /> };
+
+export const IndependentTables: Story = { render: () => <><Example ariaLabel="First table" /><Example ariaLabel="Second table" /></> };

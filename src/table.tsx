@@ -1,58 +1,34 @@
 "use client";
-import type { RowData } from '@tanstack/react-table';
-import { memo, useMemo, useState, type ReactNode } from 'react';
-import { useTable, type SortingState, type RowSelectionState, type OnChangeFn } from '@tanstack/react-table';
-import { puppertinoTableFeatures, type PuppertinoTableInstance, type PuppertinoColumnDef } from './model.js';
-import { columnSizeBounds, readColumnSizing } from './sizing.js';
+import type { RowData, Row, Cell } from '@tanstack/react-table';
+import { memo, type ReactNode, type ComponentPropsWithoutRef } from 'react';
+import { puppertinoTableFeatures, type PuppertinoTableInstance } from './model.js';
+import { usePuppertinoTable, type PuppertinoTableOptions } from './use-puppertino-table.js';
 import { useColumnResize } from './use-column-resize.js';
 
-export interface PuppertinoTableProps<T extends RowData> {
-  data: readonly T[];
-  columns: readonly PuppertinoColumnDef<T>[];
-  getRowId: (row: T, index: number) => string;
-  sorting: SortingState;
-  onSortingChange: OnChangeFn<SortingState>;
-  /** True for server-owned order/pagination; false enables local TanStack sorting. */
-  manualSorting?: boolean;
-  rowSelection?: RowSelectionState;
-  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+export type PuppertinoRow<T extends RowData> = Row<typeof puppertinoTableFeatures, T>;
+export type PuppertinoCell<T extends RowData> = Cell<typeof puppertinoTableFeatures, T>;
+export type PuppertinoRowProps = Omit<ComponentPropsWithoutRef<'tr'>, 'children' | 'dangerouslySetInnerHTML'>;
+export type PuppertinoCellProps = Omit<ComponentPropsWithoutRef<'td'>, 'children' | 'dangerouslySetInnerHTML'>;
+
+export interface PuppertinoTableProps<T extends RowData> extends PuppertinoTableOptions<T> {
   getRowLabel?: (row: T) => string;
-  selectable?: boolean;
-  disabled?: boolean;
   resizable?: boolean;
-  storageKey?: string;
-  storage?: Pick<Storage, 'getItem' | 'setItem'>;
   cancelMediaQuery?: string;
   ariaLabel: string;
   caption?: ReactNode;
   emptyContent?: ReactNode;
   className?: string;
+  getRowProps?: (row: PuppertinoRow<T>) => PuppertinoRowProps | undefined;
+  getCellProps?: (cell: PuppertinoCell<T>) => PuppertinoCellProps | undefined;
+  /** Render semantic <tr> elements before data rows, including when data is empty. */
+  leadingRows?: ReactNode | ((table: PuppertinoTableInstance<T>) => ReactNode);
 }
 
 export function PuppertinoTable<T extends RowData>({ data, columns, getRowId, sorting, onSortingChange, manualSorting = true,
   rowSelection: controlledSelection, onRowSelectionChange, getRowLabel, selectable = false, disabled = false,
-  resizable = true, storageKey, storage, cancelMediaQuery, ariaLabel, caption, emptyContent = 'No rows', className = '' }: PuppertinoTableProps<T>) {
-  const [localSelection, setLocalSelection] = useState<RowSelectionState>({});
-  const rowSelection = controlledSelection ?? localSelection;
-  const canSelect = selectable && !disabled && (controlledSelection === undefined || !!onRowSelectionChange);
-  const bounds = useMemo(() => columnSizeBounds(columns), [columns]);
-  const sizedColumns = useMemo(() => {
-    const byId = new Map(bounds.map(bound => [bound.id, bound]));
-    const decorate = (defs: readonly PuppertinoColumnDef<T>[]): PuppertinoColumnDef<T>[] => defs.map(def => {
-      if ('columns' in def && def.columns) return { ...def, columns: decorate(def.columns) };
-      const id = def.id ?? ('accessorKey' in def ? String(def.accessorKey).replaceAll('.', '_') : '');
-      return { ...def, ...byId.get(id) };
-    });
-    return decorate(columns);
-  }, [columns, bounds]);
-  const [initialWidths] = useState(() => {
-    try { return readColumnSizing(bounds, storageKey, storage || localStorage); } catch { return readColumnSizing(bounds); }
-  });
-  const table = useTable({ features: puppertinoTableFeatures, columns: sizedColumns, data, getRowId,
-    manualSorting, enableMultiSort: false, enableSortingRemoval: false, enableRowSelection: canSelect,
-    enableSubRowSelection: false, initialState: { columnSizing: initialWidths },
-    state: { sorting, rowSelection }, onSortingChange, onRowSelectionChange: onRowSelectionChange ?? setLocalSelection,
-  }, state => ({ sorting: state.sorting, rowSelection: state.rowSelection }));
+  resizable = true, storageKey, storage, cancelMediaQuery, ariaLabel, caption, emptyContent = 'No rows', className = '', getRowProps, getCellProps, leadingRows }: PuppertinoTableProps<T>) {
+  const table = usePuppertinoTable({ data, columns, getRowId, sorting, onSortingChange, manualSorting,
+    rowSelection: controlledSelection, onRowSelectionChange, selectable, disabled, storageKey, storage });
   const options = { enabled: resizable && !disabled, storageKey, storage, cancelMediaQuery };
   const { handle } = useColumnResize(table, options);
   const groups = table.getHeaderGroups();
@@ -77,20 +53,28 @@ export function PuppertinoTable<T extends RowData>({ data, columns, getRowId, so
           </th>;
         })}
       </tr>)}</thead>
-      <MemoTableBody table={table} selectable={selectable} getRowLabel={getRowLabel} emptyContent={emptyContent} />
+      <MemoTableBody table={table} selectable={selectable} getRowLabel={getRowLabel} emptyContent={emptyContent} getRowProps={getRowProps} getCellProps={getCellProps} leadingRows={leadingRows} />
     </table>}</table.Subscribe>
   </div>;
 }
 
 /** Geometry updates do not rerender cells. State and data changes still do. */
-function TableBody<T extends RowData>({ table, selectable, getRowLabel, emptyContent }: {
+function TableBody<T extends RowData>({ table, selectable, getRowLabel, emptyContent, getRowProps, getCellProps, leadingRows }: {
   table: PuppertinoTableInstance<T>; selectable: boolean; getRowLabel?: (row: T) => string; emptyContent: ReactNode;
+  getRowProps?: PuppertinoTableProps<T>['getRowProps']; getCellProps?: PuppertinoTableProps<T>['getCellProps'];
+  leadingRows?: PuppertinoTableProps<T>['leadingRows'];
 }) {
   const rows = table.getRowModel().rows;
-  return <tbody>{rows.length ? rows.map(row => <tr key={row.id} className={row.getIsSelected() ? 'p-selected' : undefined}>
-    {selectable && <td className="pt-selection"><input type="checkbox" aria-label={`Select ${getRowLabel?.(row.original) ?? row.id}`} checked={row.getIsSelected()} disabled={!row.getCanSelect()}
-      onClick={event => { event.stopPropagation(); row.getToggleSelectedHandler()(event); }} onChange={() => {}} /></td>}
-    {row.getAllCells().map(cell => <td key={cell.id}><table.FlexRender cell={cell} /></td>)}
-  </tr>) : <tr><td colSpan={table.getAllLeafColumns().length + (selectable ? 1 : 0)}>{emptyContent}</td></tr>}</tbody>;
+  return <tbody>{typeof leadingRows === 'function' ? leadingRows(table) : leadingRows}
+    {rows.length ? rows.map(row => {
+      const props = getRowProps?.(row);
+      const className = [row.getIsSelected() ? 'p-selected' : '', props?.className].filter(Boolean).join(' ') || undefined;
+      return <tr {...props} key={row.id} className={className}>
+        {selectable && <td className="pt-selection"><input type="checkbox" aria-label={`Select ${getRowLabel?.(row.original) ?? row.id}`} checked={row.getIsSelected()} disabled={!row.getCanSelect()}
+          onClick={event => { event.stopPropagation(); row.getToggleSelectedHandler()(event); }} onChange={() => {}} /></td>}
+        {row.getAllCells().map(cell => <td {...getCellProps?.(cell)} key={cell.id}><table.FlexRender cell={cell} /></td>)}
+      </tr>;
+    }) : <tr><td colSpan={table.getAllLeafColumns().length + (selectable ? 1 : 0)}>{emptyContent}</td></tr>}
+  </tbody>;
 }
 const MemoTableBody = memo(TableBody) as typeof TableBody;

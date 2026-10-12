@@ -106,10 +106,24 @@ try {
   await page.frameLocator('#storybook-preview-iframe').getByRole('table').waitFor();
   await page.getByRole('link', { name: 'Default', exact: true }).waitFor();
   await page.screenshot({ path: `${evidence}/storybook-pages.png` });
-  for (const story of ['default', 'selection', 'keyboard-resize', 'dark', 'narrow', 'empty', 'disabled', 'read-only', 'server-owned-order', 'different-schema', 'grouped-headers', 'standalone-resize']) {
+  for (const story of ['default', 'selection', 'keyboard-resize', 'dark', 'narrow', 'empty', 'disabled', 'read-only', 'server-owned-order', 'different-schema', 'grouped-headers', 'standalone-resize', 'customized-rows', 'leading-rows-when-empty', 'hook-layout', 'independent-tables']) {
+    if (story === 'standalone-resize') await page.addInitScript(() => {
+      const target = window as any;
+      const listeners = { keydown: new Set(), blur: new Set() };
+      target.__resizeListeners = listeners;
+      const add = window.addEventListener.bind(window), remove = window.removeEventListener.bind(window);
+      window.addEventListener = ((type: string, listener: any, options: any) => {
+        if (type === 'keydown' || type === 'blur') listeners[type].add(listener);
+        add(type, listener, options);
+      }) as typeof window.addEventListener;
+      window.removeEventListener = ((type: string, listener: any, options: any) => {
+        if (type === 'keydown' || type === 'blur') listeners[type].delete(listener);
+        remove(type, listener, options);
+      }) as typeof window.removeEventListener;
+    });
     await page.goto(`${stories.base}/iframe.html?id=puppertino-table--${story}&viewMode=story`);
-    await page.getByRole('table').waitFor();
-    assert.equal(await page.locator('#storybook-root').getByRole('table').count(), 1);
+    await page.getByRole('table').first().waitFor();
+    assert.equal(await page.locator('#storybook-root').getByRole('table').count(), story === 'independent-tables' ? 2 : 1);
     if (story === 'selection') await page.waitForFunction(() => document.querySelector('output')?.textContent === '4 selected');
     if (story === 'default') await page.waitForFunction(() => document.querySelector('th[aria-sort]')?.getAttribute('aria-sort') === 'ascending');
     if (story === 'grouped-headers') {
@@ -117,10 +131,75 @@ try {
       assert.ok(await page.getByRole('columnheader', { name: 'Identity', exact: true }).isVisible());
       assert.equal(await page.getByRole('separator', { name: 'Resize Name column', exact: true }).count(), 1);
     }
+    if (story === 'customized-rows') {
+      const rows = page.getByRole('table', { name: 'Customized people', exact: true }).locator('tbody tr');
+      assert.equal(await rows.count(), 3);
+      await page.getByRole('button', { name: 'Open folder' }).click();
+      assert.equal(await page.getByLabel('Context action').textContent(), 'Folder opened');
+      const first = rows.nth(1);
+      await first.locator('td[title]').first().click();
+      assert.equal(await first.getAttribute('aria-current'), 'true');
+      await first.click({ button: 'right' });
+      assert.match(await page.getByLabel('Context action').textContent() ?? '', /Person/);
+      await first.getByRole('checkbox').check();
+      assert.match(await first.getAttribute('class') ?? '', /p-selected/);
+      assert.match(await first.getAttribute('class') ?? '', /active-row/);
+      await first.locator('td[title]').first().dblclick();
+      assert.equal(await page.getByLabel('Context action').textContent(), 'name');
+      const before = await page.getByLabel('Active row').textContent();
+      await rows.nth(2).getByRole('checkbox').check();
+      assert.equal(await page.getByLabel('Active row').textContent(), before, 'selection does not trigger app row click');
+      await first.evaluate(el => { (window as any).__customRow = el; });
+      await page.getByRole('separator', { name: 'Resize Name column' }).press('ArrowRight');
+      assert.ok(await first.evaluate(el => el === (window as any).__customRow), 'custom row remains mounted on geometry updates');
+    }
+    if (story === 'leading-rows-when-empty') {
+      assert.equal(await page.getByRole('table', { name: 'Customized people', exact: true }).locator('tbody tr').count(), 2);
+      assert.ok(await page.getByRole('button', { name: 'Open folder' }).isVisible());
+      assert.ok(await page.getByText('No rows', { exact: true }).isVisible());
+    }
+    if (story === 'hook-layout') {
+      const table = page.getByRole('table', { name: 'Hook layout', exact: true });
+      const first = await table.locator('tbody tr').first().textContent();
+      await page.getByRole('button', { name: 'Score', exact: true }).click();
+      assert.notEqual(await table.locator('tbody tr').first().textContent(), first, 'hook enables opt-in local sorting');
+      await page.getByRole('checkbox').first().check();
+      assert.equal(await page.getByRole('checkbox').first().isChecked(), true);
+      const handle = page.getByRole('separator', { name: 'Resize name column', exact: true });
+      const before = Number(await handle.getAttribute('aria-valuenow'));
+      await handle.press('ArrowRight');
+      assert.equal(Number(await handle.getAttribute('aria-valuenow')), before + 16);
+      await page.getByRole('button', { name: 'Toggle read-only selection' }).click();
+      assert.equal(await table.getByRole('checkbox').first().isDisabled(), true, 'controlled selection without callback is read-only');
+    }
+    if (story === 'independent-tables') {
+      const first = page.getByRole('table', { name: 'First table', exact: true }).getByRole('separator', { name: 'Resize Name column' });
+      const second = page.getByRole('table', { name: 'Second table', exact: true }).getByRole('separator', { name: 'Resize Name column' });
+      const firstWidth = Number(await first.getAttribute('aria-valuenow'));
+      const secondWidth = Number(await second.getAttribute('aria-valuenow'));
+      const box = (await first.boundingBox())!;
+      await page.mouse.move(box.x + 6, box.y + box.height / 2); await page.mouse.down();
+      await page.mouse.move(box.x + 46, box.y + box.height / 2);
+      await second.dispatchEvent('keydown', { key: 'ArrowRight', bubbles: true });
+      assert.equal(Number(await second.getAttribute('aria-valuenow')), secondWidth + 16, 'another table can resize independently');
+      await page.keyboard.press('Escape'); await page.mouse.up();
+      assert.equal(Number(await first.getAttribute('aria-valuenow')), firstWidth);
+      assert.equal(Number(await second.getAttribute('aria-valuenow')), secondWidth + 16, 'cancel restores only the active table');
+    }
     if (story === 'empty') assert.ok(await page.getByText('No people match this view.').isVisible());
     if (story === 'disabled') assert.equal(await page.getByRole('checkbox').first().isDisabled(), true);
     if (story === 'different-schema') assert.ok(await page.getByRole('table', { name: 'Inventory' }).isVisible());
     if (story === 'standalone-resize') {
+      const listenerCounts = () => page.evaluate(() => {
+        const listeners = (window as any).__resizeListeners;
+        return [listeners.keydown.size, listeners.blur.size];
+      });
+      const mountedCounts = await listenerCounts();
+      await page.getByRole('button', { name: 'Remove resize controls', exact: true }).click();
+      const unmountedCounts = await listenerCounts();
+      assert.deepEqual(mountedCounts.map((count, index) => count - unmountedCounts[index]), [1, 1], 'all standalone handles share exactly one keydown and blur listener');
+      await page.getByRole('button', { name: 'Mount resize controls', exact: true }).click();
+      assert.deepEqual(await listenerCounts(), mountedCounts, 'remount retains one controller listener pair');
       assert.equal(await page.getByRole('separator').count(), 2, 'only two leaf headers expose standalone handles');
       assert.equal(await page.getByRole('separator', { name: 'Resize identity column', exact: true }).count(), 0);
       const handle = page.getByRole('separator', { name: 'Resize name column', exact: true });
@@ -129,6 +208,20 @@ try {
       await page.mouse.move(box.x + 6, box.y + box.height / 2); await page.mouse.down();
       await page.mouse.move(box.x + 66, box.y + box.height / 2);
       assert.equal(Number(await page.getByLabel('Standalone name width').textContent()), initial + 60);
+      const other = page.getByRole('separator', { name: 'Resize score column', exact: true });
+      const otherWidth = Number(await other.getAttribute('aria-valuenow'));
+      await other.dispatchEvent('keydown', { key: 'ArrowRight', bubbles: true });
+      await other.dispatchEvent('pointerdown', { button: 0, pointerId: 99, clientX: 0, bubbles: true });
+      await other.dispatchEvent('pointermove', { pointerId: 99, clientX: 100, bubbles: true });
+      assert.equal(Number(await other.getAttribute('aria-valuenow')), otherWidth, 'another column cannot change during an active shared gesture');
+      await page.getByRole('button', { name: 'Remove name handle', exact: true }).evaluate(el => (el as HTMLButtonElement).click());
+      await page.mouse.up();
+      assert.equal(Number(await page.getByLabel('Standalone name width').textContent()), initial, 'removing only the active handle restores widths');
+      assert.deepEqual(await listenerCounts(), mountedCounts, 'remaining handles retain the shared listener pair');
+      await page.getByRole('button', { name: 'Mount name handle', exact: true }).click();
+      const newBox = (await handle.boundingBox())!;
+      await page.mouse.move(newBox.x + 6, newBox.y + newBox.height / 2); await page.mouse.down();
+      await page.mouse.move(newBox.x + 66, newBox.y + newBox.height / 2);
       await page.getByRole('button', { name: 'Remove resize controls', exact: true }).evaluate(el => (el as HTMLButtonElement).click());
       await page.mouse.up();
       assert.equal(Number(await page.getByLabel('Standalone name width').textContent()), initial, 'removing controls cancels preview sizing in a surviving table');
@@ -139,5 +232,5 @@ try {
     }
   }
   await page.close(); assert.deepEqual(errors, []);
-  console.log(process.env.PUPPERTINO_STORIES_ONLY ? 'Twelve Storybook stories including standalone-control cancellation passed.' : '512 repeated pointer drags, geometry, limits, keyboard/reset/cancellation/persistence, selection, disabled/unmount recovery, standalone-control cancellation, 267 rows across six pages, six light/dark axe layouts and twelve Storybook stories passed.');
+  console.log(process.env.PUPPERTINO_STORIES_ONLY ? 'Sixteen Storybook stories, customization, hook layouts and shared resize controllers passed.' : '512 repeated pointer drags, geometry, limits, keyboard/reset/cancellation/persistence, selection, disabled/unmount recovery, standalone-control cancellation, 267 rows across six pages, six light/dark axe layouts and sixteen Storybook stories, customization, hook layouts and shared resize controllers passed.');
 } finally { await browser.close(); await demo.close(); await stories.close(); }

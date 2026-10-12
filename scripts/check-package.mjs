@@ -31,7 +31,7 @@ try {
     await writeFile(path.join(directory, 'consumer.tsx'), `
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { PuppertinoTable, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
+import { PuppertinoTable, usePuppertinoTable, ColumnResizeHandle, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
 type Item = { id: string; title: string; price: number };
 const helper = createPuppertinoColumnHelper<Item>();
 const columns = helper.columns([
@@ -43,6 +43,20 @@ const markup = renderToStaticMarkup(createElement(PuppertinoTable<Item>, {
   data, columns, getRowId: item => item.id, ariaLabel: 'Inventory',
   sorting: [{ id: 'price', desc: false }], onSortingChange: () => {}, manualSorting: false,
 }));
+const customized = renderToStaticMarkup(createElement(PuppertinoTable<Item>, {
+  data, columns, getRowId: item => item.id, ariaLabel: 'Custom inventory', sorting: [], onSortingChange: () => {},
+  getRowProps: row => ({ className: 'custom-row', title: row.original.title }),
+  getCellProps: cell => ({ title: String(cell.getValue()) }),
+  leadingRows: table => createElement('tr', null, createElement('td', { colSpan: table.getAllLeafColumns().length }, 'Folder')),
+}));
+if (!customized.includes('custom-row') || customized.indexOf('Folder') > customized.indexOf('Ten')) throw new Error('Custom rows failed');
+function HookConsumer() {
+  const table = usePuppertinoTable({ data, columns, getRowId: item => item.id, sorting: [], onSortingChange: () => {}, selectable: true });
+  const header = table.getHeaderGroups()[0].headers[0];
+  return createElement('table', null, createElement('thead', null, createElement('tr', null, createElement('th', null,
+    createElement(ColumnResizeHandle<Item>, { table, header, label: 'Title' })))));
+}
+if (!renderToStaticMarkup(createElement(HookConsumer)).includes('Resize Title column')) throw new Error('Hook consumer failed');
 if (!markup.includes('aria-label="Inventory"')) throw new Error('Missing table label');
 if (markup.indexOf('Two') >= markup.indexOf('Ten')) throw new Error('Numeric sorting failed');
 if (clampSize(500, { id: 'price', minSize: 100, maxSize: 300, size: 200 }) !== 300) throw new Error('Sizing export failed');
