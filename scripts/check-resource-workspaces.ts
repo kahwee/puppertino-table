@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import axe from 'axe-core';
 import type { Page } from 'playwright';
 
@@ -46,6 +47,12 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
         const initial = Number(await handle.getAttribute('aria-valuenow'));
         await handle.press('ArrowRight');
         assert.equal(Number(await handle.getAttribute('aria-valuenow')), initial + 16);
+        assert.equal(await page.getByLabel('Panel resize commits').textContent(), '1');
+        assert.equal(
+          JSON.parse((await page.getByLabel('Committed panel widths').textContent()) || '{}')
+            .workspace,
+          initial + 16,
+        );
         await handle.press('Enter');
         assert.equal(Number(await handle.getAttribute('aria-valuenow')), initial);
         const box = await handle.boundingBox();
@@ -60,6 +67,30 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
           initial,
           `${story} Escape restores panel width`,
         );
+        assert.equal(
+          await page.getByLabel('Panel resize commits').textContent(),
+          '2',
+          'Escape never emits a commit',
+        );
+        const completed = await handle.boundingBox();
+        assert.ok(completed);
+        const startX = completed.x + completed.width / 2;
+        await page.mouse.move(startX, completed.y + 20);
+        await page.mouse.down();
+        await page.mouse.move(startX + 48, completed.y + 20);
+        assert.equal(
+          await page.getByLabel('Panel resize commits').textContent(),
+          '2',
+          'Pointer previews never commit',
+        );
+        await page.mouse.up();
+        assert.equal(await page.getByLabel('Panel resize commits').textContent(), '3');
+        assert.equal(
+          JSON.parse((await page.getByLabel('Committed panel widths').textContent()) || '{}')
+            .workspace,
+          initial + 48,
+        );
+        await handle.press('Enter');
         const box2 = await handle.boundingBox();
         assert.ok(box2);
         await page.mouse.move(box2.x + box2.width / 2, box2.y + 20);
@@ -74,8 +105,25 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
           0,
           'Removing dragged panels cancels the gesture',
         );
+        assert.equal(
+          await page.getByLabel('Panel resize commits').textContent(),
+          '4',
+          'Unmount cancellation never commits',
+        );
         await page.getByRole('button', { name: 'Toggle root view' }).click();
       }
+    }
+    if (!tableView) {
+      const guide = page.getByRole('link', { name: 'Workspace guide', exact: true });
+      assert.equal(await guide.getAttribute('aria-pressed'), null, 'Links retain native semantics');
+      const disabledGuide = page.getByRole('link', { name: 'Unavailable guide', exact: true });
+      assert.equal(await disabledGuide.getAttribute('href'), null);
+      assert.equal(await disabledGuide.getAttribute('aria-disabled'), 'true');
+      const popupPromise = page.context().waitForEvent('page');
+      await guide.click({ modifiers: ['Control'] });
+      const popup = await popupPromise;
+      await popup.waitForURL((url) => url.hash === '#workspace-guide');
+      await popup.close();
     }
     await target.click({ button: 'right' });
     const menu = page.getByRole('menu', { name: 'Resource commands', exact: true });
@@ -85,12 +133,33 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
         .getByRole('menuitem', { name: 'Show details' })
         .evaluate((element) => element === document.activeElement),
     );
+    assert.equal(await menu.getByRole('separator').count(), 1);
+    assert.equal(
+      await menu.getByRole('menuitem', { name: 'Unavailable resource link' }).getAttribute('href'),
+      null,
+    );
+    assert.equal(
+      await menu
+        .getByRole('menuitem', { name: 'Unavailable resource link' })
+        .getAttribute('aria-disabled'),
+      'true',
+    );
     await page.keyboard.press('Escape');
     await menu.waitFor({ state: 'detached' });
     assert.ok(
       await target.evaluate((element) => element === document.activeElement),
       `${story} dismissing a menu restores the target`,
     );
+    await target.press('Shift+F10');
+    await menu.waitFor();
+    const downloadPromise = page.waitForEvent('download');
+    await menu.getByRole('menuitem', { name: 'Download sample' }).click();
+    const download = await downloadPromise;
+    assert.equal(download.suggestedFilename(), 'sample-resource.txt');
+    const downloadedPath = await download.path();
+    assert.ok(downloadedPath);
+    assert.equal(await readFile(downloadedPath, 'utf8'), 'Sample resource');
+    await menu.waitFor({ state: 'detached' });
     await target.press('Shift+F10');
     await menu.waitFor();
     await page.keyboard.press('ArrowDown');
@@ -126,11 +195,16 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
     await page.keyboard.press('End');
     assert.ok(
       await menu
-        .getByRole('menuitem', { name: 'Select only this item' })
+        .getByRole('menuitem', { name: 'Open resource link' })
         .evaluate((element) => element === document.activeElement),
-      'Menu navigation skips disabled actions',
+      'Menu navigation skips disabled links/actions and separators',
     );
-    await page.keyboard.press('Escape');
+    const popupPromise = page.context().waitForEvent('page');
+    await page.keyboard.press(story === 'controlled-panels' ? ' ' : 'Enter');
+    const popup = await popupPromise;
+    await popup.waitForURL((url) => url.hash === '#resource-0');
+    await popup.close();
+    await menu.waitFor({ state: 'detached' });
     await page.getByRole('button', { name: 'Toggle narrow layout' }).click();
     if (!tableView)
       await page.waitForFunction(

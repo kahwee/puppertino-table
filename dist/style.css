@@ -271,7 +271,7 @@
 .pt-browser-item.p-selected:focus-visible {
   outline-color: var(--p-list-selection-text);
 }
-.pt-browser-item:disabled {
+.pt-browser-item:is(:disabled, [aria-disabled="true"]) {
   opacity: 0.5;
   cursor: default;
 }
@@ -307,23 +307,28 @@
   background: var(--p-window-bg, #fff);
   color: var(--p-list-text, #222);
 }
-.pt-context-menu > button {
-  display: block;
+.pt-context-menu > [role="menuitem"] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
   width: 100%;
   border: 0;
   border-radius: 4px;
   padding: 5px 10px;
+  text-decoration: none;
   background: transparent;
   color: inherit;
   font: 13px var(--p-list-font, system-ui);
   text-align: left;
 }
-.pt-context-menu > button:is(:hover, :focus-visible):not(:disabled) {
+.pt-context-menu
+  > [role="menuitem"]:is(:hover, :focus-visible):not(:disabled):not([aria-disabled="true"]) {
   background: var(--p-list-selection, #0165e2);
   color: var(--p-list-selection-text, #fff);
   outline: none;
 }
-.pt-context-menu > button:disabled {
+.pt-context-menu > [role="menuitem"]:is(:disabled, [aria-disabled="true"]) {
   opacity: 0.5;
 }
 @media (forced-colors: active) {
@@ -331,8 +336,43 @@
     background: Highlight;
     color: HighlightText;
   }
-  .pt-context-menu > button:focus-visible {
+  .pt-context-menu > [role="menuitem"]:focus-visible {
     background: Highlight;
     color: HighlightText;
   }
+}
+
+.pt-browser-item:is(a) {
+  text-decoration: none;
+  cursor: pointer;
+}
+.pt-menu-label {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.pt-menu-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
+.pt-menu-icon > :is(svg, img) {
+  width: 100%;
+  height: 100%;
+}
+.pt-menu-shortcut {
+  flex: none;
+  margin-left: 16px;
+  font-size: 11px;
+}
+.pt-menu-separator {
+  margin: 4px 6px;
+  border: 0;
+  border-top: 1px solid var(--p-table-divider, #b8b8bd);
+}
+
+.pt-browser-item[aria-disabled="true"] {
+  cursor: default;
 }

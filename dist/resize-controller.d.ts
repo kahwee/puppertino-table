@@ -23,13 +23,13 @@ export interface ResizeEnvironment {
     startGesture(target: ResizeTarget, pointer: number, className: string, query: string | undefined, cancel: () => void): () => void;
 }
 /** Gesture ownership and width transitions. No React or browser globals. */
-export declare function createResizeController(environment: ResizeEnvironment, persist: (member: ResizeMember) => void): {
+export declare function createResizeController(environment: ResizeEnvironment, persist: (member: ResizeMember, widths?: ResizeWidths) => void): {
     cancelMember: (member: ResizeMember) => void;
     retain(member: ResizeMember): () => void;
     begin(member: ResizeMember, id: string, x: number, pointer: number, target: ResizeTarget, button: number): boolean;
     move(member: ResizeMember, pointer: number, x: number): void;
     end(member: ResizeMember, pointer: number): void;
     cancel(member: ResizeMember, pointer: number): void;
-    reset(member: ResizeMember, id: string): boolean;
+    reset: (member: ResizeMember, id: string) => boolean;
     key(member: ResizeMember, id: string, key: string, shift?: boolean): boolean;
 };

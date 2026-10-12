@@ -1,12 +1,12 @@
 'use client';
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useLayoutEffect, useRef, useState, } from 'react';
 import { fitColumnPanels } from './column-browser-layout.js';
 import { DensityScope } from './density.js';
 import { clampSize, columnSizeBounds } from './sizing.js';
 import { useResizeGesture } from './use-resize-gesture.js';
 /** Caller-rendered hierarchy. No fetching, navigation, selection or application commands. */
-export function ColumnBrowser({ panels, ariaLabel, density = 'compact', densityMetrics, minimumCurrentWidth = 288, resizable = true, resizeDisabled: disabled = false, cancelMediaQuery, widths: controlled, onWidthsChange, className = '', style, }) {
+export function ColumnBrowser({ panels, ariaLabel, density = 'compact', densityMetrics, minimumCurrentWidth = 288, resizable = true, resizeDisabled: disabled = false, cancelMediaQuery, widths: controlled, onWidthsChange, onWidthsCommit, className = '', style, }) {
     const ids = panels.map((panel) => panel.id);
     if (ids.some((id) => !id) || new Set(ids).size !== ids.length)
         throw new Error('Browser panels need unique stable IDs.');
@@ -25,6 +25,7 @@ export function ColumnBrowser({ panels, ariaLabel, density = 'compact', densityM
     const owner = useRef({});
     const apply = (next) => {
         const normalized = Object.fromEntries(bounds.map((bound) => [bound.id, clampSize(next[bound.id], bound)]));
+        snapshot.current = normalized;
         if (controlled === undefined)
             setLocalWidths(normalized);
         onWidthsChange?.(normalized);
@@ -42,6 +43,7 @@ export function ColumnBrowser({ panels, ariaLabel, density = 'compact', densityM
     }, {
         enabled: resizable && !disabled && (controlled === undefined || !!onWidthsChange),
         cancelMediaQuery,
+        onCommit: onWidthsCommit,
     });
     const schema = JSON.stringify(bounds);
     useLayoutEffect(() => {
@@ -72,5 +74,18 @@ export function ColumnBrowser({ panels, ariaLabel, density = 'compact', densityM
         }) }));
 }
 export function ColumnBrowserItem({ icon, trailing, selected = false, pathSelected = false, className = '', children, ...props }) {
-    return (_jsxs("button", { type: "button", ...props, className: `pt-browser-item ${selected ? 'p-selected' : ''} ${pathSelected ? 'pt-path-selected' : ''} ${className}`, "aria-pressed": selected, "aria-current": pathSelected ? 'location' : undefined, children: [icon && (_jsx("span", { className: "pt-icon", "aria-hidden": "true", children: icon })), _jsx("span", { className: "pt-item-label", children: children }), trailing && (_jsx("span", { className: "pt-item-trailing", "aria-hidden": "true", children: trailing }))] }));
+    const classes = `pt-browser-item ${selected ? 'p-selected' : ''} ${pathSelected ? 'pt-path-selected' : ''} ${className}`;
+    const content = (_jsxs(_Fragment, { children: [icon && (_jsx("span", { className: "pt-icon", "aria-hidden": "true", children: icon })), _jsx("span", { className: "pt-item-label", children: children }), trailing && (_jsx("span", { className: "pt-item-trailing", "aria-hidden": "true", children: trailing }))] }));
+    if (props.href !== undefined) {
+        const { href, disabled, onClick, ...link } = props;
+        return (_jsx("a", { ...link, href: disabled ? undefined : href, role: disabled ? 'link' : link.role, className: classes, "aria-current": pathSelected ? 'location' : selected ? 'true' : link['aria-current'], "aria-disabled": disabled || undefined, tabIndex: disabled ? -1 : link.tabIndex, onClick: (event) => {
+                if (disabled) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                else
+                    onClick?.(event);
+            }, children: content }));
+    }
+    return (_jsx("button", { type: "button", ...props, className: classes, "aria-pressed": selected, "aria-current": pathSelected ? 'location' : undefined, children: content }));
 }

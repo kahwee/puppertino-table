@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add completion-only browser `onWidthsCommit` and table resize `onCommit` callbacks; preserve preview updates and report intended controlled widths without waiting for React to rerender.
+- Add native anchor browser items through `href`, with link-specific types, modifier-click/target/download support and accessible disabled behavior.
+- Add context-menu links, separators, icons and shortcut hints; navigate enabled links/buttons together and preserve native link activation.
+- Extend resource-browser Storybook workflows and packed-consumer/browser checks for these APIs.
+
 ## 0.5.0 — 2026-10-12
 
 - Add scoped native/compact/comfortable density and explicit row/padding/icon metrics across tables and custom layouts; preserve native defaults.

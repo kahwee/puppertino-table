@@ -17,13 +17,25 @@ export function createResizeController(environment, persist) {
             });
         }
         else
-            persist(active.member);
+            persist(active.member, {
+                ...active.member.adapter.snapshot(),
+                [active.id]: active.latest[active.id],
+            });
         return true;
     };
     const owns = (member, pointer) => drag?.member === member && drag.pointer === pointer;
     const cancelMember = (member) => {
         if (drag?.member === member)
             finish(true);
+    };
+    const resetMember = (member, id) => {
+        if (!members.has(member) || member.options.enabled === false || drag)
+            return false;
+        const widths = member.adapter.snapshot();
+        const bounds = member.adapter.bounds(id);
+        member.adapter.reset(id);
+        persist(member, { ...widths, [id]: clampSize(bounds.size, bounds) });
+        return true;
     };
     return {
         cancelMember,
@@ -60,6 +72,7 @@ export function createResizeController(environment, persist) {
                 x,
                 width: before[id],
                 before,
+                latest: { ...before },
                 pointer,
                 query: member.options.cancelMediaQuery,
                 cleanup: () => { },
@@ -77,10 +90,11 @@ export function createResizeController(environment, persist) {
         move(member, pointer, x) {
             if (!owns(member, pointer) || !drag)
                 return;
-            member.adapter.apply({
+            drag.latest = {
                 ...member.adapter.snapshot(),
                 [drag.id]: clampSize(drag.width + x - drag.x, member.adapter.bounds(drag.id)),
-            });
+            };
+            member.adapter.apply(drag.latest);
         },
         end(member, pointer) {
             if (owns(member, pointer))
@@ -90,20 +104,12 @@ export function createResizeController(environment, persist) {
             if (owns(member, pointer))
                 finish(true);
         },
-        reset(member, id) {
-            if (!members.has(member) || member.options.enabled === false || drag)
-                return false;
-            member.adapter.reset(id);
-            persist(member);
-            return true;
-        },
+        reset: resetMember,
         key(member, id, key, shift = false) {
             if (!members.has(member) || member.options.enabled === false || drag)
                 return false;
             if (key === 'Enter') {
-                member.adapter.reset(id);
-                persist(member);
-                return true;
+                return resetMember(member, id);
             }
             const widths = member.adapter.snapshot();
             const bounds = member.adapter.bounds(id);
@@ -119,8 +125,9 @@ export function createResizeController(environment, persist) {
                             : undefined;
             if (next === undefined)
                 return false;
-            member.adapter.apply({ ...widths, [id]: clampSize(next, bounds) });
-            persist(member);
+            const committed = { ...widths, [id]: clampSize(next, bounds) };
+            member.adapter.apply(committed);
+            persist(member, committed);
             return true;
         },
     };

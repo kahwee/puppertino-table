@@ -221,3 +221,56 @@ test('cancel restores only the owned column and completion does not repeat the p
   assert.deepEqual(f.widths(), { name: 240, score: 175 });
   assert.equal(f.saved.length, 1);
 });
+
+test('commit callbacks fire once for completed operations and never for cancellation', () => {
+  const f = fixture();
+  const owner = f.member();
+  const committed: Record<string, number>[] = [];
+  owner.options.onCommit = (widths) => committed.push(widths);
+  const release = f.controller.retain(owner);
+  f.controller.begin(owner, 'name', 0, 1, f.target, 0);
+  f.controller.move(owner, 1, 48);
+  assert.equal(committed.length, 0);
+  f.controller.end(owner, 1);
+  f.controller.end(owner, 1);
+  assert.deepEqual(committed, [{ name: 248, score: 100 }]);
+  f.controller.begin(owner, 'name', 0, 2, f.target, 0);
+  f.controller.move(owner, 2, 40);
+  f.cancel();
+  assert.equal(committed.length, 1);
+  f.controller.key(owner, 'name', 'ArrowRight');
+  assert.equal(committed[1].name, 264);
+  f.controller.key(owner, 'name', 'Enter');
+  assert.equal(committed[2].name, 200);
+  f.controller.begin(owner, 'name', 0, 3, f.target, 0);
+  f.controller.move(owner, 3, 20);
+  release();
+  assert.equal(committed.length, 3);
+});
+
+test('commits report intended controlled widths even before the owner rerenders or with blocked storage', () => {
+  const f = fixture();
+  const owner = f.member();
+  // Model an asynchronous controlled owner: applying widths does not immediately update snapshot.
+  owner.adapter.apply = () => {};
+  const commits: Record<string, number>[] = [];
+  owner.options.storage = {
+    setItem() {
+      throw new Error('Blocked');
+    },
+  };
+  owner.options.onCommit = (widths) => commits.push(widths);
+  f.controller.retain(owner);
+  f.controller.key(owner, 'name', 'ArrowRight');
+  assert.equal(commits[0].name, 216);
+  f.controller.begin(owner, 'name', 0, 1, f.target, 0);
+  f.controller.move(owner, 1, 80);
+  f.controller.end(owner, 1);
+  assert.equal(commits[1].name, 280);
+  commits[1].name = 999;
+  assert.equal(
+    owner.adapter.snapshot().name,
+    200,
+    'Commit snapshots do not mutate the resize owner',
+  );
+});

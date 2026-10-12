@@ -32,6 +32,8 @@ export interface ColumnBrowserProps {
   cancelMediaQuery?: string;
   widths?: ColumnBrowserWidths;
   onWidthsChange?: (widths: ColumnBrowserWidths) => void;
+  /** Completed resize/reset operations only, suitable for saving preferences. */
+  onWidthsCommit?: (widths: ColumnBrowserWidths) => void;
   className?: string;
   style?: ComponentPropsWithoutRef<'div'>['style'];
 }
@@ -48,6 +50,7 @@ export function ColumnBrowser({
   cancelMediaQuery,
   widths: controlled,
   onWidthsChange,
+  onWidthsCommit,
   className = '',
   style,
 }: ColumnBrowserProps) {
@@ -75,6 +78,7 @@ export function ColumnBrowser({
     const normalized = Object.fromEntries(
       bounds.map((bound) => [bound.id, clampSize(next[bound.id], bound)]),
     );
+    snapshot.current = normalized;
     if (controlled === undefined) setLocalWidths(normalized);
     onWidthsChange?.(normalized);
   };
@@ -94,6 +98,7 @@ export function ColumnBrowser({
     {
       enabled: resizable && !disabled && (controlled === undefined || !!onWidthsChange),
       cancelMediaQuery,
+      onCommit: onWidthsCommit,
     },
   );
   const schema = JSON.stringify(bounds);
@@ -161,12 +166,18 @@ export function ColumnBrowser({
   );
 }
 
-export interface ColumnBrowserItemProps extends ComponentPropsWithoutRef<'button'> {
+interface BrowserItemPresentation {
   icon?: ReactNode;
   trailing?: ReactNode;
   selected?: boolean;
   pathSelected?: boolean;
 }
+export type ColumnBrowserItemButtonProps = BrowserItemPresentation &
+  ComponentPropsWithoutRef<'button'> & { href?: never };
+export type ColumnBrowserItemLinkProps = BrowserItemPresentation &
+  ComponentPropsWithoutRef<'a'> & { href: string; disabled?: boolean };
+export type ColumnBrowserItemProps = ColumnBrowserItemButtonProps | ColumnBrowserItemLinkProps;
+
 export function ColumnBrowserItem({
   icon,
   trailing,
@@ -176,14 +187,9 @@ export function ColumnBrowserItem({
   children,
   ...props
 }: ColumnBrowserItemProps) {
-  return (
-    <button
-      type="button"
-      {...props}
-      className={`pt-browser-item ${selected ? 'p-selected' : ''} ${pathSelected ? 'pt-path-selected' : ''} ${className}`}
-      aria-pressed={selected}
-      aria-current={pathSelected ? 'location' : undefined}
-    >
+  const classes = `pt-browser-item ${selected ? 'p-selected' : ''} ${pathSelected ? 'pt-path-selected' : ''} ${className}`;
+  const content = (
+    <>
       {icon && (
         <span className="pt-icon" aria-hidden="true">
           {icon}
@@ -195,6 +201,39 @@ export function ColumnBrowserItem({
           {trailing}
         </span>
       )}
+    </>
+  );
+  if (props.href !== undefined) {
+    const { href, disabled, onClick, ...link } = props;
+    return (
+      <a
+        {...link}
+        href={disabled ? undefined : href}
+        role={disabled ? 'link' : link.role}
+        className={classes}
+        aria-current={pathSelected ? 'location' : selected ? 'true' : link['aria-current']}
+        aria-disabled={disabled || undefined}
+        tabIndex={disabled ? -1 : link.tabIndex}
+        onClick={(event) => {
+          if (disabled) {
+            event.preventDefault();
+            event.stopPropagation();
+          } else onClick?.(event);
+        }}
+      >
+        {content}
+      </a>
+    );
+  }
+  return (
+    <button
+      type="button"
+      {...props}
+      className={classes}
+      aria-pressed={selected}
+      aria-current={pathSelected ? 'location' : undefined}
+    >
+      {content}
     </button>
   );
 }

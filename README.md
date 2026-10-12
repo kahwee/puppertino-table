@@ -136,9 +136,9 @@ import { ColumnBrowser, ColumnBrowserItem } from 'puppertino-table';
 ]} />
 ```
 
-Panels require unique stable `id`, an accessible `label` for their region, and caller-rendered `content`. Ancestors default to 224px, bounded to 120–640px. `minimumCurrentWidth` defaults to 288px. Give the component or its parent a bounded height; it fills that height. The default density is compact. Optional `widths` and `onWidthsChange` provide controlled ancestor sizing. Widths without a callback are read-only and omit resize handles. `resizable={false}` or `resizeDisabled` cancels active gestures; `cancelMediaQuery` can cancel when a responsive layout removes the controls. Panel removal and changed bounds also cancel. Completed gestures remain in local state until unmount; the component does not write preferences. Change callbacks include previews and cancellations, so they are not approval or persistence receipts.
+Panels require unique stable `id`, an accessible `label` for their region, and caller-rendered `content`. Ancestors default to 224px, bounded to 120–640px. `minimumCurrentWidth` defaults to 288px. Give the component or its parent a bounded height; it fills that height. The default density is compact. Optional `widths` and `onWidthsChange` provide controlled ancestor sizing. Widths without a callback are read-only and omit resize handles. `resizable={false}` or `resizeDisabled` cancels active gestures; `cancelMediaQuery` can cancel when a responsive layout removes the controls. Panel removal and changed bounds also cancel. Completed gestures remain in local state until unmount; the component does not write preferences. Change callbacks include previews and cancellations, so they are not approval or persistence receipts. On main, the unreleased `onWidthsCommit` callback supplies a copied snapshot after completed pointer, keyboard and reset operations only; use it to save app-owned preferences. Table resize options offer the matching `onCommit` callback. Storage failure does not suppress either callback.
 
-`ColumnBrowserItem` is a native button with `icon`, `trailing`, `selected` and `pathSelected` slots/states. It shares density metrics, ellipsis, hover and keyboard-focus styling. Selection and path indication are separate. Standard button props provide actions, labels, disabled state and context-menu triggers. The browser does not fetch records, enter folders, select items or open documents. Compose your navigation, `useRowSelectionGestures`, and custom content around it. Its geometry is measured only after hydration; initial server markup uses deterministic panel widths.
+`ColumnBrowserItem` defaults to a native button with `icon`, `trailing`, `selected` and `pathSelected` slots/states. It shares density metrics, ellipsis, hover and keyboard-focus styling. Selection and path indication are separate. Standard button props provide actions, labels, disabled state and context-menu triggers. The browser does not fetch records, enter folders, select items or open documents. Compose your navigation, `useRowSelectionGestures`, and custom content around it. Its geometry is measured only after hydration; initial server markup uses deterministic panel widths.
 
 ### Right-click and keyboard context menus
 
@@ -152,7 +152,30 @@ const menu = useContextMenu<string>();
   actions={menu.state ? commandsFor(menu.state.context) : []} />
 ```
 
-For tables, spread trigger props in `getRowProps` and make the target keyboard-focusable, or attach them to a button inside a cell. `ContextMenu` accepts actions with stable `id`, `label`, optional `disabled`, and `onSelect`. It fits the viewport, focuses the first enabled action, supports arrows/Home/End, skips disabled actions, closes on Escape/Tab/outside pointer/scroll/resize/blur, and restores the invoking target's focus. It uses a manual popover where supported so a table or panel's overflow does not clip it. Place it in the same themed DOM subtree as its trigger. Commands, right-click selection policy and authorization remain caller-owned; the component never invents file operations.
+For tables, spread trigger props in `getRowProps` and make the target keyboard-focusable, or attach them to a button inside a cell. `ContextMenu` accepts command actions with stable `id`, `label`, optional `disabled`, and `onSelect`. It fits the viewport, focuses the first enabled action, supports arrows/Home/End, skips disabled actions, closes on Escape/Tab/outside pointer/scroll/resize/blur, and restores the invoking target's focus. It uses a manual popover where supported so a table or panel's overflow does not clip it. Place it in the same themed DOM subtree as its trigger. Commands, right-click selection policy and authorization remain caller-owned; the component never invents file operations.
+
+### Browser links and richer menus (unreleased, available on main)
+
+These additions build on npm 0.5.0 and require a pinned main commit until the next release.
+
+```tsx
+<ColumnBrowserItem href="/projects/alpine" pathSelected icon={<FolderIcon />}>
+  Alpine
+</ColumnBrowserItem>
+```
+
+Supplying `href` renders a native anchor: `target`, `rel`, `download`, modifier-click and browser link menus remain available. Omit `href` for a button. Button items use `aria-pressed`; links use `aria-current` for selected/path states. A disabled link omits `href`, exposes `aria-disabled`, and prevents activation. Link and button prop types are exported separately.
+
+```tsx
+<ContextMenu position={menu.state?.position ?? null} onClose={menu.close}
+  returnFocus={menu.state?.returnFocus} ariaLabel="Resource commands" actions={[
+    { id: 'info', label: 'Show details', icon: <InfoIcon />, shortcut: '⌘I', onSelect: showDetails },
+    { id: 'group', type: 'separator' },
+    { id: 'open', label: 'Open resource', href: resourceUrl, target: '_blank', rel: 'noopener noreferrer' },
+  ]} />
+```
+
+`ContextMenuItem` includes existing `ContextMenuAction` commands, `ContextMenuLink` links and `ContextMenuSeparator` entries. Arrows/Home/End skip separators and disabled entries. Links activate with Enter or Space and retain native modifier-click/target/download behavior. Icons and shortcut hints are decorative; shortcut bindings stay caller-owned. Existing command-only menus continue to work.
 
 ### Anchored item selection in custom layouts
 

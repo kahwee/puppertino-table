@@ -2,6 +2,7 @@
 import {
   type KeyboardEvent,
   type MouseEvent,
+  type ReactNode,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -13,15 +14,34 @@ export interface ContextMenuPosition {
   x: number;
   y: number;
 }
-export interface ContextMenuAction {
+interface MenuItemPresentation {
   id: string;
   label: string;
   disabled?: boolean;
-  onSelect(): void;
+  icon?: ReactNode;
+  /** Display hint only; the caller owns shortcut bindings. */
+  shortcut?: string;
 }
+export interface ContextMenuAction extends MenuItemPresentation {
+  onSelect(): void;
+  href?: never;
+}
+export interface ContextMenuLink extends MenuItemPresentation {
+  href: string;
+  target?: string;
+  rel?: string;
+  download?: string | boolean;
+  onSelect?: () => void;
+}
+export interface ContextMenuSeparator {
+  id: string;
+  type: 'separator';
+}
+export type ContextMenuItem = ContextMenuAction | ContextMenuLink | ContextMenuSeparator;
+const enabledItems = '[role="menuitem"]:not(:disabled):not([aria-disabled="true"])';
 export interface ContextMenuProps {
   position: ContextMenuPosition | null;
-  actions: readonly ContextMenuAction[];
+  actions: readonly ContextMenuItem[];
   ariaLabel: string;
   onClose(): void;
   returnFocus?: HTMLElement | null;
@@ -89,7 +109,7 @@ export function ContextMenu({
     const rect = element.getBoundingClientRect();
     element.style.left = `${Math.max(8, Math.min(position.x, innerWidth - rect.width - 8))}px`;
     element.style.top = `${Math.max(8, Math.min(position.y, innerHeight - rect.height - 8))}px`;
-    (element.querySelector<HTMLButtonElement>('button:not(:disabled)') ?? element).focus();
+    (element.querySelector<HTMLElement>(enabledItems) ?? element).focus();
     return () => {
       if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
     };
@@ -124,22 +144,26 @@ export function ContextMenu({
     };
   }, [position]);
   if (!position) return null;
+  const hasIcons = actions.some((action) => 'icon' in action && !!action.icon);
   const navigate = (event: KeyboardEvent<HTMLDivElement>) => {
-    const buttons = Array.from(
-      menu.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [],
-    );
-    const current = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    const items = Array.from(menu.current?.querySelectorAll<HTMLElement>(enabledItems) ?? []);
+    if (event.key === ' ' && event.target instanceof HTMLAnchorElement) {
+      event.preventDefault();
+      event.target.click();
+      return;
+    }
+    const current = items.indexOf(document.activeElement as HTMLElement);
     let next = current;
-    if (event.key === 'ArrowDown') next = (current + 1) % buttons.length;
-    else if (event.key === 'ArrowUp') next = (current - 1 + buttons.length) % buttons.length;
+    if (event.key === 'ArrowDown') next = (current + 1) % items.length;
+    else if (event.key === 'ArrowUp') next = (current - 1 + items.length) % items.length;
     else if (event.key === 'Home') next = 0;
-    else if (event.key === 'End') next = buttons.length - 1;
+    else if (event.key === 'End') next = items.length - 1;
     else if (event.key === 'Tab') {
       close.current();
       return;
     } else return;
     event.preventDefault();
-    buttons[next]?.focus();
+    items[next]?.focus();
   };
   return (
     <div
@@ -153,20 +177,63 @@ export function ContextMenu({
       onContextMenu={(event) => event.preventDefault()}
       style={{ left: position.x, top: position.y }}
     >
-      {actions.map((action) => (
-        <button
-          type="button"
-          key={action.id}
-          role="menuitem"
-          disabled={action.disabled}
-          onClick={() => {
-            onClose();
-            action.onSelect();
-          }}
-        >
-          {action.label}
-        </button>
-      ))}
+      {actions.map((action) => {
+        if ('type' in action && action.type === 'separator')
+          return <hr key={action.id} className="pt-menu-separator" />;
+        if (!('label' in action)) return null;
+        const content = (
+          <>
+            {hasIcons && (
+              <span className="pt-menu-icon" aria-hidden="true">
+                {action.icon}
+              </span>
+            )}
+            <span className="pt-menu-label">{action.label}</span>
+            {action.shortcut && (
+              <span className="pt-menu-shortcut" aria-hidden="true">
+                {action.shortcut}
+              </span>
+            )}
+          </>
+        );
+        if (action.href !== undefined)
+          return (
+            <a
+              key={action.id}
+              role="menuitem"
+              href={action.disabled ? undefined : action.href}
+              target={action.target}
+              rel={action.rel}
+              download={action.download}
+              aria-disabled={action.disabled || undefined}
+              tabIndex={action.disabled ? -1 : 0}
+              onClick={(event) => {
+                if (action.disabled) {
+                  event.preventDefault();
+                  return;
+                }
+                onClose();
+                action.onSelect?.();
+              }}
+            >
+              {content}
+            </a>
+          );
+        return (
+          <button
+            type="button"
+            key={action.id}
+            role="menuitem"
+            disabled={action.disabled}
+            onClick={() => {
+              onClose();
+              action.onSelect();
+            }}
+          >
+            {content}
+          </button>
+        );
+      })}
     </div>
   );
 }

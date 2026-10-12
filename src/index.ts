@@ -1,6 +1,8 @@
 export {
   ColumnBrowser,
   ColumnBrowserItem,
+  type ColumnBrowserItemButtonProps,
+  type ColumnBrowserItemLinkProps,
   type ColumnBrowserItemProps,
   type ColumnBrowserPanel,
   type ColumnBrowserProps,
@@ -10,8 +12,11 @@ export { type ColumnBrowserLayoutOptions, fitColumnBrowser } from './column-brow
 export {
   ContextMenu,
   type ContextMenuAction,
+  type ContextMenuItem,
+  type ContextMenuLink,
   type ContextMenuPosition,
   type ContextMenuProps,
+  type ContextMenuSeparator,
   useContextMenu,
 } from './context-menu.js';
 export {

@@ -1,6 +1,7 @@
 'use client';
-import { jsx as _jsx } from "react/jsx-runtime";
+import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, } from 'react';
+const enabledItems = '[role="menuitem"]:not(:disabled):not([aria-disabled="true"])';
 export function useContextMenu() {
     const [state, setState] = useState(null);
     const close = useCallback(() => setState(null), []);
@@ -49,7 +50,7 @@ export function ContextMenu({ position, actions, ariaLabel, onClose, returnFocus
         const rect = element.getBoundingClientRect();
         element.style.left = `${Math.max(8, Math.min(position.x, innerWidth - rect.width - 8))}px`;
         element.style.top = `${Math.max(8, Math.min(position.y, innerHeight - rect.height - 8))}px`;
-        (element.querySelector('button:not(:disabled)') ?? element).focus();
+        (element.querySelector(enabledItems) ?? element).focus();
         return () => {
             if (returnFocus?.isConnected)
                 returnFocus.focus({ preventScroll: true });
@@ -89,18 +90,24 @@ export function ContextMenu({ position, actions, ariaLabel, onClose, returnFocus
     }, [position]);
     if (!position)
         return null;
+    const hasIcons = actions.some((action) => 'icon' in action && !!action.icon);
     const navigate = (event) => {
-        const buttons = Array.from(menu.current?.querySelectorAll('button:not(:disabled)') ?? []);
-        const current = buttons.indexOf(document.activeElement);
+        const items = Array.from(menu.current?.querySelectorAll(enabledItems) ?? []);
+        if (event.key === ' ' && event.target instanceof HTMLAnchorElement) {
+            event.preventDefault();
+            event.target.click();
+            return;
+        }
+        const current = items.indexOf(document.activeElement);
         let next = current;
         if (event.key === 'ArrowDown')
-            next = (current + 1) % buttons.length;
+            next = (current + 1) % items.length;
         else if (event.key === 'ArrowUp')
-            next = (current - 1 + buttons.length) % buttons.length;
+            next = (current - 1 + items.length) % items.length;
         else if (event.key === 'Home')
             next = 0;
         else if (event.key === 'End')
-            next = buttons.length - 1;
+            next = items.length - 1;
         else if (event.key === 'Tab') {
             close.current();
             return;
@@ -108,10 +115,26 @@ export function ContextMenu({ position, actions, ariaLabel, onClose, returnFocus
         else
             return;
         event.preventDefault();
-        buttons[next]?.focus();
+        items[next]?.focus();
     };
-    return (_jsx("div", { ref: menu, popover: "manual", className: "pt-context-menu", role: "menu", tabIndex: -1, "aria-label": ariaLabel, onKeyDown: navigate, onContextMenu: (event) => event.preventDefault(), style: { left: position.x, top: position.y }, children: actions.map((action) => (_jsx("button", { type: "button", role: "menuitem", disabled: action.disabled, onClick: () => {
-                onClose();
-                action.onSelect();
-            }, children: action.label }, action.id))) }));
+    return (_jsx("div", { ref: menu, popover: "manual", className: "pt-context-menu", role: "menu", tabIndex: -1, "aria-label": ariaLabel, onKeyDown: navigate, onContextMenu: (event) => event.preventDefault(), style: { left: position.x, top: position.y }, children: actions.map((action) => {
+            if ('type' in action && action.type === 'separator')
+                return _jsx("hr", { className: "pt-menu-separator" }, action.id);
+            if (!('label' in action))
+                return null;
+            const content = (_jsxs(_Fragment, { children: [hasIcons && (_jsx("span", { className: "pt-menu-icon", "aria-hidden": "true", children: action.icon })), _jsx("span", { className: "pt-menu-label", children: action.label }), action.shortcut && (_jsx("span", { className: "pt-menu-shortcut", "aria-hidden": "true", children: action.shortcut }))] }));
+            if (action.href !== undefined)
+                return (_jsx("a", { role: "menuitem", href: action.disabled ? undefined : action.href, target: action.target, rel: action.rel, download: action.download, "aria-disabled": action.disabled || undefined, tabIndex: action.disabled ? -1 : 0, onClick: (event) => {
+                        if (action.disabled) {
+                            event.preventDefault();
+                            return;
+                        }
+                        onClose();
+                        action.onSelect?.();
+                    }, children: content }, action.id));
+            return (_jsx("button", { type: "button", role: "menuitem", disabled: action.disabled, onClick: () => {
+                    onClose();
+                    action.onSelect();
+                }, children: content }, action.id));
+        }) }));
 }

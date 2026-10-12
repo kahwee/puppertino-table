@@ -6,6 +6,8 @@ export interface ColumnResizeOptions {
     storage?: Pick<Storage, 'setItem'>;
     cancelMediaQuery?: string;
     dragClassName?: string;
+    /** Completed pointer, keyboard or reset operation; previews/cancellation never commit. */
+    onCommit?: (widths: Record<string, number>) => void;
 }
 export interface ColumnResizeHandleProps<T extends RowData> {
     table: PuppertinoTableInstance<T>;

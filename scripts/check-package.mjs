@@ -75,7 +75,7 @@ import { createAtom } from '@tanstack/react-store';
 import type { ColumnSizingState, SortingState, RowSelectionState } from '@tanstack/react-table';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { PuppertinoBodyContext, PuppertinoRowProps, ColumnResizeHandleProps, TableHeaderProps, TableBodyProps, RowSelectionCheckboxProps, PuppertinoTableOptions, PuppertinoTableAtoms } from 'puppertino-table';
-import { PuppertinoTable, DensityScope, ColumnBrowser, ColumnBrowserItem, ContextMenu, useContextMenu, usePuppertinoTable, useRowSelectionGestures, applySelectionGesture, fitColumnBrowser, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
+import { type ContextMenuItem, type ColumnBrowserItemLinkProps, PuppertinoTable, DensityScope, ColumnBrowser, ColumnBrowserItem, ContextMenu, useContextMenu, usePuppertinoTable, useRowSelectionGestures, applySelectionGesture, fitColumnBrowser, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
 type Item = { id: string; title: string; price: number };
 const helper = createPuppertinoColumnHelper<Item>();
 const columns = helper.columns([
@@ -84,8 +84,14 @@ const columns = helper.columns([
 ]);
 const data: Item[] = [{ id: 'ten', title: 'Ten', price: 10 }, { id: 'two', title: 'Two', price: 2 }];
 const browserMarkup = renderToStaticMarkup(createElement(DensityScope, { density: 'comfortable' }, createElement(ColumnBrowser, {
-  ariaLabel: 'Consumer browser', panels: [{ id: 'root', label: 'Root', content: createElement(ColumnBrowserItem, { selected: true }, 'Item') }],
+  ariaLabel: 'Consumer browser', onWidthsCommit: widths => { const value: number | undefined = widths.root; void value; }, panels: [{ id: 'root', label: 'Root', content: createElement(ColumnBrowserItem, { selected: true }, 'Item') }],
 })));
+const linkProps: ColumnBrowserItemLinkProps = { href: '/resources', target: '_blank', rel: 'noopener', pathSelected: true };
+const nativeLink = renderToStaticMarkup(createElement(ColumnBrowserItem, linkProps, 'Resources'));
+if (!nativeLink.includes('<a ') || !nativeLink.includes('href="/resources"') || nativeLink.includes('aria-pressed')) throw new Error('Native browser link consumer failed');
+const richActions: ContextMenuItem[] = [{ id: 'group', type: 'separator' }, { id: 'docs', label: 'Docs', href: '/docs', shortcut: '⌘D' }, { id: 'action', label: 'Action', onSelect: () => {} }];
+const richMenu = renderToStaticMarkup(createElement(ContextMenu, { position: { x: 8, y: 8 }, actions: richActions, ariaLabel: 'Rich commands', onClose: () => {} }));
+if (!richMenu.includes('href="/docs"') || !richMenu.includes('pt-menu-separator')) throw new Error('Rich menu consumer failed');
 if (!browserMarkup.includes('Consumer browser') || !browserMarkup.includes('aria-pressed="true"')) throw new Error('Column browser consumer failed');
 const markup = renderToStaticMarkup(createElement(PuppertinoTable<Item>, {
   data, columns, getRowId: item => item.id, ariaLabel: 'Inventory',

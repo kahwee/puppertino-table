@@ -32,7 +32,7 @@ export interface ResizeEnvironment {
 /** Gesture ownership and width transitions. No React or browser globals. */
 export function createResizeController(
   environment: ResizeEnvironment,
-  persist: (member: ResizeMember) => void,
+  persist: (member: ResizeMember, widths?: ResizeWidths) => void,
 ) {
   const members = new Set<ResizeMember>();
   let stopListening: (() => void) | undefined;
@@ -42,6 +42,7 @@ export function createResizeController(
     x: number;
     width: number;
     before: ResizeWidths;
+    latest: ResizeWidths;
     pointer: number;
     query?: string;
     cleanup: () => void;
@@ -56,13 +57,25 @@ export function createResizeController(
         ...active.member.adapter.snapshot(),
         [active.id]: active.before[active.id],
       });
-    } else persist(active.member);
+    } else
+      persist(active.member, {
+        ...active.member.adapter.snapshot(),
+        [active.id]: active.latest[active.id],
+      });
     return true;
   };
   const owns = (member: ResizeMember, pointer: number) =>
     drag?.member === member && drag.pointer === pointer;
   const cancelMember = (member: ResizeMember) => {
     if (drag?.member === member) finish(true);
+  };
+  const resetMember = (member: ResizeMember, id: string) => {
+    if (!members.has(member) || member.options.enabled === false || drag) return false;
+    const widths = member.adapter.snapshot();
+    const bounds = member.adapter.bounds(id);
+    member.adapter.reset(id);
+    persist(member, { ...widths, [id]: clampSize(bounds.size, bounds) });
+    return true;
   };
   return {
     cancelMember,
@@ -105,6 +118,7 @@ export function createResizeController(
         x,
         width: before[id],
         before,
+        latest: { ...before },
         pointer,
         query: member.options.cancelMediaQuery,
         cleanup: () => {},
@@ -126,10 +140,11 @@ export function createResizeController(
     },
     move(member: ResizeMember, pointer: number, x: number) {
       if (!owns(member, pointer) || !drag) return;
-      member.adapter.apply({
+      drag.latest = {
         ...member.adapter.snapshot(),
         [drag.id]: clampSize(drag.width + x - drag.x, member.adapter.bounds(drag.id)),
-      });
+      };
+      member.adapter.apply(drag.latest);
     },
     end(member: ResizeMember, pointer: number) {
       if (owns(member, pointer))
@@ -138,18 +153,11 @@ export function createResizeController(
     cancel(member: ResizeMember, pointer: number) {
       if (owns(member, pointer)) finish(true);
     },
-    reset(member: ResizeMember, id: string) {
-      if (!members.has(member) || member.options.enabled === false || drag) return false;
-      member.adapter.reset(id);
-      persist(member);
-      return true;
-    },
+    reset: resetMember,
     key(member: ResizeMember, id: string, key: string, shift = false) {
       if (!members.has(member) || member.options.enabled === false || drag) return false;
       if (key === 'Enter') {
-        member.adapter.reset(id);
-        persist(member);
-        return true;
+        return resetMember(member, id);
       }
       const widths = member.adapter.snapshot();
       const bounds = member.adapter.bounds(id);
@@ -165,8 +173,9 @@ export function createResizeController(
                 ? bounds.maxSize
                 : undefined;
       if (next === undefined) return false;
-      member.adapter.apply({ ...widths, [id]: clampSize(next, bounds) });
-      persist(member);
+      const committed = { ...widths, [id]: clampSize(next, bounds) };
+      member.adapter.apply(committed);
+      persist(member, committed);
       return true;
     },
   };

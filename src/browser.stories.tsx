@@ -74,6 +74,8 @@ function ResourceBrowser({
   const [inspect, setInspect] = useState<string | null>(null);
   const [selection, setSelection] = useState<RowSelectionState>({ 'resource-0': true });
   const [widths, setWidths] = useState<ColumnBrowserWidths>({ workspace: 224, projects: 224 });
+  const [commits, setCommits] = useState(0);
+  const [committedWidths, setCommittedWidths] = useState<ColumnBrowserWidths>({});
   const [resizeDisabled, setResizeDisabled] = useState(false);
   const [project, setProject] = useState('Alpine');
   const [rootOnly, setRootOnly] = useState(false);
@@ -92,14 +94,27 @@ function ResourceBrowser({
       id: 'workspace',
       label: 'Workspace',
       content: (
-        <ColumnBrowserItem
-          icon={<ResourceIcon folder />}
-          pathSelected
-          trailing="›"
-          onClick={() => setRootOnly(!rootOnly)}
-        >
-          Projects
-        </ColumnBrowserItem>
+        <>
+          <ColumnBrowserItem
+            icon={<ResourceIcon folder />}
+            pathSelected
+            trailing="›"
+            onClick={() => setRootOnly(!rootOnly)}
+          >
+            Projects
+          </ColumnBrowserItem>
+          <ColumnBrowserItem
+            href="#workspace-guide"
+            target="_blank"
+            rel="noopener noreferrer"
+            icon={<ResourceIcon />}
+          >
+            Workspace guide
+          </ColumnBrowserItem>
+          <ColumnBrowserItem href="#unavailable-guide" disabled>
+            Unavailable guide
+          </ColumnBrowserItem>
+        </>
       ),
     },
     {
@@ -214,6 +229,10 @@ function ResourceBrowser({
               ariaLabel="Project folders"
               density={density}
               resizeDisabled={resizeDisabled}
+              onWidthsCommit={(next) => {
+                setCommittedWidths(next);
+                setCommits((count) => count + 1);
+              }}
               {...(controlled
                 ? {
                     widths,
@@ -243,6 +262,12 @@ function ResourceBrowser({
         <footer>
           <span>Workspace › Projects › {project}</span>
           <span className="demo-spacer" />
+          {!tableView && (
+            <>
+              <output aria-label="Panel resize commits">{commits}</output>
+              <output aria-label="Committed panel widths">{JSON.stringify(committedWidths)}</output>
+            </>
+          )}
           <output aria-label="Resource selection count">
             {Object.keys(selection).length} selected
           </output>
@@ -256,17 +281,44 @@ function ResourceBrowser({
         actions={
           context
             ? [
-                { id: 'inspect', label: 'Show details', onSelect: () => setInspect(context.id) },
+                {
+                  id: 'inspect',
+                  label: 'Show details',
+                  icon: <ResourceIcon />,
+                  shortcut: '⌘I',
+                  onSelect: () => setInspect(context.id),
+                },
                 {
                   id: 'select',
                   label: 'Select only this item',
                   onSelect: () => select(context.id),
                 },
+                { id: 'commands-divider', type: 'separator' },
                 {
                   id: 'clear',
                   label: 'Clear selection',
                   disabled: !Object.keys(selection).length,
                   onSelect: clearSelection,
+                },
+                {
+                  id: 'download',
+                  label: 'Download sample',
+                  href: 'data:text/plain,Sample%20resource',
+                  download: 'sample-resource.txt',
+                },
+                {
+                  id: 'resource-link',
+                  label: 'Open resource link',
+                  href: `#${context.id}`,
+                  target: '_blank',
+                  rel: 'noopener noreferrer',
+                  icon: <ResourceIcon />,
+                },
+                {
+                  id: 'unavailable-link',
+                  label: 'Unavailable resource link',
+                  href: '#unavailable',
+                  disabled: true,
                 },
               ]
             : []
