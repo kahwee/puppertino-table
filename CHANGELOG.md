@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **Behavior change:** automatic local sorting is now the default (`manualSorting=false`). Consumers with server pages or app-owned order must set `manualSorting` explicitly; controlled sorting state alone does not select manual mode.
+- Let table headers, bodies and standalone resize handles inherit selection-column visibility, disabled state and resize policy from `usePuppertinoTable`. Keep sizing separate from memoized row cells and suppress primitive handles for read-only widths.
+- Register TanStack's standard sorting functions, demonstrate real Date accessors with datetime sorting and semantic formatted cells, and replace Finder's display-string timestamps with Date values.
+- Show actual library defaults in Storybook Controls, make the simple table the primary example, provide complete public recipes for state ownership, custom rows, pagination and gestures, and typecheck every recipe against the installed packed package during `pnpm check`.
+
 ## 0.9.1 — 2026-10-12
 
 - Align the Finder and resource-browser examples with Puppertino’s Phosphor Icons guidance. Use regular toolbar icons, filled selected views and duotone file-type icons; preserve readable icon colors on selected rows.

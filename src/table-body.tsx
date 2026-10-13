@@ -2,6 +2,7 @@
 import type { RowData } from '@tanstack/react-table';
 import { memo } from 'react';
 import { RowSelectionCheckbox } from './row-selection-checkbox.js';
+import { tableBehavior } from './table-behavior.js';
 import type { PuppertinoBodyContext, TableBodyProps } from './table-types.js';
 
 function RenderTableBody<T extends RowData>({
@@ -58,4 +59,16 @@ function RenderTableBody<T extends RowData>({
   );
 }
 /** Geometry updates do not rerender cells; data and table state changes still do. */
-export const TableBody = memo(RenderTableBody) as typeof RenderTableBody;
+const MemoTableBody = memo(RenderTableBody) as typeof RenderTableBody;
+
+/** Resolve shared policy outside the memoized cells so policy changes still reach them. */
+export function TableBody<T extends RowData>(props: TableBodyProps<T>) {
+  const behavior = tableBehavior(props.table);
+  return (
+    <MemoTableBody
+      {...props}
+      selectable={props.selectable ?? (behavior.selectable && behavior.selectionCheckboxes)}
+      disabled={behavior.disabled || !!props.disabled}
+    />
+  );
+}

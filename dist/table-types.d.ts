@@ -19,9 +19,9 @@ export interface PuppertinoBodyContext<T extends RowData> {
 export type PuppertinoRowProps = PuppertinoDataAttributes & Omit<ComponentPropsWithoutRef<'tr'>, 'children' | 'dangerouslySetInnerHTML'>;
 export type PuppertinoCellProps = PuppertinoDataAttributes & Omit<ComponentPropsWithoutRef<'td'>, 'children' | 'dangerouslySetInnerHTML'>;
 export interface PuppertinoBodyOptions<T extends RowData> {
-    /** Render the selection column. Match the hook selection setting in custom layouts. */
+    /** Omit to inherit selection-column visibility from the hook. */
     selectable?: boolean;
-    /** Disable body selection controls. */
+    /** Omit to inherit the hook policy; true additionally disables body controls. */
     disabled?: boolean;
     getRowLabel?: (row: T) => string;
     emptyContent?: ReactNode;
@@ -31,12 +31,8 @@ export interface PuppertinoBodyOptions<T extends RowData> {
     leadingRows?: ReactNode | ((table: PuppertinoTableInstance<T>, context: PuppertinoBodyContext<T>) => ReactNode);
 }
 export type PuppertinoTableProps<T extends RowData> = PuppertinoTableOptions<T> & PuppertinoBodyOptions<T> & {
-    /** Render the selection column when selectable. Default: true; hide for row-only layouts. */
-    selectionCheckboxes?: boolean;
     /** Completed resize/reset snapshot; previews and cancelled gestures never commit. */
     onColumnSizingCommit?: ColumnResizeOptions['onCommit'];
-    /** Show pointer and keyboard resize handles. Default: true. */
-    resizable?: boolean;
     /** Cancel an unfinished drag when this media query matches. */
     cancelMediaQuery?: string;
     /** Accessible name for the table and its horizontal scroll region. */

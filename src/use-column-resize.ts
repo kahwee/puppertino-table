@@ -2,6 +2,7 @@
 import type { RowData } from '@tanstack/react-table';
 import type { PuppertinoTableInstance } from './model.js';
 import type { ColumnResizeOptions } from './resize-types.js';
+import { tableBehavior } from './table-behavior.js';
 import { useResizeGesture } from './use-resize-gesture.js';
 
 export function useColumnResize<T extends RowData>(
@@ -28,5 +29,8 @@ export function useColumnResize<T extends RowData>(
     apply: (widths: Record<string, number>) => table.setColumnSizing(widths),
     reset: (id: string) => columnById(id).resetSize(),
   };
-  return useResizeGesture(table.atoms.columnSizing, adapter, options);
+  return useResizeGesture(table.atoms.columnSizing, adapter, {
+    ...options,
+    enabled: tableBehavior(table).resizable && options.enabled !== false,
+  });
 }

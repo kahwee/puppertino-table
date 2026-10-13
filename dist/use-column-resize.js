@@ -1,4 +1,5 @@
 'use client';
+import { tableBehavior } from './table-behavior.js';
 import { useResizeGesture } from './use-resize-gesture.js';
 export function useColumnResize(table, options = {}) {
     const columnById = (id) => {
@@ -21,5 +22,8 @@ export function useColumnResize(table, options = {}) {
         apply: (widths) => table.setColumnSizing(widths),
         reset: (id) => columnById(id).resetSize(),
     };
-    return useResizeGesture(table.atoms.columnSizing, adapter, options);
+    return useResizeGesture(table.atoms.columnSizing, adapter, {
+        ...options,
+        enabled: tableBehavior(table).resizable && options.enabled !== false,
+    });
 }

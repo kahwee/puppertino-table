@@ -41,13 +41,39 @@ export function Example() {
 }
 ```
 
-For simpler tables, omit `sorting` and `onSortingChange` to let the library own sort state; set `manualSorting={false}` for local ordering. `initialSorting` and `initialRowSelection` seed uncontrolled state on mount. You can provide change callbacks as notifications while leaving state uncontrolled. If you provide controlled `sorting` or `rowSelection` without its matching callback, that state is read-only. Do not switch between controlled and uncontrolled ownership while a table is mounted.
+For simpler tables, omit `sorting` and `onSortingChange` to let the library own sort state and sort the supplied rows automatically. `initialSorting` and `initialRowSelection` seed uncontrolled state on mount. You can provide change callbacks as notifications while leaving state uncontrolled. If you provide controlled `sorting` or `rowSelection` without its matching callback, that state is read-only. Do not switch between controlled and uncontrolled ownership while a table is mounted.
 
 The example uses local sorting and uncontrolled checkbox selection. Pass both `rowSelection` and `onRowSelectionChange` for controlled selection. Controlled selection without a change callback is read-only. Set `selectionCheckboxes={false}` to hide the selection column while retaining selection capability and caller-provided row gestures. By default, with `selectable`, the header checkbox selects or clears the current row model, preserving selected IDs from other server pages or filtered-out rows. It shows a mixed state for partial selection and is disabled when no rows can be selected. Space toggles it from the keyboard. Keep column definitions and data references stable when possible.
 
 ### Sorting and pagination
 
-`manualSorting` defaults to `true`: the table reports sort changes and renders rows in the order provided. Your caller can sort/filter/page locally or request data from any backend. The component makes no network calls, has no endpoint conventions, and does not treat a loaded page as the full dataset. Pagination controls belong to the caller. Use `manualSorting={false}` to let TanStack sort all supplied rows locally.
+`manualSorting` defaults to `false`: TanStack sorts the supplied rows automatically. Set `manualSorting={true}` for server-paginated data or app-owned ordering; sort callbacks still fire, but the table renders the supplied page unchanged. Your caller can sort/filter/page locally or request data from any backend. The component makes no network calls, has no endpoint conventions, and does not treat a loaded page as the full dataset. Pagination controls belong to the caller. Controlled sorting state does not imply server sorting: choose `manualSorting` explicitly when the app or server owns order.
+
+### Date columns
+
+Keep `Date` objects in the accessor value and format only the cell. The registered TanStack datetime sorter compares timestamps, so month names, time-of-day strings and the user's locale cannot change the order. In TanStack v9 the column option is `sortFn`:
+
+```tsx
+const dateFormat = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric', month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles',
+});
+const timeFormat = new Intl.DateTimeFormat('en-US', {
+  hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles',
+});
+// Item.added is a Date; normalize ISO strings from an API when loading your data.
+helper.accessor('added', {
+  header: 'Date Added', size: 280, minSize: 240,
+  sortFn: 'datetime', sortDescFirst: true,
+  cell: cell => {
+    const date = cell.getValue();
+    return <time dateTime={date.toISOString()}>
+      {dateFormat.format(date)} at {timeFormat.format(date)}
+    </time>;
+  },
+});
+```
+
+This renders `Oct 10, 2026 at 4:40 PM` for the corresponding timestamp. Applications choose their locale/time zone; keep that choice consistent between server rendering and hydration. Validate missing or invalid timestamps in the app before creating `Date` values. Automatic sorting also detects valid Date values when `sortFn` is omitted. The table registers TanStack's standard text, natural-text, basic and datetime sorting functions; custom `sortFn` functions remain supported.
 
 ### Controlled column sizing
 
@@ -63,6 +89,12 @@ const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({ name: 240 
 ```
 
 The callback receives a value or functional updater, like a React state setter. Supplying widths without a callback makes sizing read-only. Omit `columnSizing` for TanStack-owned sizing and its fine-grained geometry subscription; a standalone `onColumnSizingChange` observes changes, just like sorting and selection callbacks. Controlled widths ignore saved preferences: the app owns restoration and persistence, so omit `storageKey` from controlled resize handles. Uncontrolled sorting and selection also stay in TanStack’s internal atoms; callbacks can observe their changes without owning the state. React-controlled sizing rerenders its state owner; for high-frequency custom layouts, TanStack v9 also supports external atoms through `useTable`.
+
+### Shared custom-layout behavior
+
+Configure `selectable`, `selectionCheckboxes`, `disabled` and `resizable` once in `usePuppertinoTable`. `TableHeader`, `TableBody` and standalone resize handles inherit that policy. With `selectable: true`, omitted primitive selection props render the selection column; use `selectionCheckboxes: false` for a row-only layout. Read-only selection keeps its checkboxes visible but disabled. Read-only controlled widths omit resize handles, including in custom layouts.
+
+Primitive `selectable` overrides remain available for specialized layouts; keep header/body visibility and your `colgroup` aligned. Primitive `disabled: true` and `resizable: false` can further restrict controls; they cannot enable resizing or bypass a disabled hook. The body resolves policy before its memoized cells, so disabled/visibility changes reach the body while column sizing remains separately subscribed.
 
 ### External atom ownership
 
@@ -102,10 +134,10 @@ Density is a library term implemented with standard CSS custom properties, not a
 
 ```tsx
 <DensityScope density="comfortable">
-  <PuppertinoTable data={items} columns={columns} ariaLabel="Items" />
+  <PuppertinoTable data={items} columns={columns} getRowId={item => item.id} ariaLabel="Items" />
   <ColumnBrowser panels={panels} ariaLabel="Projects" />
-  <DensityScope metrics={{ iconSize: 22 }}><PuppertinoTable data={items} columns={columns} ariaLabel="Larger icons" /></DensityScope>
-  <PuppertinoTable density="native" data={items} columns={columns} ariaLabel="Native override" />
+  <DensityScope metrics={{ iconSize: 22 }}><PuppertinoTable data={items} columns={columns} getRowId={item => item.id} ariaLabel="Larger icons" /></DensityScope>
+  <PuppertinoTable density="native" data={items} columns={columns} getRowId={item => item.id} ariaLabel="Native override" />
 </DensityScope>
 ```
 
@@ -331,8 +363,8 @@ function CustomItems() {
     <table.Subscribe source={table.atoms.columnSizing}>{() => (
       <table className="p-table pt-table" aria-label="Items" style={{ width: table.getTotalSize() + 36 }}>
         <colgroup><col style={{ width: 36 }} />{table.getAllLeafColumns().map(column => <col key={column.id} style={{ width: column.getSize() }} />)}</colgroup>
-        <TableHeader table={table} selectable resizeOptions={{ storageKey }} />
-        <TableBody table={table} selectable getRowLabel={item => item.name}
+        <TableHeader table={table} resizeOptions={{ storageKey }} />
+        <TableBody table={table} getRowLabel={item => item.name}
           leadingRows={(_table, context) => <tr><td colSpan={context.columnCount}>Folder</td></tr>} />
       </table>
     )}</table.Subscribe>
@@ -348,7 +380,7 @@ For a fully custom header or body, use `ColumnResizeHandle` and `RowSelectionChe
 
 | Option | Default or omitted behavior |
 | --- | --- |
-| `manualSorting` | `true`: preserve supplied row order; `false` sorts the supplied rows locally |
+| `manualSorting` | Defaults to `false`: sort supplied rows automatically; `true` preserves server/app-owned order |
 | `selectable` | `false`: no selection column or selection gestures |
 | `disabled` | `false`; the complete table disables sorting, selection and resizing UI |
 | `resizable` | `true`; controlled `columnSizing` without `onColumnSizingChange` is read-only. Atom-owned widths resize without a callback |

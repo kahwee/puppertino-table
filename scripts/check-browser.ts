@@ -436,8 +436,8 @@ try {
         first,
         'hook enables opt-in local sorting',
       );
-      await page.getByRole('checkbox').first().check();
-      assert.equal(await page.getByRole('checkbox').first().isChecked(), true);
+      await table.getByRole('checkbox').first().check();
+      assert.equal(await table.getByRole('checkbox').first().isChecked(), true);
       const handle = page.getByRole('separator', { name: 'Resize Name column', exact: true });
       const before = Number(await handle.getAttribute('aria-valuenow'));
       await handle.press('ArrowRight');

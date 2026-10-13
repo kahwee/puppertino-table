@@ -3,6 +3,7 @@ import type { RowSelectionState } from '@tanstack/react-table';
 import type { DragEvent, MouseEvent } from 'react';
 import { useReducer, useRef, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
+import { formatDateTime } from '../demo/date-format.js';
 import { FileArtwork, FilePreview, Glyph, ViewGlyph } from '../demo/finder-artwork.js';
 import { DemoToolbar } from '../demo/finder-chrome.js';
 import { type FileItem, finderFilesReducer, initialFinderFiles } from '../demo/finder-files.js';
@@ -50,7 +51,15 @@ const columns = helper.columns([
       </span>
     ),
   }),
-  helper.accessor('modified', { header: 'Date modified', size: 170, minSize: 140 }),
+  helper.accessor('modified', {
+    header: 'Date modified',
+    size: 260,
+    minSize: 240,
+    sortFn: 'datetime',
+    cell: (cell) => (
+      <time dateTime={cell.getValue().toISOString()}>{formatDateTime(cell.getValue())}</time>
+    ),
+  }),
   helper.accessor('size', { header: 'Size', size: 90, minSize: 70 }),
   helper.accessor('kind', { header: 'Kind', size: 160, minSize: 120 }),
 ]);
@@ -559,7 +568,7 @@ function FinderDemo({
                 <dt>Size</dt>
                 <dd>{active.size}</dd>
                 <dt>Modified</dt>
-                <dd>{active.modified}</dd>
+                <dd>{formatDateTime(active.modified)}</dd>
                 <dt>{inTrash ? 'Original folder' : 'Folder'}</dt>
                 <dd>{active.folder}</dd>
               </dl>

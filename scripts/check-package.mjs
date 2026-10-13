@@ -164,12 +164,20 @@ console.log('React ${react}: typed imports and server rendering passed');
         'puppertino-table',
       ),
     );
+    const recipeFiles = JSON.parse(
+      execFileSync(
+        path.join(root, 'node_modules/.bin/tsx'),
+        ['scripts/export-table-recipes.ts', directory],
+        { cwd: root, encoding: 'utf8' },
+      ),
+    );
     // Consumers should not require the repository's development dependencies.
     execFileSync(
       path.join(directory, 'node_modules/.bin/tsc'),
       [
         'consumer.tsx',
         'public-contracts.ts',
+        ...recipeFiles,
         '--outDir',
         'compiled',
         '--module',
@@ -186,6 +194,9 @@ console.log('React ${react}: typed imports and server rendering passed');
         'react,react-dom',
       ],
       { cwd: directory, stdio: 'inherit' },
+    );
+    console.log(
+      `Typechecked ${recipeFiles.length - 1} Storybook recipes against the installed package.`,
     );
     execFileSync(process.execPath, ['compiled/consumer.js'], { cwd: directory, stdio: 'inherit' });
     // CSS must be consumable through the public export, without copying package internals.

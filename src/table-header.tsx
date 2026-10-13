@@ -2,15 +2,20 @@
 import { type RowData, Subscribe } from '@tanstack/react-table';
 import { ColumnResizeHandle } from './resize-handle.js';
 import { selectionAnchorFor } from './selection-anchor.js';
+import { tableBehavior } from './table-behavior.js';
 import type { TableHeaderProps } from './table-types.js';
 
 export function TableHeader<T extends RowData>({
   table,
-  selectable = false,
-  disabled = false,
-  resizable = true,
+  selectable: selectionOverride,
+  disabled: disabledOverride,
+  resizable: resizeOverride,
   resizeOptions,
 }: TableHeaderProps<T>) {
+  const behavior = tableBehavior(table);
+  const selectable = selectionOverride ?? (behavior.selectable && behavior.selectionCheckboxes);
+  const disabled = behavior.disabled || !!disabledOverride;
+  const resizable = behavior.resizable && resizeOverride !== false;
   const groups = table.getHeaderGroups();
   const options = {
     ...resizeOptions,

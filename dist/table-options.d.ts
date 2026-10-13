@@ -20,7 +20,7 @@ interface TableOptions<T extends RowData> {
     initialSorting?: SortingState;
     /** Mount-only seed for internally owned selection; ignored for controlled/atom state. */
     initialRowSelection?: RowSelectionState;
-    /** Preserve host-owned order by default, including server-paginated data. */
+    /** Sort supplied rows locally by default. Set true for server pages or app-owned order. */
     manualSorting?: boolean;
     /** Omit for local selection; a value without a callback is read-only. */
     rowSelection?: RowSelectionState;
@@ -29,8 +29,12 @@ interface TableOptions<T extends RowData> {
     selectable?: boolean;
     /** Shared range anchor for checkboxes, row gestures and other layouts. */
     selectionAnchor?: RefObject<string | null>;
-    /** Disable selection in the hook; the complete component also disables its UI. */
+    /** Disable sorting, selection and resizing across complete and custom layouts. */
     disabled?: boolean;
+    /** Show selection checkboxes in complete and primitive layouts. Default: true. */
+    selectionCheckboxes?: boolean;
+    /** Enable resizing across complete and primitive layouts. Default: true. */
+    resizable?: boolean;
     /** App-owned widths; saved preferences are ignored in controlled mode. */
     columnSizing?: ColumnSizingState;
     /** Receives a value or updater; observes internal changes when widths are omitted.

@@ -3,10 +3,13 @@ import { useCreateAtom } from '@tanstack/react-store';
 import type { RowSelectionState, SortingState } from '@tanstack/react-table';
 import { useRef, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
+import { tableRecipes } from '../.storybook/table-sources.js';
+import { DateTableExample } from '../demo/date-table-example.js';
 import { type Person, people, personColumns, productColumns, products } from '../demo/fixtures.js';
 import {
   AtomOwnershipExample,
   ControlledSizingExample,
+  ReadOnlyStateExample,
   ResizeEventsExample,
 } from '../demo/table-state-examples.js';
 import {
@@ -20,6 +23,7 @@ import {
   usePuppertinoTable,
   useRowSelectionGestures,
 } from './index.js';
+import { tableDefaults } from './table-behavior.js';
 
 function Example(args: Partial<Omit<PuppertinoTableProps<Person>, 'atoms'>>) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -49,35 +53,63 @@ const meta = {
   component: Example,
   parameters: {
     controls: {
-      include: ['disabled', 'selectable', 'resizable', 'manualSorting', 'density', 'ariaLabel'],
+      include: [
+        'disabled',
+        'selectable',
+        'selectionCheckboxes',
+        'resizable',
+        'manualSorting',
+        'density',
+        'ariaLabel',
+      ],
     },
     docs: {
+      source: { language: 'tsx', type: 'code' },
       description: {
         component:
-          'Generic typed rows, custom cells, optional selection and precise cancelable sizing. Host-owned ordering is the default; local sorting is opt-in.',
+          'Start with Default for an internally managed table. Selection shows React-controlled sorting and selection; External Atoms shares app-owned state. Read Only supplies snapshots without change callbacks. Automatic sorting is the default. Set manualSorting for server pages or app-owned ordering. The ownership examples include public imports, typed columns and sample data in Show code.',
       },
     },
   },
   args: {
-    disabled: false,
+    ...tableDefaults,
     selectable: true,
-    resizable: true,
-    manualSorting: false,
     density: 'native',
     ariaLabel: 'People',
   },
   argTypes: {
-    disabled: { control: 'boolean', description: 'Disable sorting, selection and resizing.' },
-    selectable: { control: 'boolean', description: 'Show row selection checkboxes.' },
-    resizable: { control: 'boolean', description: 'Enable pointer and keyboard column resizing.' },
+    disabled: {
+      control: 'boolean',
+      description: 'Disable sorting, selection and resizing.',
+      table: { defaultValue: { summary: String(tableDefaults.disabled) } },
+    },
+    selectable: {
+      control: 'boolean',
+      description: 'Enable row selection. This story enables it; the library defaults to false.',
+      table: { defaultValue: { summary: String(tableDefaults.selectable) } },
+    },
+    selectionCheckboxes: {
+      control: 'boolean',
+      description: 'Show the selection column when selectable; hide for row-only gestures.',
+      table: { defaultValue: { summary: String(tableDefaults.selectionCheckboxes) } },
+    },
+    resizable: {
+      control: 'boolean',
+      description: 'Enable pointer and keyboard column resizing.',
+      table: { defaultValue: { summary: String(tableDefaults.resizable) } },
+    },
     manualSorting: {
       control: 'boolean',
-      description: 'Preserve app-owned row order; disable to sort locally.',
+      description:
+        'Default false: sort supplied rows automatically. Enable for server pages or app-owned order.',
+      table: { defaultValue: { summary: String(tableDefaults.manualSorting) } },
     },
     density: {
       control: 'inline-radio',
       options: ['native', 'compact', 'comfortable'],
-      description: 'Use native Puppertino spacing or an explicit row density.',
+      description:
+        'Omitting density inherits the surrounding scope. This story starts with native spacing.',
+      table: { defaultValue: { summary: 'inherit' } },
     },
     ariaLabel: { control: 'text', description: 'Accessible name for the table.' },
     data: { control: false },
@@ -86,6 +118,27 @@ const meta = {
 } satisfies Meta<typeof Example>;
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  parameters: { docs: { source: { code: tableRecipes.uncontrolled } } },
+  render: (args) => (
+    <PuppertinoTable
+      data={people.slice(0, 12)}
+      columns={personColumns}
+      getRowId={(row) => row.id}
+      getRowLabel={(row) => row.name}
+      {...args}
+      ariaLabel={args.ariaLabel ?? 'People'}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Sort by Score' }));
+    await expect(canvas.getAllByRole('row')[1].children[3]).toHaveTextContent('86');
+    await userEvent.click(canvas.getByRole('button', { name: 'Sort by Score' }));
+    await expect(canvas.getAllByRole('row')[1].children[3]).toHaveTextContent('0');
+  },
+};
 
 function ItemGestureExample({ ownership }: { ownership: 'controlled' | 'local' | 'atom' }) {
   const [selection, setSelection] = useState<RowSelectionState>({});
@@ -197,27 +250,28 @@ function ItemGestureExample({ ownership }: { ownership: 'controlled' | 'local' |
 }
 
 export const ItemSelectionGestures: Story = {
-  parameters: { controls: { disable: true } },
+  parameters: {
+    controls: { disable: true },
+    docs: { source: { code: tableRecipes.controlledGestures } },
+  },
   render: () => <ItemGestureExample ownership="controlled" />,
 };
 export const UncontrolledItemGestures: Story = {
-  parameters: { controls: { disable: true } },
+  parameters: {
+    controls: { disable: true },
+    docs: { source: { code: tableRecipes.localGestures } },
+  },
   render: () => <ItemGestureExample ownership="local" />,
 };
 export const AtomItemGestures: Story = {
-  parameters: { controls: { disable: true } },
+  parameters: {
+    controls: { disable: true },
+    docs: { source: { code: tableRecipes.atomGestures } },
+  },
   render: () => <ItemGestureExample ownership="atom" />,
 };
-export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Sort by Score' }));
-    await expect(canvas.getAllByRole('row')[1].children[3]).toHaveTextContent('86');
-    await userEvent.click(canvas.getByRole('button', { name: 'Sort by Score' }));
-    await expect(canvas.getAllByRole('row')[1].children[3]).toHaveTextContent('0');
-  },
-};
 export const Selection: Story = {
+  parameters: { docs: { source: { code: tableRecipes.controlled } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const boxes = canvas.getAllByRole('checkbox', { name: /^Select Person/ });
@@ -230,6 +284,7 @@ export const Selection: Story = {
   },
 };
 export const KeyboardResize: Story = {
+  parameters: { docs: { source: { code: tableRecipes.controlled } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const edge = canvas.getByRole('separator', { name: 'Resize Name column' });
@@ -241,9 +296,11 @@ export const KeyboardResize: Story = {
   },
 };
 export const Dark: Story = {
+  parameters: { docs: { source: { code: tableRecipes.controlled } } },
   globals: { theme: 'dark' },
 };
 export const Narrow: Story = {
+  parameters: { docs: { source: { code: tableRecipes.controlled } } },
   decorators: [
     (Story) => (
       <div style={{ width: 320 }}>
@@ -252,11 +309,51 @@ export const Narrow: Story = {
     ),
   ],
 };
-export const Empty: Story = { args: { data: [], emptyContent: 'No people match this view.' } };
-export const Disabled: Story = { args: { disabled: true } };
-export const ReadOnly: Story = { args: { selectable: false, resizable: false } };
+export const Empty: Story = {
+  args: { data: [], emptyContent: 'No people match this view.' },
+  parameters: { docs: { source: { code: tableRecipes.empty } } },
+};
+export const Disabled: Story = {
+  args: { disabled: true },
+  parameters: { docs: { source: { code: tableRecipes.disabled } } },
+};
+export const ReadOnly: Story = {
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      source: { code: tableRecipes.readOnly },
+      description: {
+        story:
+          'Controlled sorting, selection and widths without change callbacks are read-only. Selected rows and sort direction remain visible; resizing and sorting controls are omitted.',
+      },
+    },
+  },
+  render: () => <ReadOnlyStateExample />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByRole('button', { name: /^Sort by/ })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole('separator')).not.toBeInTheDocument();
+    await expect(canvas.getByRole('checkbox', { name: 'Select Person 001' })).toBeChecked();
+    for (const checkbox of canvas.getAllByRole('checkbox')) {
+      await expect(checkbox).toBeDisabled();
+    }
+    await expect(canvas.getByRole('columnheader', { name: 'Score' })).toHaveAttribute(
+      'aria-sort',
+      'descending',
+    );
+  },
+};
 export const ServerOwnedOrder: Story = {
   args: { manualSorting: true },
+  parameters: {
+    docs: {
+      source: { code: tableRecipes.server },
+      description: {
+        story:
+          'Sort callbacks request a new order from the app. The current page stays in the supplied order; the table never sorts a server page locally.',
+      },
+    },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const first = canvas.getAllByRole('row')[1].textContent;
@@ -266,7 +363,7 @@ export const ServerOwnedOrder: Story = {
   },
 };
 export const DifferentSchema: Story = {
-  parameters: { controls: { disable: true } },
+  parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.products } } },
   render: () => {
     const [sorting, setSorting] = useState<SortingState>([]);
     return (
@@ -284,6 +381,7 @@ export const DifferentSchema: Story = {
 };
 
 export const GroupedHeaders: Story = {
+  parameters: { docs: { source: { code: tableRecipes.grouped } } },
   args: {
     columns: [
       { id: 'identity', header: 'Identity', columns: personColumns.slice(0, 2) },
@@ -362,7 +460,7 @@ function StandaloneResizeExample() {
   );
 }
 export const StandaloneResize: Story = {
-  parameters: { controls: { disable: true } },
+  parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.standalone } } },
   render: () => <StandaloneResizeExample />,
 };
 
@@ -393,9 +491,9 @@ function CustomizedRowsExample({ empty = false }: { empty?: boolean }) {
           title: `${cell.column.id}: ${cell.getValue()}`,
           onDoubleClick: () => setContext(cell.column.id),
         })}
-        leadingRows={(table) => (
+        leadingRows={(_table, context) => (
           <tr>
-            <td colSpan={table.getAllLeafColumns().length + 1}>
+            <td colSpan={context.columnCount}>
               <button type="button" onClick={() => setContext('Folder opened')}>
                 Open folder
               </button>
@@ -409,16 +507,19 @@ function CustomizedRowsExample({ empty = false }: { empty?: boolean }) {
   );
 }
 export const CustomizedRows: Story = {
-  parameters: { controls: { disable: true } },
+  parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.customized } } },
   render: () => <CustomizedRowsExample />,
 };
 export const LeadingRowsWhenEmpty: Story = {
-  parameters: { controls: { disable: true } },
+  parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.leading } } },
   render: () => <CustomizedRowsExample empty />,
 };
 
 function HookLayoutExample() {
   const [readOnly, setReadOnly] = useState(false);
+  const [disabled, setDisabled] = useState(false);
+  const [resizable, setResizable] = useState(true);
+  const [selection, setSelection] = useState<RowSelectionState>({});
   const [sorting, setSorting] = useState<SortingState>([]);
   const table = usePuppertinoTable({
     data: people.slice(0, 3),
@@ -427,14 +528,32 @@ function HookLayoutExample() {
     sorting,
     onSortingChange: setSorting,
     selectable: true,
-    manualSorting: false,
-    rowSelection: readOnly ? {} : undefined,
+    disabled,
+    resizable,
+    rowSelection: selection,
+    onRowSelectionChange: readOnly ? undefined : setSelection,
   });
   return (
     <>
       <button type="button" onClick={() => setReadOnly(!readOnly)}>
         Toggle read-only selection
       </button>
+      <label>
+        <input
+          type="checkbox"
+          checked={disabled}
+          onChange={(event) => setDisabled(event.target.checked)}
+        />
+        Disable table
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={resizable}
+          onChange={(event) => setResizable(event.target.checked)}
+        />
+        Enable resizing
+      </label>
       <table.Subscribe source={table.atoms.columnSizing}>
         {() => (
           <table
@@ -448,8 +567,8 @@ function HookLayoutExample() {
                 <col key={column.id} style={{ width: column.getSize() }} />
               ))}
             </colgroup>
-            <TableHeader table={table} selectable />
-            <TableBody table={table} selectable getRowLabel={(row) => row.name} />
+            <TableHeader table={table} />
+            <TableBody table={table} getRowLabel={(row) => row.name} />
           </table>
         )}
       </table.Subscribe>
@@ -457,12 +576,28 @@ function HookLayoutExample() {
   );
 }
 export const HookLayout: Story = {
-  parameters: { controls: { disable: true } },
+  parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.hook } } },
   render: () => <HookLayoutExample />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const table = within(canvas.getByRole('table', { name: 'Hook layout' }));
+    await userEvent.click(table.getByRole('checkbox', { name: 'Select Person 001' }));
+    await userEvent.click(canvas.getByRole('checkbox', { name: 'Disable table' }));
+    for (const checkbox of table.getAllByRole('checkbox')) await expect(checkbox).toBeDisabled();
+    await expect(table.queryByRole('separator')).not.toBeInTheDocument();
+    await expect(table.queryByRole('button', { name: /^Sort by/ })).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('checkbox', { name: 'Disable table' }));
+    await expect(table.getByRole('checkbox', { name: 'Select Person 001' })).toBeChecked();
+    await expect(table.getByRole('checkbox', { name: 'Select Person 001' })).toBeEnabled();
+    await userEvent.click(canvas.getByRole('checkbox', { name: 'Enable resizing' }));
+    await expect(table.queryByRole('separator')).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('checkbox', { name: 'Enable resizing' }));
+    await expect(table.getByRole('separator', { name: 'Resize Name column' })).toBeInTheDocument();
+  },
 };
 
 export const IndependentTables: Story = {
-  parameters: { controls: { disable: true } },
+  parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.independent } } },
   render: () => (
     <>
       <Example ariaLabel="First table" />
@@ -505,7 +640,7 @@ function UncontrolledStateExample() {
   );
 }
 export const UncontrolledState: Story = {
-  parameters: { controls: { disable: true } },
+  parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.observed } } },
   render: () => <UncontrolledStateExample />,
 };
 
@@ -538,12 +673,12 @@ function CheckboxPrimitiveExample() {
   );
 }
 export const CheckboxPrimitive: Story = {
-  parameters: { controls: { disable: true } },
+  parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.checkbox } } },
   render: () => <CheckboxPrimitiveExample />,
 };
 
 export const ControlledSizing: Story = {
-  parameters: { controls: { disable: true } },
+  parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.sizing } } },
   render: () => <ControlledSizingExample />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -557,7 +692,7 @@ export const ControlledSizing: Story = {
 };
 
 export const ExternalAtoms: Story = {
-  parameters: { controls: { disable: true } },
+  parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.atoms } } },
   render: () => <AtomOwnershipExample />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -592,6 +727,7 @@ function PaginatedSelectionExample() {
         getRowId={(row) => row.id}
         getRowLabel={(row) => row.name}
         ariaLabel="Paged people"
+        manualSorting
         selectable
         rowSelection={selection}
         onRowSelectionChange={setSelection}
@@ -604,6 +740,7 @@ export const PaginatedSelection: Story = {
   parameters: {
     controls: { disable: true },
     docs: {
+      source: { code: tableRecipes.paginated },
       description: {
         story:
           'The header checkbox selects only the current page. Switch pages to verify that selections on other pages survive selecting and clearing this page.',
@@ -617,6 +754,7 @@ export const ResizeEvents: Story = {
   parameters: {
     controls: { disable: true },
     docs: {
+      source: { code: tableRecipes.resize },
       description: {
         story:
           'Internal widths with an observer: change callbacks include previews and cancellation; onColumnSizingCommit receives completed pointer, keyboard and reset snapshots. Escape cancels a preview without committing.',
@@ -632,5 +770,29 @@ export const ResizeEvents: Story = {
     await expect(canvas.getByLabelText('Preview name width')).toHaveTextContent('256');
     await expect(canvas.getByLabelText('Committed name width')).toHaveTextContent('256');
     await expect(canvas.getByLabelText('Resize commits')).toHaveTextContent('1');
+  },
+};
+
+export const DateColumns: Story = {
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      source: { code: tableRecipes.dates },
+      description: {
+        story:
+          'Date Added keeps real Date values for chronological sorting and formats only the cell. Click once for newest first. The fixed demo locale/time zone keeps server and browser output consistent; applications choose their own.',
+      },
+    },
+  },
+  render: () => <DateTableExample />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('Oct 10, 2026 at 4:40 PM')).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: 'Sort by Date Added' }));
+    await expect(canvas.getAllByRole('row')[1]).toHaveTextContent('November plan');
+    await userEvent.click(canvas.getByRole('button', { name: 'Sort by Date Added' }));
+    await expect(canvas.getAllByRole('row')[1]).toHaveTextContent('September notes');
+    await expect(canvas.getAllByRole('row')[2]).toHaveTextContent('Morning update');
+    await expect(canvas.getAllByRole('row')[3]).toHaveTextContent('October brief');
   },
 };

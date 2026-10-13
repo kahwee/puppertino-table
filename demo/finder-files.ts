@@ -4,7 +4,7 @@ export const initialFiles = [
     name: 'Project brief.pdf',
     kind: 'PDF document',
     size: '248 KB',
-    modified: 'Today, 10:42',
+    modified: new Date('2026-10-12T17:42:00Z'),
     folder: 'Projects',
   },
   {
@@ -12,7 +12,7 @@ export const initialFiles = [
     name: 'Research notes.txt',
     kind: 'Text document',
     size: '18 KB',
-    modified: 'Today, 09:15',
+    modified: new Date('2026-10-12T16:15:00Z'),
     folder: 'Projects',
   },
   {
@@ -20,7 +20,7 @@ export const initialFiles = [
     name: 'Budget.xlsx',
     kind: 'Spreadsheet',
     size: '96 KB',
-    modified: 'Yesterday',
+    modified: new Date('2026-10-11T22:20:00Z'),
     folder: 'Projects',
   },
   {
@@ -28,7 +28,7 @@ export const initialFiles = [
     name: 'Cover artwork.png',
     kind: 'PNG image',
     size: '1.2 MB',
-    modified: 'Yesterday',
+    modified: new Date('2026-10-11T18:05:00Z'),
     folder: 'Projects',
   },
   {
@@ -36,7 +36,7 @@ export const initialFiles = [
     name: 'Meeting notes.txt',
     kind: 'Text document',
     size: '12 KB',
-    modified: 'Oct 10, 2026',
+    modified: new Date('2026-10-10T23:40:00Z'),
     folder: 'Projects',
   },
   {
@@ -44,7 +44,7 @@ export const initialFiles = [
     name: 'Launch timeline.pdf',
     kind: 'PDF document',
     size: '384 KB',
-    modified: 'Oct 9, 2026',
+    modified: new Date('2026-10-09T21:10:00Z'),
     folder: 'Projects',
   },
 ];

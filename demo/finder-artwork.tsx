@@ -22,12 +22,13 @@ import {
 } from '@phosphor-icons/react';
 import type { CSSProperties } from 'react';
 import { FinderEmptyState, FinderPreview } from '../src/index.js';
+import { formatDateTime } from './date-format.js';
 
 interface FinderFile {
   name: string;
   kind: string;
   size: string;
-  modified: string;
+  modified: Date;
   folder: string;
 }
 
@@ -145,7 +146,7 @@ export function FilePreview({ file }: { file?: FinderFile }) {
     >
       <dl>
         <dt>Modified</dt>
-        <dd>{file.modified}</dd>
+        <dd>{formatDateTime(file.modified)}</dd>
         <dt>Location</dt>
         <dd>{file.folder}</dd>
       </dl>

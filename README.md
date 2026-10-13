@@ -47,13 +47,12 @@ export function Files() {
       ariaLabel="Files"
       density="compact"
       selectable
-      manualSorting={false}
     />
   );
 }
 ```
 
-Sorting defaults to caller-owned order. Set `manualSorting={false}` to sort the supplied data locally. The [API guide](https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md) covers controlled state, server pagination, persistence, styling and primitive composition.
+Sorting automatically orders the supplied rows by default. Set `manualSorting` for server-paginated data or other app-owned ordering. The [API guide](https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md) covers controlled state, server pagination, persistence, styling and primitive composition.
 
 ## Four views, one workspace
 

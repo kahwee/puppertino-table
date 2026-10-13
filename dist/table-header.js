@@ -3,7 +3,12 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { Subscribe } from '@tanstack/react-table';
 import { ColumnResizeHandle } from './resize-handle.js';
 import { selectionAnchorFor } from './selection-anchor.js';
-export function TableHeader({ table, selectable = false, disabled = false, resizable = true, resizeOptions, }) {
+import { tableBehavior } from './table-behavior.js';
+export function TableHeader({ table, selectable: selectionOverride, disabled: disabledOverride, resizable: resizeOverride, resizeOptions, }) {
+    const behavior = tableBehavior(table);
+    const selectable = selectionOverride ?? (behavior.selectable && behavior.selectionCheckboxes);
+    const disabled = behavior.disabled || !!disabledOverride;
+    const resizable = behavior.resizable && resizeOverride !== false;
     const groups = table.getHeaderGroups();
     const options = {
         ...resizeOptions,

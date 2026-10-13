@@ -93,6 +93,7 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   await link.click();
   await page.waitForURL((url) => url.searchParams.get('path') === '/docs/examples-finder--docs');
   await page.frameLocator('#storybook-preview-iframe').locator('#finder-walkthrough').waitFor();
+  await checkTableRecipes(page, base);
   await checkThemeToolbar(page, base);
   console.log(
     'Storybook docs passed: media playback, readable source, live args, reset and manager navigation.',
@@ -150,4 +151,47 @@ async function checkThemeToolbar(page: Page, base: string) {
     await page.getByRole('button', { name: 'Theme set by story parameters' }).isDisabled(),
     true,
   );
+}
+
+async function checkTableRecipes(page: Page, base: string) {
+  console.log('Checking table docs: public API recipes and primary example');
+  await page.goto(`${base}/iframe.html?id=puppertino-table--docs&viewMode=docs`);
+  await page.locator('#story--puppertino-table--default').waitFor();
+  const primary = page.locator('.sbdocs-preview').first();
+  await primary.getByRole('table', { name: 'People', exact: true }).waitFor();
+  assert.equal(await primary.getByRole('heading', { name: 'Anchored item selection' }).count(), 0);
+  for (const [story, marker] of [
+    ['default', 'ariaLabel="People"'],
+    ['selection', 'onRowSelectionChange={setSelection}'],
+    ['server-owned-order', 'manualSorting\n'],
+    ['read-only', 'columnSizing={{ name: 280 }}'],
+    ['controlled-sizing', 'onColumnSizingChange={setColumnSizing}'],
+    ['external-atoms', 'atoms={{ columnSizing, sorting, rowSelection }}'],
+    ['resize-events', 'onColumnSizingCommit='],
+    ['hook-layout', 'onRowSelectionChange: readOnly ? undefined : setSelection'],
+    ['customized-rows', 'getRowProps='],
+    ['leading-rows-when-empty', 'EmptyTableWithLeadingRows'],
+    ['paginated-selection', 'manualSorting\n'],
+    ['item-selection-gestures', 'ownership="controlled"'],
+    ['uncontrolled-item-gestures', 'ownership="local"'],
+    ['atom-item-gestures', 'ownership="atom"'],
+    ['date-columns', "sortFn: 'datetime'"],
+  ]) {
+    const preview = page
+      .locator(`#story--puppertino-table--${story}`)
+      .locator('xpath=ancestor::div[contains(@class,"sbdocs-preview")]/..');
+    await preview.getByRole('switch', { name: 'Show code' }).click();
+    const source = await preview.locator('pre').innerText();
+    assert.ok(source.includes("from 'puppertino-table'"), `${story}: public imports`);
+    assert.ok(source.includes('createPuppertinoColumnHelper<'), `${story}: typed columns`);
+    assert.ok(source.includes(marker), `${story}: actual state wiring`);
+    if (story === 'hook-layout') {
+      assert.ok(source.includes('<TableHeader table={table} />'));
+      assert.ok(!source.includes('<TableBody table={table} selectable'));
+    }
+    assert.ok(
+      !source.includes('../src/') && !source.includes('<Example'),
+      `${story}: consumer-ready source`,
+    );
+  }
 }

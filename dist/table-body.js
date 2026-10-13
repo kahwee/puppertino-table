@@ -3,6 +3,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { createElement as _createElement } from "react";
 import { memo } from 'react';
 import { RowSelectionCheckbox } from './row-selection-checkbox.js';
+import { tableBehavior } from './table-behavior.js';
 function RenderTableBody({ table, selectable = false, disabled = false, getRowLabel, emptyContent = 'No rows', getRowProps, getCellProps, leadingRows, }) {
     const rows = table.getRowModel().rows;
     const context = {
@@ -22,4 +23,9 @@ function RenderTableBody({ table, selectable = false, disabled = false, getRowLa
             })) : (_jsx("tr", { children: _jsx("td", { colSpan: context.columnCount, children: emptyContent }) }))] }));
 }
 /** Geometry updates do not rerender cells; data and table state changes still do. */
-export const TableBody = memo(RenderTableBody);
+const MemoTableBody = memo(RenderTableBody);
+/** Resolve shared policy outside the memoized cells so policy changes still reach them. */
+export function TableBody(props) {
+    const behavior = tableBehavior(props.table);
+    return (_jsx(MemoTableBody, { ...props, selectable: props.selectable ?? (behavior.selectable && behavior.selectionCheckboxes), disabled: behavior.disabled || !!props.disabled }));
+}

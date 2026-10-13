@@ -46,12 +46,12 @@ const files = [{ id: 'brief', name: 'Project brief.pdf' }];
 export function Files() {
   return <PuppertinoTable data={files} columns={columns}
     getRowId={file => file.id} getRowLabel={file => file.name}
-    ariaLabel="Files" density="compact" selectable manualSorting={false} />;
+    ariaLabel="Files" density="compact" selectable />;
 }`} />
 
 ## Choose the right ownership
 
-Sorting defaults to caller-owned row order. Use `manualSorting={false}` only when the supplied rows are the complete local dataset you want to sort. Keep manual sorting for a server page.
+Sorting automatically orders the supplied rows by default. Set `manualSorting` when supplying a server page or when your application owns row ordering. Sorting state ownership is independent: local sorting works with internal state, controlled values or external atoms.
 
 The library owns table semantics, column/panel sizing gestures, selection primitives, density and menu behavior. Your app owns data fetching, folder routes, file moves, preview content and command authorization. Drag/drop in the Finder example uses native HTML events and in-memory state.
 

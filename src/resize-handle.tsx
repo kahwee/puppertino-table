@@ -1,6 +1,7 @@
 'use client';
 import { type RowData, Subscribe } from '@tanstack/react-table';
 import type { ColumnResizeHandleProps } from './resize-types.js';
+import { tableBehavior } from './table-behavior.js';
 import { useColumnResize } from './use-column-resize.js';
 
 export function ColumnResizeHandle<T extends RowData>({
@@ -15,7 +16,12 @@ export function ColumnResizeHandle<T extends RowData>({
       ? header.column.columnDef.header
       : header.column.id);
   const { handle } = useColumnResize(table, options);
-  if (options?.enabled === false || header.isPlaceholder || header.column.columns.length > 0)
+  if (
+    !tableBehavior(table).resizable ||
+    options?.enabled === false ||
+    header.isPlaceholder ||
+    header.column.columns.length > 0
+  )
     return null;
   return (
     <Subscribe source={table.atoms.columnSizing} selector={(widths) => widths[header.column.id]}>

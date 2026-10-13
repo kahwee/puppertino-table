@@ -80,3 +80,20 @@ export function ResizeEventsExample() {
     </>
   );
 }
+
+export function ReadOnlyStateExample() {
+  return (
+    <PuppertinoTable
+      data={people.slice(0, 12)}
+      columns={personColumns}
+      getRowId={(row) => row.id}
+      getRowLabel={(row) => row.name}
+      ariaLabel="Read-only people"
+      manualSorting={false}
+      selectable
+      sorting={[{ id: 'score', desc: true }]}
+      rowSelection={{ [people[0].id]: true }}
+      columnSizing={{ name: 280 }}
+    />
+  );
+}

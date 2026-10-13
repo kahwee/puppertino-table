@@ -5,9 +5,10 @@ import { puppertinoTableFeatures, } from './model.js';
 import { selectionAnchorFor } from './selection-anchor.js';
 import { columnSizeBounds, readColumnSizing } from './sizing.js';
 import { validateAtomIdentity, validateAtomOwnership } from './state-ownership.js';
+import { tableDefaults } from './table-behavior.js';
 import { useColumnSizingPersistence } from './use-column-sizing-persistence.js';
 /** Shared state wiring for complete tables and custom semantic layouts. */
-export function usePuppertinoTable({ data, columns, atoms, getRowId, sorting: controlledSorting, onSortingChange, initialSorting = [], initialRowSelection = {}, manualSorting = true, rowSelection: controlledSelection, onRowSelectionChange, selectable = false, selectionAnchor, disabled = false, columnSizing, onColumnSizingChange, storageKey, storage, }) {
+export function usePuppertinoTable({ data, columns, atoms, getRowId, sorting: controlledSorting, onSortingChange, initialSorting = [], initialRowSelection = {}, manualSorting = tableDefaults.manualSorting, rowSelection: controlledSelection, onRowSelectionChange, selectable = tableDefaults.selectable, selectionAnchor, disabled = tableDefaults.disabled, columnSizing, onColumnSizingChange, selectionCheckboxes = tableDefaults.selectionCheckboxes, resizable = tableDefaults.resizable, storageKey, storage, }) {
     const mountedAtoms = useRef(atoms ? { ...atoms } : undefined);
     validateAtomIdentity(mountedAtoms.current, atoms);
     validateAtomOwnership({
@@ -43,7 +44,15 @@ export function usePuppertinoTable({ data, columns, atoms, getRowId, sorting: co
         data,
         getRowId,
         manualSorting,
-        enableSorting: atomSorting || controlledSorting === undefined || !!onSortingChange,
+        enableSorting: !disabled && (atomSorting || controlledSorting === undefined || !!onSortingChange),
+        meta: {
+            puppertino: {
+                selectable,
+                selectionCheckboxes,
+                disabled,
+                resizable: resizable && !disabled && (columnSizing === undefined || !!onColumnSizingChange),
+            },
+        },
         enableMultiSort: false,
         enableSortingRemoval: false,
         enableRowSelection: canSelect,

@@ -11,6 +11,7 @@ import { selectionAnchorFor } from './selection-anchor.js';
 import { columnSizeBounds, readColumnSizing } from './sizing.js';
 
 import { validateAtomIdentity, validateAtomOwnership } from './state-ownership.js';
+import { tableDefaults } from './table-behavior.js';
 import type { PuppertinoTableOptions } from './table-options.js';
 import { useColumnSizingPersistence } from './use-column-sizing-persistence.js';
 
@@ -24,14 +25,16 @@ export function usePuppertinoTable<T extends RowData>({
   onSortingChange,
   initialSorting = [],
   initialRowSelection = {},
-  manualSorting = true,
+  manualSorting = tableDefaults.manualSorting,
   rowSelection: controlledSelection,
   onRowSelectionChange,
-  selectable = false,
+  selectable = tableDefaults.selectable,
   selectionAnchor,
-  disabled = false,
+  disabled = tableDefaults.disabled,
   columnSizing,
   onColumnSizingChange,
+  selectionCheckboxes = tableDefaults.selectionCheckboxes,
+  resizable = tableDefaults.resizable,
   storageKey,
   storage,
 }: PuppertinoTableOptions<T>): PuppertinoTableInstance<T> {
@@ -73,7 +76,17 @@ export function usePuppertinoTable<T extends RowData>({
       data,
       getRowId,
       manualSorting,
-      enableSorting: atomSorting || controlledSorting === undefined || !!onSortingChange,
+      enableSorting:
+        !disabled && (atomSorting || controlledSorting === undefined || !!onSortingChange),
+      meta: {
+        puppertino: {
+          selectable,
+          selectionCheckboxes,
+          disabled,
+          resizable:
+            resizable && !disabled && (columnSizing === undefined || !!onColumnSizingChange),
+        },
+      },
       enableMultiSort: false,
       enableSortingRemoval: false,
       enableRowSelection: canSelect,

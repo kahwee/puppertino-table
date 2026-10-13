@@ -2,6 +2,7 @@
 'use client';
 import type { RowData } from '@tanstack/react-table';
 import { DensityScope } from './density.js';
+import { tableBehavior } from './table-behavior.js';
 import { TableBody } from './table-body.js';
 import { TableHeader } from './table-header.js';
 import type { PuppertinoTableProps } from './table-types.js';
@@ -11,12 +12,7 @@ export function PuppertinoTable<T extends RowData>(props: PuppertinoTableProps<T
   const {
     atoms,
     getRowLabel,
-    selectable = false,
-    selectionCheckboxes = true,
-    disabled = false,
-    resizable = true,
     columnSizing,
-    onColumnSizingChange,
     onColumnSizingCommit,
     storageKey,
     storage,
@@ -32,7 +28,8 @@ export function PuppertinoTable<T extends RowData>(props: PuppertinoTableProps<T
     leadingRows,
   } = props;
   const table = usePuppertinoTable(props);
-  const showSelection = selectable && selectionCheckboxes;
+  const behavior = tableBehavior(table);
+  const showSelection = behavior.selectable && behavior.selectionCheckboxes;
   return (
     <DensityScope
       density={density}
@@ -58,9 +55,6 @@ export function PuppertinoTable<T extends RowData>(props: PuppertinoTableProps<T
             </colgroup>
             <TableHeader
               table={table}
-              selectable={showSelection}
-              disabled={disabled}
-              resizable={resizable && (columnSizing === undefined || !!onColumnSizingChange)}
               resizeOptions={{
                 storageKey:
                   columnSizing === undefined && !atoms?.columnSizing ? storageKey : undefined,
@@ -71,8 +65,6 @@ export function PuppertinoTable<T extends RowData>(props: PuppertinoTableProps<T
             />
             <TableBody
               table={table}
-              selectable={showSelection}
-              disabled={disabled}
               getRowLabel={getRowLabel}
               emptyContent={emptyContent}
               getRowProps={getRowProps}
