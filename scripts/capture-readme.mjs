@@ -66,8 +66,11 @@ async function open(story, recording = false, closeup = false) {
   const createdAt = performance.now();
   const page = await context.newPage();
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto(`${base}/iframe.html?${storyQuery(`examples-finder--${story}`)}`);
-  await page.getByRole('region', { name: 'Finder-style demo' }).waitFor();
+  const storyId = story.includes('--') ? story : `examples-finder--${story}`;
+  await page.goto(`${base}/iframe.html?${storyQuery(storyId)}`);
+  if (storyId.startsWith('examples-finder--'))
+    await page.getByRole('region', { name: 'Finder-style demo' }).waitFor();
+  else await page.getByRole('main').waitFor();
   await page.evaluate(() => document.fonts.ready);
   if (recording)
     await page.evaluate(() => {
@@ -113,7 +116,7 @@ async function caption(page, text) {
     element.textContent = text;
   }, text);
 }
-async function screenshot(page, name) {
+async function screenshot(page, name, selector = '.pt-finder-window') {
   await page.evaluate(() => {
     if (
       document.activeElement instanceof HTMLElement &&
@@ -121,7 +124,7 @@ async function screenshot(page, name) {
     )
       document.activeElement.blur();
   });
-  const box = await page.locator('.pt-finder-window').boundingBox();
+  const box = await page.locator(selector).boundingBox();
   assert.ok(box);
   const viewport = page.viewportSize();
   const x = Math.max(0, box.x - 14);
@@ -149,7 +152,7 @@ async function finish(context, page, name) {
   await context.close();
   const input = await video.path();
   execFileSync(
-    'ffmpeg',
+    process.env.FFMPEG_EXECUTABLE || 'ffmpeg',
     [
       '-y',
       '-i',
@@ -170,7 +173,7 @@ async function finish(context, page, name) {
     { stdio: 'pipe' },
   );
   execFileSync(
-    'ffmpeg',
+    process.env.FFMPEG_EXECUTABLE || 'ffmpeg',
     [
       '-y',
       '-i',
@@ -186,7 +189,7 @@ async function finish(context, page, name) {
     { stdio: 'pipe' },
   );
   execFileSync(
-    'ffmpeg',
+    process.env.FFMPEG_EXECUTABLE || 'ffmpeg',
     [
       '-y',
       '-i',
@@ -351,9 +354,110 @@ try {
   await drop.page.getByText('Project brief.pdf', { exact: true }).waitFor();
   await pause(drop.page);
   await finish(drop.context, drop.page, 'drag-drop');
+
+  const sidebar = await open('puppertino-sidebar--default');
+  // The documentation capture should show the initial app section, not the play-test result.
+  await sidebar.page.getByRole('button', { name: 'Projects 12', exact: true }).click();
+  await accessibility(sidebar.page);
+  await screenshot(sidebar.page, 'sidebar-light', 'main');
+  await setStorybookTheme(sidebar.page, 'dark');
+  await accessibility(sidebar.page);
+  await screenshot(sidebar.page, 'sidebar-dark', 'main');
+  await sidebar.context.close();
+  const touch = await open('puppertino-sidebar--touch');
+  await touch.page.locator('.p-sidebar-touch').waitFor();
+  assert.equal(
+    await touch.page
+      .getByRole('button', { name: 'Archive', exact: true })
+      .evaluate((element) => element.getBoundingClientRect().height),
+    44,
+  );
+  await setStorybookTheme(touch.page, 'dark');
+  await accessibility(touch.page);
+  await screenshot(touch.page, 'sidebar-touch', 'main');
+  await touch.context.close();
+
+  const outline = await open('puppertino-outline-view--default');
+  await pointerClick(outline.page, outline.page.getByRole('button', { name: 'Expand Projects' }));
+  await outline.page.getByRole('button', { name: 'Expand Source' }).waitFor();
+  await pointerClick(outline.page, outline.page.getByRole('button', { name: 'Expand Source' }));
+  await outline.page.getByRole('checkbox', { name: 'Select index.ts' }).check();
+  await outline.page.getByRole('heading', { name: 'index.ts', exact: true }).waitFor();
+  await accessibility(outline.page);
+  await screenshot(outline.page, 'outline-light', 'main');
+  await setStorybookTheme(outline.page, 'dark');
+  await accessibility(outline.page);
+  await screenshot(outline.page, 'outline-dark', 'main');
+  await outline.context.close();
+
+  for (const [orientation, name] of [
+    ['horizontal', 'split-view'],
+    ['vertical', 'split-vertical'],
+  ]) {
+    const split = await open(
+      `puppertino-split-view--${orientation === 'vertical' ? 'vertical' : 'default'}`,
+    );
+    if (orientation === 'vertical') await split.page.setViewportSize({ width: 1080, height: 740 });
+    await split.page.locator(`.pt-split-view[data-orientation="${orientation}"]`).waitFor();
+    await accessibility(split.page);
+    await screenshot(split.page, name, 'main');
+    await split.context.close();
+  }
+
+  const hierarchy = await open('puppertino-outline-view--default', true);
+  await caption(hierarchy.page, '1 / 4 · Expand Projects. The app loads its children.');
+  await pause(hierarchy.page);
+  await pointerClick(
+    hierarchy.page,
+    hierarchy.page.getByRole('button', { name: 'Expand Projects' }),
+  );
+  await hierarchy.page.getByRole('button', { name: 'Expand Source' }).waitFor();
+  await caption(hierarchy.page, '2 / 4 · Expand Source. Select index.ts to show its details.');
+  await pointerClick(hierarchy.page, hierarchy.page.getByRole('button', { name: 'Expand Source' }));
+  await pointerClick(
+    hierarchy.page,
+    hierarchy.page.getByRole('checkbox', { name: 'Select index.ts' }),
+  );
+  await hierarchy.page.getByRole('heading', { name: 'index.ts', exact: true }).waitFor();
+  await caption(hierarchy.page, '3 / 4 · Archive returns an error. The branch offers Retry.');
+  await pointerClick(
+    hierarchy.page,
+    hierarchy.page.getByRole('button', { name: 'Expand Archive' }),
+  );
+  await hierarchy.page.getByRole('button', { name: 'Retry Archive' }).waitFor();
+  await pause(hierarchy.page);
+  await caption(hierarchy.page, '4 / 4 · Retry loads the branch. Existing selection stays intact.');
+  await pointerClick(hierarchy.page, hierarchy.page.getByRole('button', { name: 'Retry Archive' }));
+  await hierarchy.page.getByRole('checkbox', { name: 'Select Meeting notes.txt' }).waitFor();
+  assert.equal(
+    await hierarchy.page.getByRole('checkbox', { name: 'Select index.ts' }).isChecked(),
+    true,
+  );
+  await pause(hierarchy.page);
+  await finish(hierarchy.context, hierarchy.page, 'outline-loading');
+
+  const panes = await open('puppertino-split-view--default', true);
+  await caption(panes.page, '1 / 3 · Resize the Sidebar pane. Only completed widths commit.');
+  await pause(panes.page);
+  const paneHandle = panes.page.getByRole('separator', { name: 'Resize Sidebar pane' });
+  const paneBefore = await paneHandle.getAttribute('aria-valuenow');
+  await drag(panes.page, paneHandle, 64);
+  assert.notEqual(await paneHandle.getAttribute('aria-valuenow'), paneBefore);
+  assert.ok(
+    (await panes.page.getByLabel('Committed pane sizes').textContent()).includes('sidebar'),
+  );
+  await caption(panes.page, '2 / 3 · Hide Sidebar. Content and Detail keep their state.');
+  await pointerClick(panes.page, panes.page.getByRole('button', { name: 'Hide sidebar' }));
+  assert.equal(await panes.page.getByRole('region', { name: 'Sidebar', exact: true }).count(), 0);
+  await pause(panes.page);
+  await caption(panes.page, '3 / 3 · Restore Sidebar from the pane navigation.');
+  await pointerClick(panes.page, panes.page.getByRole('button', { name: 'Sidebar', exact: true }));
+  await panes.page.getByRole('region', { name: 'Sidebar', exact: true }).waitFor();
+  await pause(panes.page);
+  await finish(panes.context, panes.page, 'split-panes');
   assert.deepEqual(errors, []);
   console.log(
-    'README media captured: eleven composed screenshots, three asserted interaction GIFs, MP4s and WebMs.',
+    'README media captured: eighteen composed screenshots, five asserted interaction GIFs, MP4s and WebMs.',
   );
 } finally {
   await browser.close();

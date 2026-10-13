@@ -13,6 +13,7 @@ Build Finder-style React workspaces, accessible tables and resizable column brow
 | A complete table | `TableView` and typed column helpers | [Table stories](https://kahwee.github.io/puppertino-table/?path=/docs/puppertino-table--docs) |
 | A hierarchy with lazy children | `OutlineView` with app-owned `loadChildren` | [Outline stories](https://kahwee.github.io/puppertino-table/?path=/docs/puppertino-outline-view--docs) |
 | Resizable sidebar/content/detail panes | `SplitView` | [Split stories](https://kahwee.github.io/puppertino-table/?path=/docs/puppertino-split-view--docs) |
+| A standalone navigation sidebar | `Sidebar`, `SidebarGroup`, `SidebarItem` | [Sidebar playground](https://kahwee.github.io/puppertino-table/?path=/story/puppertino-sidebar--default) |
 | A Finder workspace | Window, toolbar, sidebar, views, preview and status primitives | [Composition recipes](https://kahwee.github.io/puppertino-table/?path=/docs/puppertino-finder-composition--docs) |
 | A column browser | `ColumnView` with caller-rendered columns and items | [Browser stories](https://kahwee.github.io/puppertino-table/?path=/docs/puppertino-column-view--docs) |
 
@@ -21,6 +22,8 @@ Tables support local or server-owned sorting, shared range selection and bounded
 ## Sidebar
 
 Use the sidebar on its own or inside your own split view. Your app supplies selection and navigation.
+
+![Standalone sidebar with grouped navigation, a selected section and trailing counts](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/sidebar-light.png)
 
 ```tsx
 import { Sidebar, SidebarGroup, SidebarItem } from 'puppertino-table';
@@ -97,6 +100,18 @@ Command/Ctrl-click toggles an item; Shift-click extends a range from a fixed anc
 
 [Compare comfortable spacing](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--file-table&args=initialDensity:comfortable) · [Dark columns](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--file-table&args=initialView:columns&globals=theme:dark) · [Narrow columns](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--narrow-columns)
 
+## Hierarchy and split views
+
+`OutlineView` keeps disclosure in the first column, sorts siblings together, and supports keyboard navigation and visible-row bulk selection. Supply `loadChildren(item, { signal })` to fetch a branch on expansion. Loading, retry, cancellation and caching stay scoped to that branch.
+
+![Expanded outline with nested Source files and selected index.ts details](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/outline-light.png)
+
+`SplitView` arranges sidebar, content and detail panes with bounded resizing. Hide and restore panes without losing app state; compact layouts show the active pane. Use horizontal or vertical orientation and completion callbacks to persist finished sizes.
+
+![Three-pane split view with independent sidebar, content and detail regions](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/split-view.png)
+
+[Outline playground](https://kahwee.github.io/puppertino-table/?path=/story/puppertino-outline-view--default) · [Split playground](https://kahwee.github.io/puppertino-table/?path=/story/puppertino-split-view--default) · [Touch sidebar](https://kahwee.github.io/puppertino-table/?path=/story/puppertino-sidebar--default&args=size:touch) · [Dark outline](https://kahwee.github.io/puppertino-table/?path=/story/puppertino-outline-view--default&globals=theme:dark)
+
 ## Watch the interactions
 
 Each recording shows the working Storybook app with fictional files. Numbered captions and a pointer overlay explain the real interactions. Full-size videos are available as WebM and MP4.
@@ -124,6 +139,18 @@ Right-click or press Shift+F10 on a focused item. Arrow keys navigate enabled co
 [WebM](https://kahwee.github.io/puppertino-table/media/drag-drop.webm) · [MP4](https://kahwee.github.io/puppertino-table/media/drag-drop.mp4) · [Demo source](https://github.com/kahwee/puppertino-table/blob/main/src/finder.stories.tsx)
 
 The example composes native HTML drag/drop with shared rows and items. Moves update in-memory state; **Move to Archive** provides a keyboard alternative. The package does not supply filesystem operations or a drag/drop engine.
+
+### Load and retry a hierarchy
+
+![Expand Projects and Source, select index.ts, then retry the Archive branch without losing selection](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/outline-loading.gif)
+
+[WebM](https://kahwee.github.io/puppertino-table/media/outline-loading.webm) · [MP4](https://kahwee.github.io/puppertino-table/media/outline-loading.mp4) · [Lazy-loading recipe](https://kahwee.github.io/puppertino-table/?path=/docs/puppertino-outline-view--docs)
+
+### Resize, hide and restore split panes
+
+![Resize the Sidebar pane, hide it, then restore it from pane navigation](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/split-panes.gif)
+
+[WebM](https://kahwee.github.io/puppertino-table/media/split-panes.webm) · [MP4](https://kahwee.github.io/puppertino-table/media/split-panes.mp4) · [Split-view recipe](https://kahwee.github.io/puppertino-table/?path=/docs/puppertino-split-view--docs)
 
 ## Tags
 
