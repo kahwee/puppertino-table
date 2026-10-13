@@ -286,6 +286,7 @@ function FinderDemo({
     <button
       type="button"
       key={name}
+      data-folder={name}
       className={`p-sidebar-row finder-demo-folder ${folder === name ? 'p-selected' : ''} ${over === name ? 'finder-demo-drop' : ''}`}
       aria-current={folder === name ? 'page' : undefined}
       onClick={() => navigate(name)}
@@ -375,7 +376,7 @@ function FinderDemo({
             {['Projects', 'Archive'].map(folderButton)}
             <h2 className="p-sidebar-header">Locations</h2>
             <div className="p-sidebar-row">
-              <span className="p-sidebar-icon">
+              <span className="p-sidebar-icon finder-demo-location">
                 <ViewGlyph view="desktop" />
               </span>
               Design studio

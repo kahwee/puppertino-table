@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Polish the Finder Storybook workspace: continuous sidebar material, content-aligned path/status bars, quieter toolbar spacing, pill-shaped search, larger icon previews and consistent sidebar icon colors in both themes. Improve tag-suggestion hover contrast, consolidate duplicate chrome styles and remove obsolete selectors. Refresh the demo screenshots and screencasts.
+
 ## 0.8.0 — 2026-10-13
 
 ### API changes
