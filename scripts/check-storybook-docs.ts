@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import type { Page } from 'playwright';
 import { checkPlaygroundControls } from './check-storybook-controls.js';
+import { checkStorybookQuality } from './check-storybook-quality.js';
 
 export async function checkStorybookDocs(page: Page, base: string, evidence: string) {
   page.setDefaultTimeout(15000);
@@ -127,6 +128,7 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   await checkFocusedViewDocs(page, base);
   await checkThemeToolbar(page, base);
   await checkPlaygroundControls(page, base, evidence);
+  await checkStorybookQuality(page, base, evidence);
   console.log(
     'Storybook docs passed: media playback, readable source, live args, reset and manager navigation.',
   );
@@ -199,7 +201,6 @@ async function checkTableRecipes(page: Page, base: string) {
     ['default', 'ariaLabel="People"'],
     ['selection', 'onRowSelectionChange={setSelection}'],
     ['server-owned-order', 'manualSorting\n'],
-    ['external-atoms', 'atoms={{ columnSizing, sorting, rowSelection }}'],
     ['customized-rows', 'getRowProps='],
     ['paginated-selection', 'manualSorting\n'],
     ['date-columns', "sortFn: 'datetime'"],

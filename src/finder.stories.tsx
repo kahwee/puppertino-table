@@ -1232,13 +1232,10 @@ const meta = {
     layout: 'fullscreen',
     docs: {
       source: {
-        transform: (code: string, context: { args: { initialView?: FinderView } }) => {
-          const view = context.args.initialView;
-          return view && view !== 'list' ? finderViewRecipes[view] : code;
-        },
+        transform: (_code: string, context: { args: { initialView?: FinderView } }) =>
+          finderViewRecipes[context.args.initialView ?? 'list'],
         language: 'tsx',
-        type: 'code',
-        code: finderViewRecipes.list,
+        type: 'dynamic',
       },
       description: {
         component:
@@ -1311,52 +1308,64 @@ export const KeyboardWorkflow: Story = {
       },
     },
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const rows = canvas.getAllByRole('row');
-    await userEvent.click(rows[1]);
-    await userEvent.keyboard('{ArrowDown}');
-    await expect(rows[2]).toHaveFocus();
-    await userEvent.keyboard('{Shift>}{ArrowDown}{/Shift}');
-    await expect(canvas.getByLabelText('Selection summary')).toHaveTextContent('2 of 6 selected');
-    await userEvent.keyboard('b');
-    await expect(rows[3]).toHaveFocus();
-    await userEvent.keyboard(' ');
-    await expect(canvas.getByRole('dialog', { name: 'Quick Look' })).toBeInTheDocument();
-    await userEvent.keyboard('{Escape}');
-    await expect(rows[3]).toHaveFocus();
-    await userEvent.keyboard('{Enter}');
-    const rename = within(canvas.getByRole('dialog', { name: 'Rename file' }));
-    const input = rename.getByRole('textbox', { name: 'New filename' });
-    await userEvent.clear(input);
-    await userEvent.type(input, 'Budget 2027.xlsx');
-    await userEvent.click(rename.getByRole('button', { name: 'Rename' }));
-    await expect(
-      canvas.getByText('Budget 2027.xlsx', { selector: '.finder-demo-filename' }),
-    ).toBeInTheDocument();
-    await userEvent.keyboard('{Control>}1{/Control}');
-    const icons = within(canvas.getByRole('region', { name: 'Project file icons' }));
-    const budget = icons.getByRole('button', { name: 'Budget 2027.xlsx Spreadsheet' });
-    await expect(budget).toHaveFocus();
-    await expect(budget).toHaveAttribute('aria-pressed', 'true');
-    await userEvent.dblClick(budget);
-    await expect(canvas.getByRole('dialog', { name: 'Quick Look' })).toBeInTheDocument();
-    await userEvent.keyboard('{Escape}');
-    await userEvent.keyboard('{Control>}3{/Control}');
-    await expect(canvas.getByRole('region', { name: 'Workspace columns' })).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: 'Budget 2027.xlsx' })).toHaveFocus();
-    await userEvent.keyboard('{ArrowLeft}');
-    const workspace = within(canvas.getByRole('region', { name: 'Workspace' }));
-    await expect(workspace.getByRole('button', { name: 'Projects' })).toHaveFocus();
-    await userEvent.keyboard('{ArrowRight}');
-    await expect(canvas.getByRole('button', { name: 'Budget 2027.xlsx' })).toHaveFocus();
-    await userEvent.keyboard('{Control>}4{/Control}');
-    await expect(canvas.getByRole('region', { name: 'Project file gallery' })).toBeInTheDocument();
-    await userEvent.keyboard('{ArrowRight}');
-    await expect(canvas.getByRole('button', { name: 'Cover artwork.png' })).toHaveFocus();
-    await userEvent.keyboard('{Control>}a{/Control}');
-    await expect(canvas.getByLabelText('Selection summary')).toHaveTextContent('6 of 6 selected');
-    await userEvent.click(canvas.getByRole('button', { name: 'Reset demo' }));
+    await step('Navigate, extend a range and type to select', async () => {
+      await userEvent.click(rows[1]);
+      await userEvent.keyboard('{ArrowDown}');
+      await expect(rows[2]).toHaveFocus();
+      await userEvent.keyboard('{Shift>}{ArrowDown}{/Shift}');
+      await expect(canvas.getByLabelText('Selection summary')).toHaveTextContent('2 of 6 selected');
+      await userEvent.keyboard('b');
+      await expect(rows[3]).toHaveFocus();
+    });
+    await step('Open Quick Look and restore file focus', async () => {
+      await userEvent.keyboard(' ');
+      await expect(canvas.getByRole('dialog', { name: 'Quick Look' })).toBeInTheDocument();
+      await userEvent.keyboard('{Escape}');
+      await expect(rows[3]).toHaveFocus();
+    });
+    await step('Rename the selected document', async () => {
+      await userEvent.keyboard('{Enter}');
+      const rename = within(canvas.getByRole('dialog', { name: 'Rename file' }));
+      const input = rename.getByRole('textbox', { name: 'New filename' });
+      await userEvent.clear(input);
+      await userEvent.type(input, 'Budget 2027.xlsx');
+      await userEvent.click(rename.getByRole('button', { name: 'Rename' }));
+      await expect(
+        canvas.getByText('Budget 2027.xlsx', { selector: '.finder-demo-filename' }),
+      ).toBeInTheDocument();
+    });
+    await step('Keep selection and focus across Icons, Columns and Gallery', async () => {
+      await userEvent.keyboard('{Control>}1{/Control}');
+      const icons = within(canvas.getByRole('region', { name: 'Project file icons' }));
+      const budget = icons.getByRole('button', { name: 'Budget 2027.xlsx Spreadsheet' });
+      await expect(budget).toHaveFocus();
+      await expect(budget).toHaveAttribute('aria-pressed', 'true');
+      await userEvent.dblClick(budget);
+      await expect(canvas.getByRole('dialog', { name: 'Quick Look' })).toBeInTheDocument();
+      await userEvent.keyboard('{Escape}');
+      await userEvent.keyboard('{Control>}3{/Control}');
+      await expect(canvas.getByRole('region', { name: 'Workspace columns' })).toBeInTheDocument();
+      await expect(canvas.getByRole('button', { name: 'Budget 2027.xlsx' })).toHaveFocus();
+      await userEvent.keyboard('{ArrowLeft}');
+      const workspace = within(canvas.getByRole('region', { name: 'Workspace' }));
+      await expect(workspace.getByRole('button', { name: 'Projects' })).toHaveFocus();
+      await userEvent.keyboard('{ArrowRight}');
+      await expect(canvas.getByRole('button', { name: 'Budget 2027.xlsx' })).toHaveFocus();
+      await userEvent.keyboard('{Control>}4{/Control}');
+      await expect(
+        canvas.getByRole('region', { name: 'Project file gallery' }),
+      ).toBeInTheDocument();
+      await userEvent.keyboard('{ArrowRight}');
+      await expect(canvas.getByRole('button', { name: 'Cover artwork.png' })).toHaveFocus();
+      await userEvent.keyboard('{Control>}a{/Control}');
+      await expect(canvas.getByLabelText('Selection summary')).toHaveTextContent('6 of 6 selected');
+    });
+    await step('Reset the fictional workspace', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Reset demo' }));
+    });
   },
 };
 

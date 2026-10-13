@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import type { Page } from 'playwright';
+import { storyQuery } from './story-presets.mjs';
 
 /** End-to-end contract: complete-table change notifications versus completed snapshots. */
 export async function checkResizeEvents(page: Page, base: string) {
   for (const story of ['controlled-sizing', 'external-atoms']) {
-    await page.goto(`${base}/iframe.html?id=puppertino-table--${story}&viewMode=story&embed=true`);
+    await page.goto(`${base}/iframe.html?${storyQuery(`puppertino-table--${story}`)}&embed=true`);
     const edge = page.getByRole('separator', { name: 'Resize Name column' });
     await edge.press('ArrowRight');
     assert.equal(

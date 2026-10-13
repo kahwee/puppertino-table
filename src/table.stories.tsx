@@ -2,7 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useCreateAtom } from '@tanstack/react-store';
 import type { RowSelectionState, SortingState } from '@tanstack/react-table';
 import { useRef, useState } from 'react';
+import { useArgs } from 'storybook/preview-api';
 import { expect, userEvent, within } from 'storybook/test';
+import { tablePlaygroundSource } from '../.storybook/playground-source.js';
+import { ResettableExample } from '../.storybook/resettable-example.js';
 import { tableRecipes } from '../.storybook/table-sources.js';
 import { DateTableExample } from '../demo/date-table-example.js';
 import { type Person, people, personColumns, productColumns, products } from '../demo/fixtures.js';
@@ -73,12 +76,13 @@ const meta = {
       source: { language: 'tsx', type: 'code' },
       description: {
         component:
-          'Playground is the typed public TableView<Person> component with internally managed state. Selection shows React-controlled sorting and selection; External Atoms shares app-owned state. Automatic sorting is the default. Set manualSorting for server pages or app-owned ordering. The visible stories cover the main integration paths; advanced interaction and state cases remain tested by direct story URL. Each Show code panel includes public imports, typed columns and sample data.',
+          'Playground is the typed public TableView<Person> component with internally managed state. State ownership compares React-controlled state with shared atoms in one example. Automatic sorting is the default. Set manualSorting for server pages or app-owned ordering. The visible stories cover the main integration paths; advanced interaction and state cases remain tested by direct story URL. Each Show code panel includes public imports, typed columns and sample data.',
       },
     },
   },
   args: {
     gestureOwnership: 'controlled',
+    stateOwner: 'react',
     ...tableDefaults,
     data: people.slice(0, 12),
     columns: personColumns,
@@ -92,51 +96,79 @@ const meta = {
     disabled: {
       control: 'boolean',
       description: 'Disable sorting, selection and resizing.',
-      table: { defaultValue: { summary: String(tableDefaults.disabled) } },
+      table: { category: 'Behavior', defaultValue: { summary: String(tableDefaults.disabled) } },
     },
     selectable: {
       control: 'boolean',
       description: 'Enable row selection. This story enables it; the library defaults to false.',
-      table: { defaultValue: { summary: String(tableDefaults.selectable) } },
+      table: { category: 'Selection', defaultValue: { summary: String(tableDefaults.selectable) } },
     },
     selectionCheckboxes: {
       control: 'boolean',
       if: { arg: 'selectable' },
       description: 'Show the selection column when selectable; hide for row-only gestures.',
-      table: { defaultValue: { summary: String(tableDefaults.selectionCheckboxes) } },
+      table: {
+        category: 'Selection',
+        defaultValue: { summary: String(tableDefaults.selectionCheckboxes) },
+      },
     },
     resizable: {
       control: 'boolean',
       description: 'Enable pointer and keyboard column resizing.',
-      table: { defaultValue: { summary: String(tableDefaults.resizable) } },
+      table: { category: 'Sizing', defaultValue: { summary: String(tableDefaults.resizable) } },
     },
     manualSorting: {
       control: 'boolean',
       description:
         'Default false: sort supplied rows automatically. Enable for server pages or app-owned order.',
-      table: { defaultValue: { summary: String(tableDefaults.manualSorting) } },
+      table: {
+        category: 'Sorting',
+        defaultValue: { summary: String(tableDefaults.manualSorting) },
+      },
     },
     density: {
       control: 'inline-radio',
       options: ['native', 'compact', 'comfortable'],
       description:
         'Omitting density inherits the surrounding scope. This story starts with native spacing.',
-      table: { defaultValue: { summary: 'inherit' } },
+      table: { category: 'Appearance', defaultValue: { summary: 'inherit' } },
     },
-    ariaLabel: { control: 'text', description: 'Accessible name for the table.' },
+    ariaLabel: {
+      control: 'text',
+      description: 'Accessible name for the table.',
+      table: { category: 'Accessibility' },
+    },
     data: { control: false },
     columns: { control: false },
   },
 } satisfies Meta<
-  PuppertinoTableProps<Person> & { gestureOwnership?: 'controlled' | 'local' | 'atom' }
+  PuppertinoTableProps<Person> & {
+    gestureOwnership?: 'controlled' | 'local' | 'atom';
+    stateOwner?: 'react' | 'atoms';
+  }
 >;
 export default meta;
 export type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   name: 'Playground',
-  parameters: { docs: { source: { code: tableRecipes.uncontrolled } } },
-  render: (args) => <PeopleTable {...args} />,
+  parameters: {
+    docs: {
+      source: {
+        type: 'dynamic',
+        transform: (_code: string, context: { args: Partial<PuppertinoTableProps<Person>> }) =>
+          tablePlaygroundSource(tableRecipes.uncontrolled, context.args),
+      },
+    },
+  },
+  render: function Playground(args) {
+    const [, , resetArgs] = useArgs<typeof args>();
+    return (
+      <ResettableExample onReset={resetArgs}>
+        <PeopleTable {...args} />
+      </ResettableExample>
+    );
+  },
 };
 
 function ItemGestureExample({ ownership }: { ownership: 'controlled' | 'local' | 'atom' }) {
@@ -262,7 +294,7 @@ export const ItemSelectionGestures: Story = {
     controls: { include: ['gestureOwnership'] },
     docs: {
       source: {
-        code: tableRecipes.controlledGestures,
+        type: 'dynamic',
         transform: (_code: string, context: { args: { gestureOwnership?: string } }) =>
           context.args.gestureOwnership === 'local'
             ? tableRecipes.localGestures
@@ -280,16 +312,59 @@ export const ItemSelectionGestures: Story = {
   ),
 };
 export const Selection: Story = {
-  parameters: { docs: { source: { code: tableRecipes.controlled } } },
-  play: async ({ canvasElement }) => {
+  name: 'State ownership',
+  args: { stateOwner: 'react' },
+  argTypes: {
+    stateOwner: {
+      control: 'inline-radio',
+      options: ['react', 'atoms'],
+      description:
+        'Compare React-owned sorting/selection with atom-owned sorting/selection/widths. Changing owners starts a fresh example.',
+      table: { category: 'State ownership' },
+    },
+  },
+  render: (args) =>
+    args.stateOwner === 'atoms' ? <AtomOwnershipExample /> : <Example {...args} />,
+  parameters: {
+    controls: { include: ['stateOwner'] },
+    docs: {
+      source: {
+        type: 'dynamic',
+        transform: (_code: string, context: { args: { stateOwner?: string } }) =>
+          context.args.stateOwner === 'atoms' ? tableRecipes.atoms : tableRecipes.controlled,
+      },
+    },
+  },
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
-    const boxes = canvas.getAllByRole('checkbox', { name: /^Select Person/ });
-    const user = userEvent.setup();
-    await user.click(boxes[1]);
-    await user.keyboard('{Shift>}');
-    await user.click(boxes[4]);
-    await user.keyboard('{/Shift}');
-    await expect(canvas.getByLabelText('Checked rows')).toHaveTextContent('4 selected');
+    if (args.stateOwner === 'atoms') {
+      await step('Resize, select and sort through shared atoms', async () => {
+        const edge = canvas.getByRole('separator', { name: 'Resize Name column' });
+        edge.focus();
+        await userEvent.keyboard('{ArrowRight}');
+        await expect(canvas.getByLabelText('Atom name width')).toHaveTextContent('296');
+        await userEvent.click(canvas.getByRole('button', { name: 'Set atom width to 200' }));
+        await expect(edge).toHaveAttribute('aria-valuenow', '200');
+        const checkbox = canvas.getAllByRole('checkbox', { name: /^Select person-/ })[0];
+        await userEvent.click(checkbox);
+        await expect(checkbox).toBeChecked();
+        await userEvent.click(canvas.getByRole('button', { name: 'Sort by Score' }));
+        await expect(canvas.getByRole('columnheader', { name: /Score/ })).toHaveAttribute(
+          'aria-sort',
+          'descending',
+        );
+      });
+      return;
+    }
+    await step('Extend and shrink selection from a fixed React-owned anchor', async () => {
+      const boxes = canvas.getAllByRole('checkbox', { name: /^Select Person/ });
+      const user = userEvent.setup();
+      await user.click(boxes[1]);
+      await user.keyboard('{Shift>}');
+      await user.click(boxes[4]);
+      await user.keyboard('{/Shift}');
+      await expect(canvas.getByLabelText('Checked rows')).toHaveTextContent('4 selected');
+    });
   },
 };
 export const KeyboardResize: Story = {
@@ -707,28 +782,6 @@ export const ControlledSizing: Story = {
     await expect(canvas.getByLabelText('Name width')).toHaveTextContent('296');
     await userEvent.click(canvas.getByRole('button', { name: 'Set name width to 200' }));
     await expect(edge).toHaveAttribute('aria-valuenow', '200');
-  },
-};
-
-export const ExternalAtoms: Story = {
-  parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.atoms } } },
-  render: () => <AtomOwnershipExample />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const edge = canvas.getByRole('separator', { name: 'Resize Name column' });
-    edge.focus();
-    await userEvent.keyboard('{ArrowRight}');
-    await expect(canvas.getByLabelText('Atom name width')).toHaveTextContent('296');
-    await userEvent.click(canvas.getByRole('button', { name: 'Set atom width to 200' }));
-    await expect(edge).toHaveAttribute('aria-valuenow', '200');
-    const checkbox = canvas.getAllByRole('checkbox', { name: /^Select person-/ })[0];
-    await userEvent.click(checkbox);
-    await expect(checkbox).toBeChecked();
-    await userEvent.click(canvas.getByRole('button', { name: 'Sort by Score' }));
-    await expect(canvas.getByRole('columnheader', { name: /Score/ })).toHaveAttribute(
-      'aria-sort',
-      'descending',
-    );
   },
 };
 

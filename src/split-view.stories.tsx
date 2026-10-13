@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useArgs } from 'storybook/preview-api';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { ResettableExample } from '../.storybook/resettable-example.js';
 import { tableRecipes } from '../.storybook/table-sources.js';
 import { SplitViewExample } from '../demo/split-view-example.js';
 
@@ -19,21 +20,23 @@ const meta = {
     onSizesCommit: fn(),
   },
   render: function Playground(args) {
-    const [, updateArgs] = useArgs<typeof args>();
+    const [, updateArgs, resetArgs] = useArgs<typeof args>();
     return (
-      <div style={{ width: args.container === 'compact' ? 390 : '100%', maxWidth: '100%' }}>
-        <SplitViewExample
-          {...args}
-          onActivePaneChange={(activePaneId) => {
-            args.onActivePaneChange?.(activePaneId);
-            updateArgs({ activePaneId });
-          }}
-          onSidebarHiddenChange={(sidebarHidden) => {
-            args.onSidebarHiddenChange?.(sidebarHidden);
-            updateArgs({ sidebarHidden });
-          }}
-        />
-      </div>
+      <ResettableExample onReset={resetArgs}>
+        <div style={{ width: args.container === 'compact' ? 390 : '100%', maxWidth: '100%' }}>
+          <SplitViewExample
+            {...args}
+            onActivePaneChange={(activePaneId) => {
+              args.onActivePaneChange?.(activePaneId);
+              updateArgs({ activePaneId });
+            }}
+            onSidebarHiddenChange={(sidebarHidden) => {
+              args.onSidebarHiddenChange?.(sidebarHidden);
+              updateArgs({ sidebarHidden });
+            }}
+          />
+        </div>
+      </ResettableExample>
     );
   },
   argTypes: {

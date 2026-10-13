@@ -1,4 +1,5 @@
 const aliases = {
+  'puppertino-table--external-atoms': ['puppertino-table--selection', 'stateOwner:atoms'],
   'puppertino-split-view--vertical': ['puppertino-split-view--default', 'orientation:vertical'],
   'puppertino-split-view--compact': ['puppertino-split-view--default', 'container:compact'],
   'puppertino-sidebar--touch': ['puppertino-sidebar--default', 'size:touch'],

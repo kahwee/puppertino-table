@@ -1,8 +1,10 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { finderViewRecipes } from '../.storybook/finder-recipes.js';
+import { tablePlaygroundSource } from '../.storybook/playground-source.js';
 import { createTableRecipes } from '../.storybook/table-recipes.js';
 import { tagPickerRecipe } from '../.storybook/tag-picker-recipe.js';
+import { documentWorkspaceRecipe } from '../.storybook/workspace-recipe.js';
 
 const [
   fixtures,
@@ -46,7 +48,23 @@ const recipes = createTableRecipes({
 });
 const directory = process.argv[2];
 if (!directory) throw new Error('Provide the installed consumer directory.');
+const workspace = documentWorkspaceRecipe(
+  await readFile('demo/document-workspace-example.tsx', 'utf8'),
+);
 const files = Object.entries({
+  'document-workspace': workspace,
+  'table-comfortable-disabled': tablePlaygroundSource(recipes.uncontrolled, {
+    density: 'comfortable',
+    disabled: true,
+    selectable: false,
+    resizable: false,
+  }),
+  'table-server-order': tablePlaygroundSource(recipes.uncontrolled, {
+    manualSorting: true,
+    selectable: true,
+    selectionCheckboxes: true,
+    resizable: true,
+  }),
   ...recipes,
   'finder-list': finderViewRecipes.list,
   'finder-outline': finderViewRecipes.outline,

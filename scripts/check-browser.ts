@@ -259,7 +259,7 @@ async function checkStories() {
   await page.goto(`${stories.base}/?path=/story/puppertino-table--default`);
   await page.frameLocator('#storybook-preview-iframe').getByRole('table').waitFor();
   await page.getByRole('link', { name: 'Playground', exact: true }).waitFor();
-  for (const name of ['Selection', 'External Atoms', 'Date Columns']) {
+  for (const name of ['State ownership', 'Date Columns']) {
     assert.equal(await page.getByRole('link', { name, exact: true }).count(), 1);
   }
   for (const name of ['Dark', 'Narrow', 'Keyboard Resize', 'Controlled Sizing']) {

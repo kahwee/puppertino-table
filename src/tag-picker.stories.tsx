@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { useArgs } from 'storybook/preview-api';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { ResettableExample } from '../.storybook/resettable-example.js';
 import { tagPickerRecipe } from '../.storybook/tag-picker-recipe.js';
 import { type TagOption, TagPicker, type TagPickerProps } from './index.js';
 
@@ -125,26 +126,28 @@ const meta = {
     },
   },
   render: function Controlled(args) {
-    const [, updateArgs] = useArgs<typeof args>();
+    const [, updateArgs, resetArgs] = useArgs<typeof args>();
     return (
-      <PickerExample
-        {...args}
-        onValueChange={(value) => {
-          args.onValueChange(value);
-          updateArgs({ value, mixedValue: args.mixedValue?.filter((id) => !value.includes(id)) });
-        }}
-        onCreate={
-          args.onCreate
-            ? (label) => {
-                args.onCreate?.(label);
-                updateArgs({
-                  options: [...(args.options ?? standardOptions), { id: label, label }],
-                  value: [...args.value, label],
-                });
-              }
-            : undefined
-        }
-      />
+      <ResettableExample onReset={resetArgs}>
+        <PickerExample
+          {...args}
+          onValueChange={(value) => {
+            args.onValueChange(value);
+            updateArgs({ value, mixedValue: args.mixedValue?.filter((id) => !value.includes(id)) });
+          }}
+          onCreate={
+            args.onCreate
+              ? (label) => {
+                  args.onCreate?.(label);
+                  updateArgs({
+                    options: [...(args.options ?? standardOptions), { id: label, label }],
+                    value: [...args.value, label],
+                  });
+                }
+              : undefined
+          }
+        />
+      </ResettableExample>
     );
   },
 } satisfies Meta<typeof PickerExample>;

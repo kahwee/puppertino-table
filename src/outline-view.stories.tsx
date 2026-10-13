@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useLayoutEffect, useState } from 'react';
 import { useArgs } from 'storybook/preview-api';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { ResettableExample } from '../.storybook/resettable-example.js';
 import { tableRecipes } from '../.storybook/table-sources.js';
 import { OutlineViewExample, type OutlineViewExampleProps } from '../demo/outline-view-example.js';
 
@@ -40,21 +41,23 @@ const meta = {
     onRowSelectionChange: fn(),
   },
   render: function Playground(args) {
-    const [, updateArgs] = useArgs<typeof args>();
+    const [, updateArgs, resetArgs] = useArgs<typeof args>();
     return (
-      <OutlinePlayground
-        {...args}
-        onExpandedChange={(expanded) => {
-          args.onExpandedChange?.(expanded);
-          updateArgs({ expanded });
-        }}
-        onRowSelectionChange={(updater) => {
-          const rowSelection =
-            typeof updater === 'function' ? updater(args.rowSelection ?? {}) : updater;
-          args.onRowSelectionChange?.(rowSelection);
-          updateArgs({ rowSelection });
-        }}
-      />
+      <ResettableExample onReset={resetArgs}>
+        <OutlinePlayground
+          {...args}
+          onExpandedChange={(expanded) => {
+            args.onExpandedChange?.(expanded);
+            updateArgs({ expanded });
+          }}
+          onRowSelectionChange={(updater) => {
+            const rowSelection =
+              typeof updater === 'function' ? updater(args.rowSelection ?? {}) : updater;
+            args.onRowSelectionChange?.(rowSelection);
+            updateArgs({ rowSelection });
+          }}
+        />
+      </ResettableExample>
     );
   },
   argTypes: {

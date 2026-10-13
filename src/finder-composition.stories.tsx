@@ -1,290 +1,53 @@
-import {
-  ColumnsIcon,
-  DotsThreeIcon,
-  FileTextIcon,
-  FolderIcon,
-  ImagesIcon,
-  ListIcon,
-  MagnifyingGlassIcon,
-  SquaresFourIcon,
-  TagIcon,
-  TreeStructureIcon,
-} from '@phosphor-icons/react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useState } from 'react';
 import { useArgs } from 'storybook/preview-api';
-import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
-import {
-  ColumnView,
-  ColumnViewItem,
-  createPuppertinoColumnHelper,
-  FinderActions,
-  FinderBody,
-  FinderContent,
-  FinderEmptyState,
-  FinderFilmstrip,
-  FinderGallery,
-  FinderGalleryItem,
-  FinderIconGrid,
-  FinderIconItem,
-  FinderPathBar,
-  FinderPreview,
-  FinderSearch,
-  FinderSidebar,
-  FinderSidebarGroup,
-  FinderSidebarItem,
-  FinderStatusBar,
-  FinderTitle,
-  FinderToolbar,
-  FinderToolbarGroup,
-  type FinderView,
-  FinderViewSwitcher,
-  FinderWindow,
-  finderViews,
-  type OutlineExpandedState,
-  OutlineView,
-  TableView,
-  TagPicker,
-} from './index.js';
+import { expect, fn, userEvent, within } from 'storybook/test';
+import { ResettableExample } from '../.storybook/resettable-example.js';
+import { documentWorkspaceRecipe } from '../.storybook/workspace-recipe.js';
+import { Composition } from '../demo/document-workspace-example.js';
+import workspaceSource from '../demo/document-workspace-example.tsx?raw';
+import { finderViews } from './index.js';
 
-interface Document {
-  id: string;
-  name: string;
-  children?: readonly Document[];
-}
-const helper = createPuppertinoColumnHelper<Document>();
-const columns = helper.columns([helper.accessor('name', { header: 'Name', size: 340 })]);
-interface CompositionProps {
-  view: FinderView;
-  query: string;
-  onViewChange(value: FinderView): void;
-  onQueryChange(value: string): void;
-}
-/** Consumer-owned data and behavior, using only public library imports. */
-function Composition({ view, query, onViewChange, onQueryChange }: CompositionProps) {
-  const [documents, setDocuments] = useState<Document[]>([
-    { id: 'brief', name: 'Brief.pdf' },
-    { id: 'notes', name: 'Notes.md' },
-  ]);
-  const [expanded, setExpanded] = useState<OutlineExpandedState>({ 'collection:documents': true });
-  const [selected, setSelected] = useState<Record<string, true>>({});
-  const [tags, setTags] = useState<Record<string, string[]>>({});
-  const visible = documents.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()));
-  const chosen = visible.filter((item) => selected[item.id]);
-  const active = chosen[0];
-  const CollectionView = view === 'outline' ? OutlineView<Document> : TableView<Document>;
-  const choose = (id: string) => setSelected({ [id]: true });
-  const preview = (
-    <FinderPreview
-      artwork={<FileTextIcon size={72} weight="light" aria-hidden="true" />}
-      heading={active?.name ?? 'Select a document'}
-      description="Your application supplies previews."
-    />
-  );
-  return (
-    <FinderWindow aria-label="Composed document browser">
-      <FinderToolbar>
-        <FinderTitle>Documents</FinderTitle>
-        <FinderViewSwitcher
-          value={view}
-          onValueChange={onViewChange}
-          icons={{
-            outline: (
-              <TreeStructureIcon
-                weight={view === 'outline' ? 'fill' : 'regular'}
-                aria-hidden="true"
-              />
-            ),
-            icons: (
-              <SquaresFourIcon
-                size={20}
-                weight={view === 'icons' ? 'fill' : 'regular'}
-                aria-hidden="true"
-              />
-            ),
-            list: (
-              <ListIcon
-                size={20}
-                weight={view === 'list' ? 'fill' : 'regular'}
-                aria-hidden="true"
-              />
-            ),
-            columns: (
-              <ColumnsIcon
-                size={20}
-                weight={view === 'columns' ? 'fill' : 'regular'}
-                aria-hidden="true"
-              />
-            ),
-            gallery: (
-              <ImagesIcon
-                size={20}
-                weight={view === 'gallery' ? 'fill' : 'regular'}
-                aria-hidden="true"
-              />
-            ),
-          }}
-        />
-        <FinderToolbarGroup aria-label="Document commands">
-          <TagPicker
-            options={[
-              { id: 'review', label: 'Review' },
-              { id: 'work', label: 'Work' },
-            ]}
-            value={active ? (tags[active.id] ?? []) : []}
-            onValueChange={(value) => {
-              if (active) setTags((previous) => ({ ...previous, [active.id]: value }));
-            }}
-            disabled={chosen.length !== 1}
-            trigger={<TagIcon weight="regular" aria-hidden="true" />}
-            triggerClassName="p-toolbar-btn"
-          />
-          <FinderActions
-            icon={<DotsThreeIcon weight="regular" aria-hidden="true" />}
-            actions={[
-              {
-                id: 'trash',
-                label: 'Move to Trash',
-                disabled: !active,
-                onSelect: () => {
-                  setDocuments((items) =>
-                    items.filter((item) => !chosen.some((target) => target.id === item.id)),
-                  );
-                  setSelected({});
-                },
-              },
-            ]}
-          />
-        </FinderToolbarGroup>
-        <FinderSearch
-          value={query}
-          onValueChange={(value) => {
-            setSelected({});
-            onQueryChange(value);
-          }}
-          icon={<MagnifyingGlassIcon weight="regular" aria-hidden="true" />}
-        />
-      </FinderToolbar>
-      <FinderBody density="comfortable">
-        <FinderSidebar aria-label="Document locations">
-          <FinderSidebarGroup label="Favorites">
-            <FinderSidebarItem
-              selected
-              icon={<FolderIcon weight="regular" aria-hidden="true" />}
-              onClick={() => onQueryChange('')}
-            >
-              Documents
-            </FinderSidebarItem>
-          </FinderSidebarGroup>
-        </FinderSidebar>
-        <FinderContent>
-          {visible.length === 0 ? (
-            <FinderEmptyState role="status">
-              {query ? 'No matching documents' : 'No documents'}
-            </FinderEmptyState>
-          ) : view === 'list' || view === 'outline' ? (
-            <CollectionView
-              data={
-                view === 'outline'
-                  ? [{ id: 'collection:documents', name: 'Documents', children: visible }]
-                  : visible
-              }
-              {...(view === 'outline'
-                ? {
-                    getChildren: (item: Document) => item.children,
-                    expanded,
-                    onExpandedChange: setExpanded,
-                  }
-                : {})}
-              isRowSelectable={(item) => !item.children}
-              getRowLabel={(item) => item.name}
-              columns={columns}
-              getRowId={(item) => item.id}
-              ariaLabel="Documents"
-              selectable
-              selectionCheckboxes={false}
-              rowSelection={selected}
-              onRowSelectionChange={setSelected}
-              getRowProps={(row) =>
-                row.original.children
-                  ? undefined
-                  : {
-                      onClick: (event) => {
-                        event.preventDefault();
-                        choose(row.id);
-                      },
-                    }
-              }
-            />
-          ) : view === 'icons' ? (
-            <FinderIconGrid aria-label="Document icons">
-              {visible.map((item) => (
-                <FinderIconItem
-                  key={item.id}
-                  selected={selected[item.id]}
-                  artwork={<FileTextIcon weight="light" />}
-                  onClick={() => choose(item.id)}
-                >
-                  {item.name}
-                </FinderIconItem>
-              ))}
-            </FinderIconGrid>
-          ) : view === 'columns' ? (
-            <ColumnView
-              ariaLabel="Document columns"
-              columns={[
-                {
-                  id: 'files',
-                  label: 'Documents',
-                  content: visible.map((item) => (
-                    <ColumnViewItem
-                      key={item.id}
-                      selected={selected[item.id]}
-                      onClick={() => choose(item.id)}
-                    >
-                      {item.name}
-                    </ColumnViewItem>
-                  )),
-                },
-                { id: 'preview', label: 'Preview', content: preview },
-              ]}
-            />
-          ) : (
-            <FinderGallery aria-label="Document gallery">
-              {preview}
-              <FinderFilmstrip aria-label="Documents">
-                {visible.map((item) => (
-                  <FinderGalleryItem
-                    key={item.id}
-                    aria-label={item.name}
-                    selected={selected[item.id]}
-                    onClick={() => choose(item.id)}
-                  >
-                    <FileTextIcon aria-hidden="true" />
-                  </FinderGalleryItem>
-                ))}
-              </FinderFilmstrip>
-            </FinderGallery>
-          )}
-        </FinderContent>
-      </FinderBody>
-      <FinderPathBar>
-        <FolderIcon size={14} aria-hidden="true" />
-        <span>Documents</span>
-      </FinderPathBar>
-      <FinderStatusBar>
-        <output aria-label="Document count">
-          {visible.length} {visible.length === 1 ? 'item' : 'items'}
-        </output>
-      </FinderStatusBar>
-    </FinderWindow>
-  );
-}
 const meta = {
   title: 'Puppertino/Finder composition',
   component: Composition,
-  args: { view: 'list', query: '', onViewChange: fn(), onQueryChange: fn() },
+  args: {
+    view: 'list',
+    query: '',
+    section: 'Documents',
+    activePaneId: 'content',
+    previewHidden: false,
+    artwork: 'symbol',
+    onViewChange: fn(),
+    onQueryChange: fn(),
+    onSectionChange: fn(),
+    onActivePaneChange: fn(),
+    onPreviewHiddenChange: fn(),
+    onDocumentAction: fn(),
+    onSizesCommit: fn(),
+  },
   argTypes: {
+    section: {
+      control: 'inline-radio',
+      options: ['Documents', 'Archive'],
+      table: { category: 'Example state' },
+    },
+    activePaneId: {
+      control: 'inline-radio',
+      options: ['sidebar', 'content', 'detail'],
+      table: { category: 'Layout' },
+    },
+    previewHidden: { control: 'boolean', table: { category: 'Layout' } },
+    artwork: {
+      control: 'inline-radio',
+      options: ['symbol', 'thumbnail'],
+      description: 'App-owned artwork slot, shared by the collection and preview.',
+      table: { category: 'Appearance' },
+    },
+    onSectionChange: { control: false },
+    onActivePaneChange: { control: false },
+    onPreviewHiddenChange: { control: false },
+    onDocumentAction: { control: false, table: { category: 'Events' } },
+    onSizesCommit: { control: false, table: { category: 'Events' } },
     view: {
       control: 'inline-radio',
       options: [...finderViews],
@@ -311,6 +74,11 @@ const meta = {
   parameters: {
     layout: 'padded',
     docs: {
+      source: {
+        language: 'tsx',
+        type: 'code',
+        code: documentWorkspaceRecipe(workspaceSource),
+      },
       description: {
         component:
           'Build your own Finder from exported primitives. All data, selection and commands belong to the consuming application; icons and previews are slots. The complete Finder example uses these same primitives.',
@@ -318,19 +86,33 @@ const meta = {
     },
   },
   render: function Controlled(args) {
-    const [, updateArgs] = useArgs<typeof args>();
+    const [, updateArgs, resetArgs] = useArgs<typeof args>();
     return (
-      <Composition
-        {...args}
-        onViewChange={(view) => {
-          args.onViewChange(view);
-          updateArgs({ view });
-        }}
-        onQueryChange={(query) => {
-          args.onQueryChange(query);
-          updateArgs({ query });
-        }}
-      />
+      <ResettableExample onReset={resetArgs}>
+        <Composition
+          {...args}
+          onSectionChange={(section) => {
+            args.onSectionChange(section);
+            updateArgs({ section });
+          }}
+          onActivePaneChange={(activePaneId) => {
+            args.onActivePaneChange(activePaneId);
+            updateArgs({ activePaneId });
+          }}
+          onPreviewHiddenChange={(previewHidden) => {
+            args.onPreviewHiddenChange(previewHidden);
+            updateArgs({ previewHidden });
+          }}
+          onViewChange={(view) => {
+            args.onViewChange(view);
+            updateArgs({ view });
+          }}
+          onQueryChange={(query) => {
+            args.onQueryChange(query);
+            updateArgs({ query });
+          }}
+        />
+      </ResettableExample>
     );
   },
 } satisfies Meta<typeof Composition>;
@@ -339,60 +121,48 @@ type Story = StoryObj<typeof meta>;
 export const Composed: Story = { name: 'Playground' };
 
 export const TagAndTrashWorkflow: Story = {
+  name: 'Organize a document',
   parameters: {
+    controls: { disable: true },
     docs: {
       description: {
         story:
-          'An automated interaction example: tag a selected document, switch views, then move it to Trash. Reload the story to replay.',
+          'Select a document, assign a tag, change its view, move it to Trash and undo. Named Interactions steps show each expected result; Reset example restores the workspace.',
       },
     },
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('row', { name: /Brief.pdf/ }));
-    await userEvent.click(canvas.getByRole('button', { name: 'Tags' }));
-    await userEvent.click(canvas.getByRole('option', { name: 'Review' }));
-    await expect(canvas.getByRole('button', { name: 'Remove tag Review' })).toBeVisible();
-    await userEvent.keyboard('{Escape}');
-    await userEvent.click(canvas.getByRole('button', { name: 'Icons' }));
-    await expect(canvas.getByRole('button', { name: 'Brief.pdf' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    await userEvent.click(canvas.getByRole('button', { name: 'Actions' }));
-    await userEvent.click(canvas.getByRole('menuitem', { name: 'Move to Trash' }));
-    await expect(canvas.queryByRole('button', { name: 'Brief.pdf' })).toBeNull();
-    await expect(canvas.getByLabelText('Document count')).toHaveTextContent('1 item');
-  },
-};
-export const CustomArtwork: Story = {
-  parameters: { controls: { disable: true } },
-  render: () => (
-    <FinderWindow aria-label="Image browser">
-      <FinderToolbar>
-        <FinderTitle>Images</FinderTitle>
-      </FinderToolbar>
-      <FinderBody>
-        <FinderContent>
-          <FinderIconGrid aria-label="Images">
-            <FinderIconItem
-              artwork={<img src="./media/icons-light.png" width={1080} height={640} alt="" />}
-              description="PNG image"
-            >
-              Finder screenshot.png
-            </FinderIconItem>
-          </FinderIconGrid>
-        </FinderContent>
-      </FinderBody>
-      <FinderStatusBar>1 item</FinderStatusBar>
-    </FinderWindow>
-  ),
-  play: async ({ canvasElement }) => {
-    const image = canvasElement.querySelector('img');
-    await expect(image).not.toBeNull();
-    await waitFor(() => expect(image?.naturalWidth).toBeGreaterThan(0));
-    const bounds = image?.getBoundingClientRect();
-    await expect(bounds?.width).toBeLessThanOrEqual(68);
-    await expect(bounds?.height).toBeLessThanOrEqual(80);
+    await step('Select Brief.pdf and assign the Review tag', async () => {
+      await userEvent.click(canvas.getByRole('row', { name: /Brief.pdf/ }));
+      await userEvent.click(canvas.getByRole('button', { name: 'Tags' }));
+      await userEvent.click(canvas.getByRole('option', { name: 'Review' }));
+      await expect(canvas.getByRole('button', { name: 'Remove tag Review' })).toBeVisible();
+      await userEvent.keyboard('{Escape}');
+    });
+    await step('Switch views while preserving the selected document', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Icons' }));
+      await expect(canvas.getByRole('button', { name: 'Brief.pdf' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+      await expect(args.onViewChange).toHaveBeenLastCalledWith('icons');
+    });
+    await step('Move to Trash, then undo the same operation', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Actions' }));
+      await userEvent.click(canvas.getByRole('menuitem', { name: 'Move to Trash' }));
+      await expect(canvas.queryByRole('button', { name: 'Brief.pdf' })).toBeNull();
+      await expect(canvas.getByLabelText('Document count')).toHaveTextContent('1 item');
+      await expect(args.onDocumentAction).toHaveBeenLastCalledWith('trash', ['brief']);
+      await userEvent.click(canvas.getByRole('button', { name: 'Undo Trash' }));
+      await expect(canvas.findByRole('button', { name: 'Brief.pdf' })).resolves.toBeVisible();
+      await expect(args.onDocumentAction).toHaveBeenLastCalledWith('undo', ['brief']);
+    });
+    await step('Reset data and Controls together', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Reset example' }));
+      await expect(canvas.findByRole('row', { name: /Brief.pdf/ })).resolves.toBeVisible();
+      await expect(canvas.getByLabelText('Document count')).toHaveTextContent('2 items');
+      await expect(canvas.getByRole('button', { name: 'Undo Trash' })).toBeDisabled();
+    });
   },
 };

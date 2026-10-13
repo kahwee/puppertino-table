@@ -218,7 +218,7 @@ export const componentGuides: Readonly<Record<string, ComponentGuide>> = {
   },
   'Puppertino/Finder composition': {
     intro:
-      'Compose the public primitives around your own app. Change the view and search in this playground before copying the integration recipe.',
+      'Explore a complete, typed document workspace with locations, resizable panes, shared selection, tags, previews and reversible Trash. Controls and application navigation share the same args.',
     scenarios: [
       {
         setting: 'view',
@@ -232,7 +232,11 @@ export const componentGuides: Readonly<Record<string, ComponentGuide>> = {
       },
     ],
     integration:
-      'FinderWindow, FinderToolbar, Sidebar, the collection views and previews are independent components. Keep document models, API clients, authentication and command authorization in your application. Use the full Finder walkthrough for the larger app example.',
+      'The composed document app uses FinderWindow, FinderToolbar, Sidebar, SplitView, collection views and a detail pane. Navigate Documents/Archive, tag a file, change views, resize panes, then Trash and undo. Keep document models, API clients, authentication and command authorization in your application. Use the full Finder walkthrough for the larger app example.',
+    keyboard: [
+      { keys: 'Tab / Enter', action: 'Navigate locations and use the compact pane controls.' },
+      { keys: 'Left/Right', action: 'Resize a focused horizontal pane divider.' },
+    ],
     api: 'compose-a-finder',
   },
 };
