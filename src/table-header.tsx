@@ -1,5 +1,5 @@
 'use client';
-import type { RowData } from '@tanstack/react-table';
+import { type RowData, Subscribe } from '@tanstack/react-table';
 import { ColumnResizeHandle } from './resize-handle.js';
 import type { TableHeaderProps } from './table-types.js';
 
@@ -21,7 +21,31 @@ export function TableHeader<T extends RowData>({
         <tr key={group.id}>
           {selectable && index === 0 && (
             <th className="pt-selection" rowSpan={groups.length} scope="col">
-              <span className="pt-sr-only">Select rows</span>
+              <Subscribe source={table.atoms.rowSelection}>
+                {(selection) => {
+                  const rows = table.getRowModel().rows.filter((row) => row.getCanSelect());
+                  const selected = rows.filter((row) => selection[row.id]).length;
+                  const checked = rows.length > 0 && selected === rows.length;
+                  const mixed = selected > 0 && !checked;
+                  return (
+                    <input
+                      type="checkbox"
+                      aria-label="Select all visible rows"
+                      aria-checked={mixed ? 'mixed' : checked}
+                      checked={checked}
+                      disabled={disabled || rows.length === 0}
+                      ref={(input) => {
+                        if (input) input.indeterminate = mixed;
+                      }}
+                      onClick={(event) => event.stopPropagation()}
+                      onChange={(event) => {
+                        if (!disabled && rows.length > 0)
+                          table.toggleAllPageRowsSelected(event.target.checked);
+                      }}
+                    />
+                  );
+                }}
+              </Subscribe>
             </th>
           )}
           {group.headers.map((header) => {

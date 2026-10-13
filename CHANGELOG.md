@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a select-all header checkbox with mixed state and keyboard support; selecting or clearing visible rows preserves other-page selections.
+
 - Clarify Storybook setup versus live controls, state ownership, defaults and resize completion callbacks.
 - Export `ContextMenuState` and reject separator/command/link prop combinations that cannot be rendered meaningfully.
 - Remove redundant type re-exports from internal implementation modules; package-root type imports remain available.

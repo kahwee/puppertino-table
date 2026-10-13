@@ -249,6 +249,8 @@ try {
   for (const story of [
     'default',
     'selection',
+    'paginated-selection',
+    'atom-selection',
     'keyboard-resize',
     'dark',
     'narrow',
@@ -288,6 +290,49 @@ try {
       await page.locator('#storybook-root').getByRole('table').count(),
       story === 'independent-tables' ? 2 : 1,
     );
+    if (story === 'atom-selection') {
+      await page.getByRole('checkbox', { name: 'Select person-0', exact: true }).check();
+      const all = page.getByRole('checkbox', { name: 'Select all visible rows', exact: true });
+      assert.equal(await all.getAttribute('aria-checked'), 'mixed');
+      await all.check();
+      assert.equal(await page.locator('tbody input:checked').count(), 5);
+      await all.uncheck();
+      assert.equal(await page.locator('tbody input:checked').count(), 0);
+    }
+    if (story === 'paginated-selection') {
+      const all = page.getByRole('checkbox', { name: 'Select all visible rows', exact: true });
+      const rows = page.getByRole('checkbox', { name: /^Select Person/ });
+      const total = page.getByLabel('Total selected');
+      assert.equal(await all.isChecked(), false);
+      await rows.first().check();
+      assert.equal(await all.getAttribute('aria-checked'), 'mixed');
+      assert.equal(await all.evaluate((input) => (input as HTMLInputElement).indeterminate), true);
+      await all.press('Space');
+      assert.equal(await all.isChecked(), true);
+      assert.equal(await total.textContent(), '2');
+      await page.getByRole('button', { name: 'Switch page' }).click();
+      assert.equal(await all.isChecked(), false);
+      assert.equal(await all.getAttribute('aria-checked'), 'false');
+      await all.check();
+      assert.equal(await total.textContent(), '4');
+      await all.uncheck();
+      assert.equal(await total.textContent(), '2', 'clearing a page preserves other pages');
+      await page.getByRole('button', { name: 'Switch page' }).click();
+      assert.equal(await all.isChecked(), true);
+      await rows.first().uncheck();
+      assert.equal(await all.getAttribute('aria-checked'), 'mixed');
+      await all.check();
+      await all.uncheck();
+      assert.equal(await total.textContent(), '0');
+    }
+    if (story === 'empty' || story === 'disabled') {
+      assert.equal(
+        await page
+          .getByRole('checkbox', { name: 'Select all visible rows', exact: true })
+          .isDisabled(),
+        true,
+      );
+    }
     if (story === 'selection') {
       await page.waitForFunction(
         () => document.querySelector('output')?.textContent === '4 selected',
@@ -434,6 +479,11 @@ try {
         'uncontrolled selection updates while notifying the host',
       );
       assert.equal(await page.getByLabel('Selection notifications').textContent(), '1');
+      const all = table.getByRole('checkbox', { name: 'Select all visible rows', exact: true });
+      await all.check();
+      assert.equal(await table.locator('tbody input:checked').count(), 3);
+      await all.uncheck();
+      assert.equal(await table.locator('tbody input:checked').count(), 0);
       await table.getByRole('button', { name: 'Sort by Name' }).click();
       assert.equal(await page.getByLabel('Sorting notifications').textContent(), '1');
       assert.equal(await table.locator('th[aria-sort]').getAttribute('aria-sort'), 'ascending');

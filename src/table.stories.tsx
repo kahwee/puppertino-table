@@ -215,7 +215,7 @@ export const Default: Story = {
 export const Selection: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const boxes = canvas.getAllByRole('checkbox');
+    const boxes = canvas.getAllByRole('checkbox', { name: /^Select Person/ });
     const user = userEvent.setup();
     await user.click(boxes[1]);
     await user.keyboard('{Shift>}');
@@ -609,7 +609,7 @@ export const ExternalAtoms: Story = {
     await expect(canvas.getByLabelText('Atom name width')).toHaveTextContent('296');
     await userEvent.click(canvas.getByRole('button', { name: 'Set atom width to 200' }));
     await expect(edge).toHaveAttribute('aria-valuenow', '200');
-    const checkbox = canvas.getAllByRole('checkbox')[0];
+    const checkbox = canvas.getAllByRole('checkbox', { name: /^Select person-/ })[0];
     await userEvent.click(checkbox);
     await expect(checkbox).toBeChecked();
     await userEvent.click(canvas.getByRole('button', { name: 'Sort by Score' }));
@@ -618,4 +618,44 @@ export const ExternalAtoms: Story = {
       'ascending',
     );
   },
+};
+
+function PaginatedSelectionExample() {
+  const [page, setPage] = useState(0);
+  const [selection, setSelection] = useState<RowSelectionState>({});
+  return (
+    <>
+      <button type="button" onClick={() => setPage(page === 0 ? 1 : 0)}>
+        Switch page
+      </button>
+      <PuppertinoTable
+        data={people.slice(page * 2, page * 2 + 2)}
+        columns={personColumns}
+        getRowId={(row) => row.id}
+        getRowLabel={(row) => row.name}
+        ariaLabel="Paged people"
+        selectable
+        rowSelection={selection}
+        onRowSelectionChange={setSelection}
+      />
+      <output aria-label="Total selected">{Object.values(selection).filter(Boolean).length}</output>
+    </>
+  );
+}
+export const PaginatedSelection: Story = {
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          'The header checkbox selects only the current page. Switch pages to verify that selections on other pages survive selecting and clearing this page.',
+      },
+    },
+  },
+  render: () => <PaginatedSelectionExample />,
+};
+
+export const AtomSelection: Story = {
+  parameters: { controls: { disable: true } },
+  render: () => <AtomOwnershipExample />,
 };

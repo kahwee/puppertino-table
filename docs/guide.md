@@ -43,7 +43,7 @@ export function Example() {
 
 For simpler tables, omit `sorting` and `onSortingChange` to let the library own sort state; set `manualSorting={false}` for local ordering. `initialSorting` and `initialRowSelection` seed uncontrolled state on mount. You can provide change callbacks as notifications while leaving state uncontrolled. If you provide controlled `sorting` or `rowSelection` without its matching callback, that state is read-only. Do not switch between controlled and uncontrolled ownership while a table is mounted.
 
-The example uses local sorting and uncontrolled checkbox selection. Pass both `rowSelection` and `onRowSelectionChange` for controlled selection. Controlled selection without a change callback is read-only. Keep column definitions and data references stable when possible.
+The example uses local sorting and uncontrolled checkbox selection. Pass both `rowSelection` and `onRowSelectionChange` for controlled selection. Controlled selection without a change callback is read-only. With `selectable`, the header checkbox selects or clears the current row model, preserving selected IDs from other server pages or filtered-out rows. It shows a mixed state for partial selection and is disabled when no rows can be selected. Space toggles it from the keyboard. Keep column definitions and data references stable when possible.
 
 ### Sorting and pagination
 

@@ -1,5 +1,6 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Subscribe } from '@tanstack/react-table';
 import { ColumnResizeHandle } from './resize-handle.js';
 export function TableHeader({ table, selectable = false, disabled = false, resizable = true, resizeOptions, }) {
     const groups = table.getHeaderGroups();
@@ -7,7 +8,19 @@ export function TableHeader({ table, selectable = false, disabled = false, resiz
         ...resizeOptions,
         enabled: resizable && !disabled && resizeOptions?.enabled !== false,
     };
-    return (_jsx("thead", { children: groups.map((group, index) => (_jsxs("tr", { children: [selectable && index === 0 && (_jsx("th", { className: "pt-selection", rowSpan: groups.length, scope: "col", children: _jsx("span", { className: "pt-sr-only", children: "Select rows" }) })), group.headers.map((header) => {
+    return (_jsx("thead", { children: groups.map((group, index) => (_jsxs("tr", { children: [selectable && index === 0 && (_jsx("th", { className: "pt-selection", rowSpan: groups.length, scope: "col", children: _jsx(Subscribe, { source: table.atoms.rowSelection, children: (selection) => {
+                            const rows = table.getRowModel().rows.filter((row) => row.getCanSelect());
+                            const selected = rows.filter((row) => selection[row.id]).length;
+                            const checked = rows.length > 0 && selected === rows.length;
+                            const mixed = selected > 0 && !checked;
+                            return (_jsx("input", { type: "checkbox", "aria-label": "Select all visible rows", "aria-checked": mixed ? 'mixed' : checked, checked: checked, disabled: disabled || rows.length === 0, ref: (input) => {
+                                    if (input)
+                                        input.indeterminate = mixed;
+                                }, onClick: (event) => event.stopPropagation(), onChange: (event) => {
+                                    if (!disabled && rows.length > 0)
+                                        table.toggleAllPageRowsSelected(event.target.checked);
+                                } }));
+                        } }) })), group.headers.map((header) => {
                     const column = header.column;
                     const label = typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id;
                     const sorted = column.getIsSorted();
