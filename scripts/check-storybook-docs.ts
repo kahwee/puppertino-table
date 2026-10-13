@@ -164,17 +164,9 @@ async function checkTableRecipes(page: Page, base: string) {
     ['default', 'ariaLabel="People"'],
     ['selection', 'onRowSelectionChange={setSelection}'],
     ['server-owned-order', 'manualSorting\n'],
-    ['read-only', 'columnSizing={{ name: 280 }}'],
-    ['controlled-sizing', 'onColumnSizingChange={setColumnSizing}'],
     ['external-atoms', 'atoms={{ columnSizing, sorting, rowSelection }}'],
-    ['resize-events', 'onColumnSizingCommit='],
-    ['hook-layout', 'onRowSelectionChange: readOnly ? undefined : setSelection'],
     ['customized-rows', 'getRowProps='],
-    ['leading-rows-when-empty', 'EmptyTableWithLeadingRows'],
     ['paginated-selection', 'manualSorting\n'],
-    ['item-selection-gestures', 'rowSelection: selection, onRowSelectionChange: setSelection'],
-    ['uncontrolled-item-gestures', 'useRowSelectionGestures(table)'],
-    ['atom-item-gestures', 'atoms: { rowSelection: selection }'],
     ['date-columns', "sortFn: 'datetime'"],
     ['request-states', 'status={status}'],
   ]) {
@@ -186,10 +178,6 @@ async function checkTableRecipes(page: Page, base: string) {
     assert.ok(source.includes("from 'puppertino-table'"), `${story}: public imports`);
     assert.ok(source.includes('createPuppertinoColumnHelper<'), `${story}: typed columns`);
     assert.ok(source.includes(marker), `${story}: actual state wiring`);
-    if (story === 'hook-layout') {
-      assert.ok(source.includes('<TableHeader table={table} />'));
-      assert.ok(!source.includes('<TableBody table={table} selectable'));
-    }
     assert.ok(
       !source.includes('../src/') && !source.includes('<Example'),
       `${story}: consumer-ready source`,

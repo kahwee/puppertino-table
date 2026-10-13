@@ -69,7 +69,7 @@ const meta = {
       source: { language: 'tsx', type: 'code' },
       description: {
         component:
-          'Start with Default for an internally managed table. Selection shows React-controlled sorting and selection; External Atoms shares app-owned state. Read Only supplies snapshots without change callbacks. Automatic sorting is the default. Set manualSorting for server pages or app-owned ordering. The ownership examples include public imports, typed columns and sample data in Show code.',
+          'Start with Default for an internally managed table. Selection shows React-controlled sorting and selection; External Atoms shares app-owned state. Automatic sorting is the default. Set manualSorting for server pages or app-owned ordering. The visible stories cover the main integration paths; advanced interaction and state cases remain tested by direct story URL. Each Show code panel includes public imports, typed columns and sample data.',
       },
     },
   },
@@ -133,13 +133,6 @@ export const Default: Story = {
       ariaLabel={args.ariaLabel ?? 'People'}
     />
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Sort by Score' }));
-    await expect(canvas.getAllByRole('row')[1].children[3]).toHaveTextContent('86');
-    await userEvent.click(canvas.getByRole('button', { name: 'Sort by Score' }));
-    await expect(canvas.getAllByRole('row')[1].children[3]).toHaveTextContent('0');
-  },
 };
 
 function ItemGestureExample({ ownership }: { ownership: 'controlled' | 'local' | 'atom' }) {
@@ -252,6 +245,7 @@ function ItemGestureExample({ ownership }: { ownership: 'controlled' | 'local' |
 }
 
 export const ItemSelectionGestures: Story = {
+  tags: ['!dev'],
   parameters: {
     controls: { disable: true },
     docs: { source: { code: tableRecipes.controlledGestures } },
@@ -259,6 +253,7 @@ export const ItemSelectionGestures: Story = {
   render: () => <ItemGestureExample ownership="controlled" />,
 };
 export const UncontrolledItemGestures: Story = {
+  tags: ['!dev'],
   parameters: {
     controls: { disable: true },
     docs: { source: { code: tableRecipes.localGestures } },
@@ -266,6 +261,7 @@ export const UncontrolledItemGestures: Story = {
   render: () => <ItemGestureExample ownership="local" />,
 };
 export const AtomItemGestures: Story = {
+  tags: ['!dev'],
   parameters: {
     controls: { disable: true },
     docs: { source: { code: tableRecipes.atomGestures } },
@@ -286,6 +282,7 @@ export const Selection: Story = {
   },
 };
 export const KeyboardResize: Story = {
+  tags: ['!dev'],
   parameters: { docs: { source: { code: tableRecipes.controlled } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -298,10 +295,12 @@ export const KeyboardResize: Story = {
   },
 };
 export const Dark: Story = {
+  tags: ['!dev'],
   parameters: { docs: { source: { code: tableRecipes.controlled } } },
   globals: { theme: 'dark' },
 };
 export const Narrow: Story = {
+  tags: ['!dev'],
   parameters: { docs: { source: { code: tableRecipes.controlled } } },
   decorators: [
     (Story) => (
@@ -312,14 +311,17 @@ export const Narrow: Story = {
   ],
 };
 export const Empty: Story = {
+  tags: ['!dev'],
   args: { data: [], emptyContent: 'No people match this view.' },
   parameters: { docs: { source: { code: tableRecipes.empty } } },
 };
 export const Disabled: Story = {
+  tags: ['!dev'],
   args: { disabled: true },
   parameters: { docs: { source: { code: tableRecipes.disabled } } },
 };
 export const ReadOnly: Story = {
+  tags: ['!dev'],
   parameters: {
     controls: { disable: true },
     docs: {
@@ -365,6 +367,7 @@ export const ServerOwnedOrder: Story = {
   },
 };
 export const DifferentSchema: Story = {
+  tags: ['!dev'],
   parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.products } } },
   render: () => {
     const [sorting, setSorting] = useState<SortingState>([]);
@@ -462,6 +465,7 @@ function StandaloneResizeExample() {
   );
 }
 export const StandaloneResize: Story = {
+  tags: ['!dev'],
   parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.standalone } } },
   render: () => <StandaloneResizeExample />,
 };
@@ -513,6 +517,7 @@ export const CustomizedRows: Story = {
   render: () => <CustomizedRowsExample />,
 };
 export const LeadingRowsWhenEmpty: Story = {
+  tags: ['!dev'],
   parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.leading } } },
   render: () => <CustomizedRowsExample empty />,
 };
@@ -578,6 +583,7 @@ function HookLayoutExample() {
   );
 }
 export const HookLayout: Story = {
+  tags: ['!dev'],
   parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.hook } } },
   render: () => <HookLayoutExample />,
   play: async ({ canvasElement }) => {
@@ -599,6 +605,7 @@ export const HookLayout: Story = {
 };
 
 export const IndependentTables: Story = {
+  tags: ['!dev'],
   parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.independent } } },
   render: () => (
     <>
@@ -642,6 +649,7 @@ function UncontrolledStateExample() {
   );
 }
 export const UncontrolledState: Story = {
+  tags: ['!dev'],
   parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.observed } } },
   render: () => <UncontrolledStateExample />,
 };
@@ -681,11 +689,13 @@ function CheckboxPrimitiveExample() {
   );
 }
 export const CheckboxPrimitive: Story = {
+  tags: ['!dev'],
   parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.checkbox } } },
   render: () => <CheckboxPrimitiveExample />,
 };
 
 export const ControlledSizing: Story = {
+  tags: ['!dev'],
   parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.sizing } } },
   render: () => <ControlledSizingExample />,
   play: async ({ canvasElement }) => {
@@ -759,6 +769,7 @@ export const PaginatedSelection: Story = {
 };
 
 export const ResizeEvents: Story = {
+  tags: ['!dev'],
   parameters: {
     controls: { disable: true },
     docs: {
@@ -852,6 +863,7 @@ export const RequestStates: Story = {
 };
 
 export const KeyboardItems: Story = {
+  tags: ['!dev'],
   parameters: {
     controls: { disable: true },
     docs: {

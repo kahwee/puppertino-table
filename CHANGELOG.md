@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Focus the Table Storybook sidebar on nine primary examples; keep specialized stories available to browser checks by direct URL. Open Default without an automatic sort, and verify sorting in browser checks instead.
 - Center the shared table selection column, use Puppertino's checkbox appearance in headers and rows, preserve a direct input hit area, and tighten the checkbox composition story.
 - Add app-owned ready/loading/error table states, accessible busy/status/error semantics, retry content and refreshes that preserve existing rows.
 - Export reusable roving item focus with list/grid/panel navigation, Shift selection integration, Home/End and filename typeahead. Keep activation and application commands caller-owned.

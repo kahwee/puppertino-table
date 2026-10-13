@@ -248,6 +248,12 @@ try {
   await page.goto(`${stories.base}/?path=/story/puppertino-table--default`);
   await page.frameLocator('#storybook-preview-iframe').getByRole('table').waitFor();
   await page.getByRole('link', { name: 'Default', exact: true }).waitFor();
+  for (const name of ['Selection', 'External Atoms', 'Date Columns']) {
+    assert.equal(await page.getByRole('link', { name, exact: true }).count(), 1);
+  }
+  for (const name of ['Dark', 'Narrow', 'Keyboard Resize', 'Controlled Sizing']) {
+    assert.equal(await page.getByRole('link', { name, exact: true }).count(), 0);
+  }
   await page.screenshot({ path: `${evidence}/storybook-pages.png` });
   for (const story of [
     'default',
@@ -384,10 +390,14 @@ try {
         'selection keeps native Puppertino colors while hovered',
       );
     }
-    if (story === 'default')
-      await page.waitForFunction(
-        () => document.querySelector('th[aria-sort]')?.getAttribute('aria-sort') === 'ascending',
-      );
+    if (story === 'default') {
+      const table = page.getByRole('table', { name: 'People' });
+      const score = table.getByRole('button', { name: 'Sort by Score' });
+      await score.click();
+      assert.match((await table.locator('tbody tr').first().textContent()) ?? '', /86/);
+      await score.click();
+      assert.match((await table.locator('tbody tr').first().textContent()) ?? '', /Person 001/);
+    }
     if (story === 'grouped-headers') {
       assert.ok((await page.locator('thead tr').count()) >= 2);
       assert.ok(
