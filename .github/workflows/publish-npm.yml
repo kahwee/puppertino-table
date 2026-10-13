@@ -29,13 +29,60 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.21.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
       - name: Validate stable tag, exact event SHA and package version
         id: release
         run: node scripts/release-guards.mjs validate-event
       - run: node --test tests/release.test.mjs
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm check
+      - name: Cache Chromium
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: chromium-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
+      # Keep OS dependencies current; cache hits skip the browser download.
+      - run: pnpm exec playwright install --with-deps chromium --no-shell
+      - name: Select installed Chromium
+        run: pnpm exec node -e "const {chromium}=require('playwright'); require('node:fs').appendFileSync(process.env.GITHUB_ENV, 'PLAYWRIGHT_CHROMIUM_EXECUTABLE=' + chromium.executablePath() + '\n')"
+      # Same gates as pnpm check; every background exit status is collected.
+      - name: Lint, type-check and unit tests
+        run: |
+          pnpm lint &
+          task_0_pid=$!
+          pnpm typecheck &
+          task_1_pid=$!
+          pnpm test &
+          task_2_pid=$!
+          status=0
+          wait "$task_0_pid" || status=1
+          wait "$task_1_pid" || status=1
+          wait "$task_2_pid" || status=1
+          exit "$status"
+      - name: Build library, demo and Storybook
+        run: |
+          pnpm build &
+          task_0_pid=$!
+          pnpm build:demo &
+          task_1_pid=$!
+          pnpm build:storybook &
+          task_2_pid=$!
+          status=0
+          wait "$task_0_pid" || status=1
+          wait "$task_1_pid" || status=1
+          wait "$task_2_pid" || status=1
+          exit "$status"
+      # Browser checks use built demo/Storybook and source; package checks own dist/prepack.
+      - name: Verify browsers and packed consumers
+        run: |
+          pnpm test:browser &
+          task_0_pid=$!
+          pnpm test:package &
+          task_1_pid=$!
+          status=0
+          wait "$task_0_pid" || status=1
+          wait "$task_1_pid" || status=1
+          exit "$status"
       - run: git diff --exit-code -- dist
       - name: Verify packed artifact identity, file list and integrity
         id: pack
@@ -96,6 +143,8 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.21.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       - name: Clean registry consumers with pinned React 19, types, rendering and CSS
         run: node scripts/check-package.mjs --from-registry
