@@ -12,7 +12,7 @@ Stable versions of the public `puppertino-table` package publish through `.githu
 
 ## Publishing and verification
 
-The release workflow uses Node 24.21.0, pnpm 11.25.0, and actions pinned to immutable commits. Its verification job validates the repository, stable tag, event SHA, main ancestry, package version and tarball. It runs release-guard tests and `pnpm check` and uploads the verified artifact.
+All GitHub Actions workflows use Node 24.21.0 and pnpm 11.25.0. Actions are pinned to immutable commits and use Node 24 runtimes, including the Pages upload action’s nested artifact action. The release verification job validates the repository, stable tag, event SHA, main ancestry, package version and tarball. It runs release-guard tests and `pnpm check` and uploads the verified artifact.
 
 Only the publish job receives `id-token: write`; other jobs receive `contents: read`. The publish job downloads the exact artifact, rechecks its SHA-512 integrity and remote tag, and publishes with pnpm OIDC and provenance. It installs no dependencies and runs no lifecycle scripts. The separate consumer job installs the public registry version with React 19.3.0, verifies typed imports, server rendering and CSS, and receives no OIDC permission.
 
