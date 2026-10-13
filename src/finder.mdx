@@ -37,7 +37,7 @@ Select files and click the tag-shaped toolbar icon. The anchored Puppertino popo
 
 Sidebar tags filter files across Projects and Archive. Tags survive moves, Trash and Put Back; Reset demo clears them. Tags are app-owned state in `demo/finder-files.ts`, not part of the table API.
 
-The chrome follows [Apple’s Finder toolbar reference](https://support.apple.com/guide/mac-help/customize-the-finder-toolbar-and-sidebar-mchlp3011/mac) and the supplied macOS screenshots: grouped icon controls, monochrome sidebar symbols, menu commands and a quiet bottom status bar. Puppertino supplies window, toolbar, sidebar and popover styles; Lucide outline icons with a 1.5-unit stroke use 20px toolbar and 18px sidebar slots.
+The chrome follows [Apple’s Finder toolbar reference](https://support.apple.com/guide/mac-help/customize-the-finder-toolbar-and-sidebar-mchlp3011/mac) and the supplied macOS screenshots: grouped icon controls, monochrome sidebar symbols, menu commands and a quiet bottom status bar. Puppertino supplies window, toolbar, sidebar and popover styles; Phosphor icons follow [Puppertino’s guidance](https://puppertino.com/docs/icons/), with regular toolbar symbols, filled selected views and duotone file-type icons.
 
 <Canvas of={Finder.Tags} />
 
@@ -99,7 +99,7 @@ Use native `href` items for links or `onClick` items for buttons. Stable panel I
   <a href="./media/context-menu.mp4">Download the context-menu screencast</a>
 </video>
 
-The recording opens a file menu in a 125% capture close-up, chooses Get Info, then opens another menu with Shift+F10 and closes it with Escape. Focus a row before trying Shift+F10. Arrows/Home/End navigate enabled commands; disabled entries and separators are skipped. Escape restores focus to the invoking target. Shortcut hints are labels; your app binds any actual shortcuts.
+The close-up recording opens a file menu, chooses Get Info, then opens another menu with Shift+F10, moves through commands with an arrow key and closes it with Escape. Focus a row before trying Shift+F10. Arrows/Home/End navigate enabled commands; disabled entries and separators are skipped. Escape restores focus to the invoking target. Shortcut hints are labels; your app binds any actual shortcuts.
 
 <Source language="tsx" code={`const menu = useContextMenu<string>();
 <ColumnBrowserItem {...menu.getTriggerProps(file.id)}>{file.name}</ColumnBrowserItem>

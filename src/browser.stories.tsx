@@ -1,3 +1,4 @@
+import { FileTextIcon, FolderIcon } from '@phosphor-icons/react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { type CSSProperties, useState } from 'react';
@@ -29,18 +30,8 @@ const resources = Array.from({ length: 28 }, (_, index) => ({
 }));
 const helper = createPuppertinoColumnHelper<(typeof resources)[number]>();
 function ResourceIcon({ folder = false }: { folder?: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.4">
-      {folder ? (
-        <path d="M2 6h8l2 3h10v12H2Z" fill="currentColor" fillOpacity=".2" />
-      ) : (
-        <>
-          <path d="M5 2h9l5 5v15H5Z" />
-          <path d="M14 2v5h5M8 12h8M8 16h6" />
-        </>
-      )}
-    </svg>
-  );
+  const Icon = folder ? FolderIcon : FileTextIcon;
+  return <Icon size={24} weight={folder ? 'duotone' : 'regular'} aria-hidden="true" />;
 }
 const columns = helper.columns([
   helper.accessor('name', {

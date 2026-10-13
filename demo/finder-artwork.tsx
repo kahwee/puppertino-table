@@ -1,21 +1,26 @@
 import {
   ArchiveIcon,
-  ChevronLeft,
-  ChevronRight,
+  ArrowUUpLeftIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
   CircleIcon,
-  Columns3,
-  Ellipsis,
+  ColumnsIcon,
+  DesktopIcon,
+  DotsThreeIcon,
   EyeIcon,
+  FileImageIcon,
+  FilePdfIcon,
+  FileTextIcon,
+  FileXlsIcon,
   FolderIcon,
-  GalleryThumbnails,
-  Grid2X2,
+  ImagesIcon,
   InfoIcon,
-  List,
-  Monitor,
-  Search,
+  ListIcon,
+  MagnifyingGlassIcon,
+  SquaresFourIcon,
   TrashIcon,
-  Undo2,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
+import type { CSSProperties } from 'react';
 import { FinderEmptyState, FinderPreview } from '../src/index.js';
 
 interface FinderFile {
@@ -27,26 +32,32 @@ interface FinderFile {
 }
 
 const viewIcons = {
-  icons: Grid2X2,
-  list: List,
-  columns: Columns3,
-  gallery: GalleryThumbnails,
-  search: Search,
-  back: ChevronLeft,
-  forward: ChevronRight,
+  icons: SquaresFourIcon,
+  list: ListIcon,
+  columns: ColumnsIcon,
+  gallery: ImagesIcon,
+  search: MagnifyingGlassIcon,
+  back: CaretLeftIcon,
+  forward: CaretRightIcon,
   info: InfoIcon,
   trash: TrashIcon,
-  restore: Undo2,
-  actions: Ellipsis,
+  restore: ArrowUUpLeftIcon,
+  actions: DotsThreeIcon,
   preview: EyeIcon,
   folder: FolderIcon,
   archive: ArchiveIcon,
-  desktop: Monitor,
+  desktop: DesktopIcon,
   tag: CircleIcon,
 };
-export function ViewGlyph({ view }: { view: keyof typeof viewIcons }) {
+export function ViewGlyph({
+  view,
+  selected = false,
+}: {
+  view: keyof typeof viewIcons;
+  selected?: boolean;
+}) {
   const Icon = viewIcons[view];
-  return <Icon size={20} strokeWidth={1.5} aria-hidden="true" />;
+  return <Icon size={20} weight={selected ? 'fill' : 'regular'} aria-hidden="true" />;
 }
 export function Glyph({
   folder = false,
@@ -63,23 +74,23 @@ export function Glyph({
         : kind === 'Text document'
           ? '#667c97'
           : '#c7574e';
+  const Icon = folder
+    ? FolderIcon
+    : kind === 'Spreadsheet'
+      ? FileXlsIcon
+      : kind === 'PNG image'
+        ? FileImageIcon
+        : kind === 'Text document'
+          ? FileTextIcon
+          : FilePdfIcon;
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="finder-demo-file-icon">
-      {folder ? (
-        <>
-          <path d="M2 5h8l2 3h10v12H2Z" fill="#77c6ec" stroke="#389dce" strokeWidth=".7" />
-          <path d="M2 10h20v10H2Z" fill="#5bb7e3" />
-          <path d="M3 11h18" stroke="#b7e5fa" />
-        </>
-      ) : (
-        <>
-          <path d="M5 2h9l5 5v15H5Z" fill="#fff" stroke="#b8c0c9" strokeWidth=".8" />
-          <path d="M14 2v5h5" fill="#e7ebef" stroke="#b8c0c9" strokeWidth=".8" />
-          <rect x="3" y="12" width="16" height="7" rx="1.5" fill={color} />
-          <path d="M7 15h8M7 17h5" stroke="#fff" strokeWidth=".9" />
-        </>
-      )}
-    </svg>
+    <Icon
+      size={24}
+      weight="duotone"
+      style={{ '--finder-file-color': folder ? '#389dce' : color } as CSSProperties}
+      aria-hidden="true"
+      className="finder-demo-file-icon"
+    />
   );
 }
 export function FilePreview({ file }: { file?: FinderFile }) {

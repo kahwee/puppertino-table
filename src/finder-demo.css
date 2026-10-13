@@ -41,8 +41,12 @@
   white-space: nowrap;
 }
 .finder-demo-file-icon {
+  color: var(--finder-file-color);
   display: block;
   flex-shrink: 0;
+}
+.p-selected .finder-demo-file-icon {
+  color: inherit;
 }
 .finder-demo-drop {
   outline: 2px solid var(--p-control-accent);

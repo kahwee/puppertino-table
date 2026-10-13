@@ -1,15 +1,15 @@
-import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
-  Columns3,
-  Ellipsis,
-  FileText,
-  Folder,
-  GalleryThumbnails,
-  Grid2X2,
-  List,
-  Search,
-  Tag,
-} from 'lucide-react';
+  ColumnsIcon,
+  DotsThreeIcon,
+  FileTextIcon,
+  FolderIcon,
+  ImagesIcon,
+  ListIcon,
+  MagnifyingGlassIcon,
+  SquaresFourIcon,
+  TagIcon,
+} from '@phosphor-icons/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { useArgs } from 'storybook/preview-api';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
@@ -69,7 +69,7 @@ function Composition({ view, query, onViewChange, onQueryChange }: CompositionPr
   const choose = (id: string) => setSelected({ [id]: true });
   const preview = (
     <FinderPreview
-      artwork={<FileText size={72} strokeWidth={1} aria-hidden="true" />}
+      artwork={<FileTextIcon size={72} weight="light" aria-hidden="true" />}
       heading={active?.name ?? 'Select a document'}
       description="Your application supplies previews."
     />
@@ -82,10 +82,34 @@ function Composition({ view, query, onViewChange, onQueryChange }: CompositionPr
           value={view}
           onValueChange={onViewChange}
           icons={{
-            icons: <Grid2X2 strokeWidth={1.5} aria-hidden="true" />,
-            list: <List strokeWidth={1.5} aria-hidden="true" />,
-            columns: <Columns3 strokeWidth={1.5} aria-hidden="true" />,
-            gallery: <GalleryThumbnails strokeWidth={1.5} aria-hidden="true" />,
+            icons: (
+              <SquaresFourIcon
+                size={20}
+                weight={view === 'icons' ? 'fill' : 'regular'}
+                aria-hidden="true"
+              />
+            ),
+            list: (
+              <ListIcon
+                size={20}
+                weight={view === 'list' ? 'fill' : 'regular'}
+                aria-hidden="true"
+              />
+            ),
+            columns: (
+              <ColumnsIcon
+                size={20}
+                weight={view === 'columns' ? 'fill' : 'regular'}
+                aria-hidden="true"
+              />
+            ),
+            gallery: (
+              <ImagesIcon
+                size={20}
+                weight={view === 'gallery' ? 'fill' : 'regular'}
+                aria-hidden="true"
+              />
+            ),
           }}
         />
         <FinderToolbarGroup aria-label="Document commands">
@@ -99,11 +123,11 @@ function Composition({ view, query, onViewChange, onQueryChange }: CompositionPr
               if (active) setTags((previous) => ({ ...previous, [active.id]: value }));
             }}
             disabled={chosen.length !== 1}
-            trigger={<Tag strokeWidth={1.5} aria-hidden="true" />}
+            trigger={<TagIcon weight="regular" aria-hidden="true" />}
             triggerClassName="p-toolbar-btn"
           />
           <FinderActions
-            icon={<Ellipsis strokeWidth={1.5} aria-hidden="true" />}
+            icon={<DotsThreeIcon weight="regular" aria-hidden="true" />}
             actions={[
               {
                 id: 'trash',
@@ -125,7 +149,7 @@ function Composition({ view, query, onViewChange, onQueryChange }: CompositionPr
             setSelected({});
             onQueryChange(value);
           }}
-          icon={<Search strokeWidth={1.5} aria-hidden="true" />}
+          icon={<MagnifyingGlassIcon weight="regular" aria-hidden="true" />}
         />
       </FinderToolbar>
       <FinderBody density="comfortable">
@@ -133,7 +157,7 @@ function Composition({ view, query, onViewChange, onQueryChange }: CompositionPr
           <FinderSidebarGroup label="Favorites">
             <FinderSidebarItem
               selected
-              icon={<Folder strokeWidth={1.5} aria-hidden="true" />}
+              icon={<FolderIcon weight="regular" aria-hidden="true" />}
               onClick={() => onQueryChange('')}
             >
               Documents
@@ -163,7 +187,7 @@ function Composition({ view, query, onViewChange, onQueryChange }: CompositionPr
                 <FinderIconItem
                   key={item.id}
                   selected={selected[item.id]}
-                  artwork={<FileText strokeWidth={1} />}
+                  artwork={<FileTextIcon weight="light" />}
                   onClick={() => choose(item.id)}
                 >
                   {item.name}
@@ -201,7 +225,7 @@ function Composition({ view, query, onViewChange, onQueryChange }: CompositionPr
                     selected={selected[item.id]}
                     onClick={() => choose(item.id)}
                   >
-                    <FileText aria-hidden="true" />
+                    <FileTextIcon aria-hidden="true" />
                   </FinderGalleryItem>
                 ))}
               </FinderFilmstrip>
@@ -210,7 +234,7 @@ function Composition({ view, query, onViewChange, onQueryChange }: CompositionPr
         </FinderContent>
       </FinderBody>
       <FinderPathBar>
-        <Folder size={14} aria-hidden="true" />
+        <FolderIcon size={14} aria-hidden="true" />
         <span>Documents</span>
       </FinderPathBar>
       <FinderStatusBar>

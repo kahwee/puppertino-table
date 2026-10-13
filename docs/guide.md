@@ -469,7 +469,7 @@ import 'puppertino-table/style.css';
 
 ```tsx
 import { useState } from 'react';
-import { FileText, Folder } from 'lucide-react'; // Optional; any React icon works.
+import { FileTextIcon, FolderIcon } from '@phosphor-icons/react'; // Optional; any React icon works.
 import {
   FinderWindow, FinderToolbar, FinderTitle, FinderBody, FinderSidebar,
   FinderSidebarGroup, FinderSidebarItem, FinderContent, FinderIconGrid,
@@ -484,7 +484,7 @@ export function Documents() {
       <FinderBody density="comfortable" style={{ height: 420 }}>
         <FinderSidebar aria-label="Locations">
           <FinderSidebarGroup label="Favorites">
-            <FinderSidebarItem selected icon={<Folder aria-hidden="true" />}>
+            <FinderSidebarItem selected icon={<FolderIcon weight="fill" aria-hidden="true" />}>
               Documents
             </FinderSidebarItem>
           </FinderSidebarGroup>
@@ -494,7 +494,7 @@ export function Documents() {
             <FinderIconItem
               selected={selected}
               onClick={() => setSelected(!selected)}
-              artwork={<FileText aria-hidden="true" />}
+              artwork={<FileTextIcon weight="duotone" aria-hidden="true" />}
               description="PDF document"
             >
               Brief.pdf
@@ -514,6 +514,11 @@ components reserve their ARIA selection attribute and derive it from `selected`,
 so there is one source of truth. Use `applySelectionGesture` and
 `useRowSelectionGestures` when composing range selection across views. Keep the
 same IDs and selection anchor when switching views.
+
+Toolbar groups keep their full button hit areas and wrap when space is tight,
+including when search expands. Icons are supplied by your application; the
+examples use [Phosphor](https://phosphoricons.com/) in the weights recommended
+by [Puppertino](https://puppertino.com/docs/icons/).
 
 Constrain the window's width with its parent or native `style` prop; it creates
 its own size-query container. Add `p-dark-mode` to the window or an ancestor for

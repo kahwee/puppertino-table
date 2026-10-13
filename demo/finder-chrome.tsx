@@ -56,10 +56,10 @@ export function DemoToolbar({
         value={view}
         onValueChange={onView}
         icons={{
-          icons: <ViewGlyph view="icons" />,
-          list: <ViewGlyph view="list" />,
-          columns: <ViewGlyph view="columns" />,
-          gallery: <ViewGlyph view="gallery" />,
+          icons: <ViewGlyph view="icons" selected={view === 'icons'} />,
+          list: <ViewGlyph view="list" selected={view === 'list'} />,
+          columns: <ViewGlyph view="columns" selected={view === 'columns'} />,
+          gallery: <ViewGlyph view="gallery" selected={view === 'gallery'} />,
         }}
       />
       <FinderToolbarGroup aria-label="File commands">

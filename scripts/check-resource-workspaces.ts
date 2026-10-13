@@ -377,14 +377,19 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
         undefined,
         { timeout: 10000 },
       );
-    await target.scrollIntoViewIfNeeded();
+    // A wide table row can still scroll when Playwright clicks its clipped center.
+    // Use the visible filename so that scrolling settles before opening the menu.
+    const pointerTarget = tableView
+      ? target.getByText('Project brief.pdf', { exact: true })
+      : target;
+    await pointerTarget.scrollIntoViewIfNeeded();
     await page.evaluate(
       () =>
         new Promise<void>((resolve) =>
           requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
         ),
     );
-    await target.click({ button: 'right' });
+    await pointerTarget.click({ button: 'right' });
     await menu.waitFor();
     await page.keyboard.press('Escape');
     await setStorybookTheme(page, 'dark');

@@ -51,7 +51,7 @@
   position: relative;
   z-index: 5;
   border-radius: var(--finder-radius) var(--finder-radius) 0 0;
-  height: 58px;
+  min-height: 58px;
   display: flex;
   background: var(--p-window-bg);
 }
@@ -69,7 +69,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 14px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--finder-line);
   min-width: 0;
   flex: 1;
@@ -427,6 +428,7 @@
   cursor: pointer;
 }
 .pt-finder-toolbar-group {
+  flex-shrink: 0;
   border: 0;
   margin: 0;
   min-width: 0;

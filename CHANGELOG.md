@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.1 — 2026-10-12
+
+- Align the Finder and resource-browser examples with Puppertino’s Phosphor Icons guidance. Use regular toolbar icons, filled selected views and duotone file-type icons; preserve readable icon colors on selected rows.
+- Replace the Lucide development dependency with `@phosphor-icons/react` and update documentation recipes. Public APIs and runtime dependencies remain unchanged.
+- Recompose eleven screenshots with tighter framing and higher resolution. Improve three interaction screencasts with numbered captions, pointer highlights, trimmed loading frames and higher-quality GIF, MP4 and WebM encoding.
+- Reorganize the README around installation, composition, views, gestures and tags; align the walkthrough and media guide with the Phosphor examples.
+- Use Puppertino’s native expanded search-field styling. Keep toolbar controls from shrinking into overlapping hit targets when search expands; allow complete control groups to wrap.
+- Stabilize narrow-table context-menu verification by right-clicking the visible filename after scrolling, avoiding a clipped-row click that immediately dismisses the menu.
+
 ## 0.9.0 — 2026-10-13
 
 - Export composable Finder window/body/content, toolbar groups/buttons/title, window controls, history, view switcher, search, actions, sidebar groups/items, icon grid/items, gallery/filmstrip/items, preview, details, empty-state and path/status-bar primitives. Refactor the complete Finder demo to use these public components.

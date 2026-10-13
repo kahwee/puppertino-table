@@ -1,4 +1,4 @@
-import { Tag } from 'lucide-react';
+import { TagIcon } from '@phosphor-icons/react';
 import { TagPicker } from '../src/index.js';
 import type { FileItem } from './finder-files.js';
 
@@ -23,9 +23,7 @@ export function FinderTags({ files, available, disabled, onTag }: FinderTagsProp
       mixedValue={mixed}
       disabled={disabled || !files.length}
       triggerClassName="p-toolbar-btn"
-      trigger={
-        <Tag size={20} strokeWidth={1.5} style={{ transform: 'scaleX(-1)' }} aria-hidden="true" />
-      }
+      trigger={<TagIcon size={20} weight="regular" aria-hidden="true" />}
       title={`Assign tags to ${files.length === 1 ? `“${files[0].name}”` : `${files.length} items`}`}
       onCreate={(tag) => onTag(tag)}
       onValueChange={(next) => {
