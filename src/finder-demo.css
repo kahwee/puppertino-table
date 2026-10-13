@@ -193,7 +193,9 @@
   font-weight: 600;
 }
 .finder-demo-sidebar .pt-item-trailing {
-  display: none;
+  color: var(--p-text-secondary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }
 .finder-demo-sidebar p {
   display: flex;
@@ -648,5 +650,107 @@
   }
   .finder-demo-workspace {
     height: 300px;
+  }
+}
+
+.finder-demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  min-width: 0;
+  padding: 12px 18px;
+  border: 0;
+  border-bottom: 1px solid var(--finder-line);
+  background: var(--finder-toolbar);
+}
+.finder-demo-actions output {
+  display: grid;
+  gap: 3px;
+}
+.finder-demo-actions output strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+.finder-demo-actions output :where(span) {
+  color: var(--p-text-secondary);
+  font-size: 11px;
+}
+.finder-demo-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.finder-demo-action-buttons button,
+.finder-demo-status button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: inherit;
+  font: inherit;
+  border: 1px solid var(--finder-line);
+  border-radius: 6px;
+  background: var(--p-window-bg);
+  padding: 6px 9px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.finder-demo-action-buttons button:not(:disabled):hover,
+.finder-demo-status button:not(:disabled):hover {
+  background: #80809018;
+}
+.finder-demo-action-buttons button:disabled,
+.finder-demo-status button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.finder-demo-action-buttons svg {
+  width: 15px;
+  height: 15px;
+}
+.finder-demo-action-buttons .finder-demo-delete:not(:disabled) {
+  color: #b42318;
+  border-color: #b4231840;
+}
+.p-dark-mode .finder-demo-action-buttons .finder-demo-delete:not(:disabled) {
+  color: #ffb4ab;
+  border-color: #ffb4ab55;
+}
+.finder-demo-status {
+  min-height: 38px;
+  height: auto;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  flex-wrap: wrap;
+}
+.finder-demo-status [role="status"] {
+  flex: 1;
+  min-width: 100px;
+}
+.finder-demo-status button {
+  color: var(--p-control-accent);
+  font-weight: 600;
+}
+.finder-demo-selection-hint {
+  font-size: 10px;
+}
+.finder-demo-no-results {
+  padding: 18px;
+  line-height: 1.6;
+}
+@container (max-width: 700px) {
+  .finder-demo-actions {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .finder-demo-action-buttons {
+    margin-left: 0;
+  }
+  .finder-demo-selection-hint {
+    display: none;
   }
 }

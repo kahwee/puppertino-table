@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { DragEvent } from 'react';
-import { useState } from 'react';
+import type { RowSelectionState } from '@tanstack/react-table';
+import type { DragEvent, MouseEvent } from 'react';
+import { useReducer, useRef, useState } from 'react';
 import {
   FileArtwork,
   FilePreview,
@@ -8,7 +9,9 @@ import {
   Glyph,
   ViewGlyph,
 } from '../demo/finder-artwork.js';
+import { type FileItem, finderFilesReducer, initialFinderFiles } from '../demo/finder-files.js';
 import {
+  applySelectionGesture,
   ColumnBrowser,
   ColumnBrowserItem,
   ContextMenu,
@@ -20,57 +23,6 @@ import {
 } from './index.js';
 import './finder-demo.css';
 
-const initialFiles = [
-  {
-    id: 'brief',
-    name: 'Project brief.pdf',
-    kind: 'PDF document',
-    size: '248 KB',
-    modified: 'Today, 10:42',
-    folder: 'Projects',
-  },
-  {
-    id: 'research',
-    name: 'Research notes.txt',
-    kind: 'Text document',
-    size: '18 KB',
-    modified: 'Today, 09:15',
-    folder: 'Projects',
-  },
-  {
-    id: 'budget',
-    name: 'Budget.xlsx',
-    kind: 'Spreadsheet',
-    size: '96 KB',
-    modified: 'Yesterday',
-    folder: 'Projects',
-  },
-  {
-    id: 'cover',
-    name: 'Cover artwork.png',
-    kind: 'PNG image',
-    size: '1.2 MB',
-    modified: 'Yesterday',
-    folder: 'Projects',
-  },
-  {
-    id: 'meeting',
-    name: 'Meeting notes.txt',
-    kind: 'Text document',
-    size: '12 KB',
-    modified: 'Oct 10, 2026',
-    folder: 'Projects',
-  },
-  {
-    id: 'timeline',
-    name: 'Launch timeline.pdf',
-    kind: 'PDF document',
-    size: '384 KB',
-    modified: 'Oct 9, 2026',
-    folder: 'Projects',
-  },
-];
-type FileItem = (typeof initialFiles)[number];
 const helper = createPuppertinoColumnHelper<FileItem>();
 const columns = helper.columns([
   helper.accessor('name', {
@@ -111,7 +63,12 @@ function FinderDemo({
   disabled?: boolean;
   manualSorting?: boolean;
 }) {
-  const [files, setFiles] = useState(initialFiles);
+  const [fileState, dispatchFiles] = useReducer(finderFilesReducer, initialFinderFiles);
+  const { files, trash, lastDeletedIds } = fileState;
+  const [selection, setSelection] = useState<RowSelectionState>({});
+  const selectionAnchor = useRef<string | null>(null);
+  const undoButton = useRef<HTMLButtonElement>(null);
+  const selectionSummary = useRef<HTMLOutputElement>(null);
   const [folder, setFolder] = useState('Projects');
   const [view, setView] = useState(initialView);
   const [dark, setDark] = useState(initialDark);
@@ -123,20 +80,78 @@ function FinderDemo({
   const [query, setQuery] = useState('');
   const [infoOpen, setInfoOpen] = useState(false);
   const [history, setHistory] = useState({ folders: ['Projects'], index: 0 });
-  const [dragging, setDragging] = useState<string | null>(null);
+  const [dragging, setDragging] = useState<string[]>([]);
   const [over, setOver] = useState<string | null>(null);
-  const [message, setMessage] = useState('6 items · Fictional workspace');
+  const [message, setMessage] = useState('All changes stay in this demo');
   const menu = useContextMenu<string>();
-  const visible = files.filter(
-    (file) => file.folder === folder && file.name.toLowerCase().includes(query.toLowerCase()),
+  const inTrash = folder === 'Trash';
+  const folderFiles = inTrash ? trash : files.filter((file) => file.folder === folder);
+  const visible = folderFiles.filter((file) =>
+    file.name.toLowerCase().includes(query.toLowerCase()),
   );
+  const selectedFiles = visible.filter((file) => selection[file.id]);
+  const canAct = selectable && !disabled;
   const active = visible.find((file) => file.id === detail);
+  const clearSelection = () => {
+    setSelection({});
+    selectionAnchor.current = null;
+  };
+  const selectFile = (
+    id: string,
+    event: Pick<MouseEvent, 'shiftKey' | 'metaKey' | 'ctrlKey'>,
+    ids = visible.map((file) => file.id),
+  ) => {
+    if (disabled) return;
+    setDetail(id);
+    if (!selectable) return;
+    const anchor = selectionAnchor.current;
+    const modifiers = { shift: event.shiftKey, toggle: event.metaKey || event.ctrlKey };
+    selectionAnchor.current = applySelectionGesture(ids, {}, anchor, id, modifiers).anchor;
+    setSelection(
+      (previous) => applySelectionGesture(ids, previous, anchor, id, modifiers).selection,
+    );
+  };
+  const finishAction = (text: string) => {
+    clearSelection();
+    setDetail(null);
+    setInfoOpen(false);
+    setMessage(text);
+  };
+  const deleteFiles = (targets: FileItem[]) => {
+    if (!canAct || inTrash || !targets.length) return;
+    dispatchFiles({ type: 'delete', ids: targets.map((file) => file.id) });
+    finishAction(`Moved ${targets.length} ${targets.length === 1 ? 'file' : 'files'} to Trash.`);
+    requestAnimationFrame(() => undoButton.current?.focus());
+  };
+  const restoreFiles = (targets: FileItem[]) => {
+    if (!canAct || !targets.length) return;
+    dispatchFiles({ type: 'restore', ids: targets.map((file) => file.id) });
+    finishAction(
+      `Restored ${targets.length} ${targets.length === 1 ? 'file' : 'files'} to their original folders.`,
+    );
+    requestAnimationFrame(() => selectionSummary.current?.focus());
+  };
+  const moveFiles = (targets: FileItem[], target: 'Projects' | 'Archive') => {
+    if (!canAct || inTrash || !targets.length) return;
+    dispatchFiles({ type: 'move', ids: targets.map((file) => file.id), folder: target });
+    finishAction(
+      `Moved ${targets.length === 1 ? targets[0].name : `${targets.length} files`} to ${target}`,
+    );
+  };
+  const emptyMessage = query
+    ? `No files match “${query}”.`
+    : inTrash
+      ? 'Trash is empty. Deleted files will appear here.'
+      : folder === 'Archive'
+        ? 'Archive is empty. Move files here from Projects.'
+        : 'No files in Projects. Restore files from Trash or reset the demo.';
   const navigate = (name: string) => {
     if (name !== folder)
       setHistory((previous) => ({
         folders: [...previous.folders.slice(0, previous.index + 1), name],
         index: previous.index + 1,
       }));
+    clearSelection();
     setFolder(name);
     setDetail(null);
     setInfoOpen(false);
@@ -146,28 +161,37 @@ function FinderDemo({
     const index = history.index + delta;
     if (index < 0 || index >= history.folders.length) return;
     setHistory({ ...history, index });
+    clearSelection();
     setFolder(history.folders[index]);
     setDetail(null);
     setInfoOpen(false);
     setQuery('');
   };
-  const context = files.find((file) => file.id === menu.state?.context);
+  const context = visible.find((file) => file.id === menu.state?.context);
+  const contextTargets = context ? (selection[context.id] ? selectedFiles : [context]) : [];
   const dragProps = (file: FileItem) => ({
-    draggable: true,
+    draggable: canAct && !inTrash,
     onDragStart: (event: DragEvent<HTMLElement>) => {
+      if (!canAct || inTrash) {
+        event.preventDefault();
+        return;
+      }
+      const targets = selection[file.id] ? selectedFiles : [file];
       event.dataTransfer.setData('text/plain', file.id);
       event.dataTransfer.effectAllowed = 'move';
-      setDragging(file.id);
-      setMessage(`Dragging ${file.name} — drop on Archive`);
+      setDragging(targets.map((item) => item.id));
+      setMessage(
+        `Dragging ${targets.length} ${targets.length === 1 ? 'file' : 'files'} — drop on a folder or Trash`,
+      );
     },
     onDragEnd: () => {
-      setDragging(null);
+      setDragging([]);
       setOver(null);
     },
   });
   const dropProps = (target: string) => ({
     onDragOver: (event: DragEvent<HTMLElement>) => {
-      if (!dragging) return;
+      if (!canAct || !dragging.length) return;
       event.preventDefault();
       event.dataTransfer.dropEffect = 'move';
       setOver(target);
@@ -176,22 +200,24 @@ function FinderDemo({
     onDrop: (event: DragEvent<HTMLElement>) => {
       event.preventDefault();
       const id = event.dataTransfer.getData('text/plain');
-      const file = files.find((item) => item.id === id);
-      if (!file || id !== dragging) return;
-      setFiles((previous) =>
-        previous.map((item) => (item.id === id ? { ...item, folder: target } : item)),
-      );
-      setMessage(`Moved ${file.name} to ${target}`);
-      setDragging(null);
+      if (!canAct || !dragging.includes(id)) return;
+      const targets = visible.filter((file) => dragging.includes(file.id));
+      if (target === 'Trash') deleteFiles(targets);
+      else if (target === 'Archive' || target === 'Projects') moveFiles(targets, target);
+      setDragging([]);
       setOver(null);
     },
   });
   const folderButton = (name: string) => (
     <ColumnBrowserItem
       key={name}
-      icon={<Glyph folder />}
+      icon={name === 'Trash' ? <ViewGlyph view="trash" /> : <Glyph folder />}
       pathSelected={folder === name}
-      trailing="›"
+      trailing={
+        <span aria-hidden="true">
+          {name === 'Trash' ? trash.length : files.filter((file) => file.folder === name).length}
+        </span>
+      }
       onClick={() => navigate(name)}
       {...dropProps(name)}
       className={over === name ? 'finder-demo-drop' : ''}
@@ -261,15 +287,85 @@ function FinderDemo({
                 aria-label="Search files"
                 placeholder="Search"
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => {
+                  clearSelection();
+                  setDetail(null);
+                  setInfoOpen(false);
+                  setQuery(event.target.value);
+                }}
               />
             </label>
           </div>
         </header>
+        <fieldset className="finder-demo-actions" aria-label="File selection actions">
+          <output ref={selectionSummary} tabIndex={-1} aria-label="Selection summary">
+            <strong>
+              {selectedFiles.length
+                ? `${selectedFiles.length} selected`
+                : `${visible.length} ${visible.length === 1 ? 'item' : 'items'}`}
+            </strong>
+            <span>
+              {inTrash
+                ? 'Restore files to their original folders'
+                : selectedFiles.length
+                  ? 'Move the selection or send it to Trash'
+                  : 'Select files to organize your workspace'}
+            </span>
+          </output>
+          <div className="finder-demo-action-buttons">
+            {view !== 'list' && (
+              <button
+                type="button"
+                disabled={!canAct || !visible.length}
+                onClick={() => {
+                  setSelection(Object.fromEntries(visible.map((file) => [file.id, true])));
+                  selectionAnchor.current = null;
+                }}
+              >
+                Select all
+              </button>
+            )}
+            <button type="button" disabled={!selectedFiles.length} onClick={clearSelection}>
+              Clear selection
+            </button>
+            {inTrash ? (
+              <button
+                type="button"
+                disabled={!canAct || !selectedFiles.length}
+                onClick={() => restoreFiles(selectedFiles)}
+              >
+                <ViewGlyph view="restore" />
+                Restore selected
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  disabled={!canAct || !selectedFiles.length}
+                  onClick={() =>
+                    moveFiles(selectedFiles, folder === 'Archive' ? 'Projects' : 'Archive')
+                  }
+                >
+                  <Glyph folder />
+                  Move to {folder === 'Archive' ? 'Projects' : 'Archive'}
+                </button>
+                <button
+                  type="button"
+                  className="finder-demo-delete"
+                  disabled={!canAct || !selectedFiles.length}
+                  onClick={() => deleteFiles(selectedFiles)}
+                >
+                  <ViewGlyph view="trash" />
+                  Move to Trash
+                </button>
+              </>
+            )}
+          </div>
+        </fieldset>
         <DensityScope density={density} className="finder-demo-workspace">
           <nav className="finder-demo-sidebar" aria-label="Favorites">
             <h2>Favorites</h2>
-            {['Projects', 'Archive'].map(folderButton)}
+            {['Projects', 'Archive', 'Trash'].map(folderButton)}
             <h2>Locations</h2>
             <p>
               <svg
@@ -299,6 +395,8 @@ function FinderDemo({
                 getRowId={(file) => file.id}
                 getRowLabel={(file) => file.name}
                 ariaLabel="Project files"
+                rowSelection={selection}
+                onRowSelectionChange={setSelection}
                 selectable={selectable}
                 resizable={resizable}
                 disabled={disabled}
@@ -307,10 +405,28 @@ function FinderDemo({
                   tabIndex: 0,
                   ...menu.getTriggerProps(row.id),
                   ...dragProps(row.original),
+                  onClick: (event) =>
+                    selectFile(
+                      row.id,
+                      event,
+                      row.table.getRowModel().rows.map((item) => item.id),
+                    ),
+                  onKeyDown: (event) => {
+                    menu.getTriggerProps(row.id).onKeyDown(event);
+                    if (
+                      event.target === event.currentTarget &&
+                      (event.key === 'Enter' || event.key === ' ')
+                    ) {
+                      event.preventDefault();
+                      selectFile(
+                        row.id,
+                        event,
+                        row.table.getRowModel().rows.map((item) => item.id),
+                      );
+                    }
+                  },
                 })}
-                emptyContent={
-                  query ? `No files match “${query}”.` : 'Drop a file here from Projects.'
-                }
+                emptyContent={emptyMessage}
               />
             ) : view === 'columns' ? (
               <ColumnBrowser
@@ -325,6 +441,7 @@ function FinderDemo({
                       <>
                         {folderButton('Projects')}
                         {folderButton('Archive')}
+                        {folderButton('Trash')}
                       </>
                     ),
                   },
@@ -332,18 +449,23 @@ function FinderDemo({
                     id: 'files',
                     label: folder,
                     width: 280,
-                    content: visible.map((file) => (
-                      <ColumnBrowserItem
-                        key={file.id}
-                        selected={detail === file.id}
-                        icon={<Glyph kind={file.kind} />}
-                        {...menu.getTriggerProps(file.id)}
-                        {...dragProps(file)}
-                        onClick={() => setDetail(file.id)}
-                      >
-                        {file.name}
-                      </ColumnBrowserItem>
-                    )),
+                    content: visible.length ? (
+                      visible.map((file) => (
+                        <ColumnBrowserItem
+                          disabled={disabled}
+                          key={file.id}
+                          selected={!!selection[file.id]}
+                          icon={<Glyph kind={file.kind} />}
+                          {...menu.getTriggerProps(file.id)}
+                          {...dragProps(file)}
+                          onClick={(event) => selectFile(file.id, event)}
+                        >
+                          {file.name}
+                        </ColumnBrowserItem>
+                      ))
+                    ) : (
+                      <p className="finder-demo-no-results">{emptyMessage}</p>
+                    ),
                   },
                   ...(active
                     ? [
@@ -362,36 +484,35 @@ function FinderDemo({
                   <button
                     type="button"
                     key={file.id}
-                    aria-pressed={detail === file.id}
+                    aria-pressed={!!selection[file.id]}
+                    disabled={disabled}
                     className="finder-demo-icon-item"
                     {...menu.getTriggerProps(file.id)}
                     {...dragProps(file)}
-                    onClick={() => setDetail(file.id)}
+                    onClick={(event) => selectFile(file.id, event)}
                   >
                     <FileArtwork file={file} />
                     <span>{file.name}</span>
                     <small>{file.kind}</small>
                   </button>
                 ))}
-                {!visible.length && (
-                  <p className="finder-demo-no-results">
-                    {query ? `No files match “${query}”.` : 'No files in this folder.'}
-                  </p>
-                )}
+                {!visible.length && <p className="finder-demo-no-results">{emptyMessage}</p>}
               </section>
             ) : (
               <section className="finder-demo-gallery" aria-label="Project file gallery">
                 <FilePreview file={active ?? visible[0]} />
                 <section className="finder-demo-filmstrip" aria-label="Gallery files">
+                  {!visible.length && <p className="finder-demo-no-results">{emptyMessage}</p>}
                   {visible.map((file) => (
                     <button
                       type="button"
                       key={file.id}
                       aria-label={file.name}
-                      aria-pressed={(active ?? visible[0])?.id === file.id}
+                      disabled={disabled}
+                      aria-pressed={!!selection[file.id]}
                       {...menu.getTriggerProps(file.id)}
                       {...dragProps(file)}
-                      onClick={() => setDetail(file.id)}
+                      onClick={(event) => selectFile(file.id, event)}
                     >
                       <FileArtwork file={file} />
                     </button>
@@ -412,7 +533,7 @@ function FinderDemo({
                 <dd>{active.size}</dd>
                 <dt>Modified</dt>
                 <dd>{active.modified}</dd>
-                <dt>Folder</dt>
+                <dt>{inTrash ? 'Original folder' : 'Folder'}</dt>
                 <dd>{active.folder}</dd>
               </dl>
               <button type="button" onClick={() => setInfoOpen(false)}>
@@ -436,12 +557,24 @@ function FinderDemo({
           )}
         </nav>
         <footer className="finder-demo-status">
-          <span role="status">
-            {message.startsWith('6 items')
-              ? `${visible.length} ${visible.length === 1 ? 'item' : 'items'} · Fictional workspace`
-              : message}
+          <span role="status">{message}</span>
+          {lastDeletedIds.length > 0 && (
+            <button
+              ref={undoButton}
+              type="button"
+              disabled={disabled}
+              onClick={() => {
+                dispatchFiles({ type: 'undo' });
+                finishAction('Deletion undone. Files restored to their original folders.');
+                requestAnimationFrame(() => selectionSummary.current?.focus());
+              }}
+            >
+              Undo delete
+            </button>
+          )}
+          <span className="finder-demo-selection-hint">
+            ⌘/Ctrl-click to add · Shift-click for a range
           </span>
-          <span>{query ? `Search in ${folder}` : 'All changes stay in this demo'}</span>
         </footer>
         <ContextMenu
           ariaLabel="File actions"
@@ -462,20 +595,41 @@ function FinderDemo({
                     },
                   },
                   { id: 'separator', type: 'separator' },
-                  {
-                    id: 'move',
-                    label: `Move to ${context.folder === 'Archive' ? 'Projects' : 'Archive'}`,
-                    icon: <Glyph folder />,
-                    onSelect: () => {
-                      const target = context.folder === 'Archive' ? 'Projects' : 'Archive';
-                      setFiles((previous) =>
-                        previous.map((file) =>
-                          file.id === context.id ? { ...file, folder: target } : file,
-                        ),
-                      );
-                      setMessage(`Moved ${context.name} to ${target}`);
-                    },
-                  },
+                  ...(inTrash
+                    ? [
+                        {
+                          id: 'restore',
+                          label:
+                            contextTargets.length > 1
+                              ? `Restore ${contextTargets.length} files`
+                              : 'Restore file',
+                          disabled: !canAct,
+                          onSelect: () => restoreFiles(contextTargets),
+                        },
+                      ]
+                    : [
+                        {
+                          id: 'move',
+                          label: `Move to ${context.folder === 'Archive' ? 'Projects' : 'Archive'}`,
+                          icon: <Glyph folder />,
+                          disabled: !canAct,
+                          onSelect: () =>
+                            moveFiles(
+                              contextTargets,
+                              context.folder === 'Archive' ? 'Projects' : 'Archive',
+                            ),
+                        },
+                        {
+                          id: 'delete',
+                          label:
+                            contextTargets.length > 1
+                              ? `Move ${contextTargets.length} files to Trash`
+                              : 'Move to Trash',
+                          icon: <ViewGlyph view="trash" />,
+                          disabled: !canAct,
+                          onSelect: () => deleteFiles(contextTargets),
+                        },
+                      ]),
                   {
                     id: 'download',
                     label: 'Download sample',
@@ -512,14 +666,16 @@ function FinderDemo({
           type="button"
           onClick={() => {
             menu.close();
-            setFiles(initialFiles);
+            dispatchFiles({ type: 'reset' });
+            clearSelection();
+            setInfoOpen(false);
             setFolder('Projects');
             setDetail(view === 'columns' || view === 'gallery' ? 'brief' : null);
-            setDragging(null);
+            setDragging([]);
             setOver(null);
             setQuery('');
             setHistory({ folders: ['Projects'], index: 0 });
-            setMessage('6 items · Fictional workspace');
+            setMessage('All changes stay in this demo');
             setRevision((value) => value + 1);
           }}
         >
@@ -629,7 +785,7 @@ export function FileTable() {
       },
       description: {
         component:
-          'Small fictional Finder-style apps. Shared table, column browser, density and menus; native HTML drag/drop and in-memory moves are owned by this example. The Move menu command is the keyboard alternative. No filesystem access.',
+          'Fictional Finder-style workspace with shared selection across four views, bulk moves, Trash, restore and undo. File operations and native HTML drag/drop are owned by this example. The Move menu command is the keyboard alternative. No filesystem access.',
       },
     },
   },

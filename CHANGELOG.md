@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add shared Finder selection across four views, bulk move/delete, a Trash view with restore and undo, folder counts and a responsive action bar.
+
 - Add a select-all header checkbox with mixed state and keyboard support; selecting or clearing visible rows preserves other-page selections.
 
 - Clarify Storybook setup versus live controls, state ownership, defaults and resize completion callbacks.
