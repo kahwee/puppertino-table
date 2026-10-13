@@ -85,6 +85,37 @@ export async function checkFinderStories(page: Page, base: string, evidence: str
   await page.getByRole('heading', { name: 'Archive', exact: true }).waitFor();
   await page.getByRole('button', { name: 'Reset demo' }).click();
   await page.getByRole('button', { name: 'Search', exact: true }).click();
+  for (const theme of ['dark', 'light']) {
+    await setStorybookTheme(page, theme);
+    const search = page.getByRole('searchbox', { name: 'Search files' });
+    await search.focus();
+    const appearance = await search.evaluate((input) => {
+      const field = input.parentElement as HTMLElement;
+      const bounds = input.getBoundingClientRect();
+      const fieldBounds = field.getBoundingClientRect();
+      return {
+        extraIcons: field.querySelectorAll('svg').length,
+        nativeIcon: getComputedStyle(field, '::before').maskImage !== 'none',
+        outerOutline: getComputedStyle(field).outlineStyle,
+        outerShadow: getComputedStyle(field).boxShadow,
+        widthDifference: Math.abs(bounds.width - fieldBounds.width),
+        height: bounds.height,
+      };
+    });
+    assert.deepEqual(
+      appearance,
+      {
+        extraIcons: 0,
+        nativeIcon: true,
+        outerOutline: 'none',
+        outerShadow: 'none',
+        widthDifference: 0,
+        height: 36,
+      },
+      `${theme}: Puppertino owns the single search glyph and input capsule`,
+    );
+  }
+
   await page.getByRole('searchbox', { name: 'Search files' }).fill('budget');
   assert.equal(await page.getByRole('row').count(), 2);
   await page.getByRole('row').filter({ hasText: 'Budget.xlsx' }).waitFor();

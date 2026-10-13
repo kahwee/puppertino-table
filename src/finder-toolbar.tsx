@@ -125,6 +125,7 @@ export function FinderViewSwitcher({
 export interface FinderSearchProps {
   value: string;
   onValueChange(value: string): void;
+  /** Collapsed toolbar icon. The expanded field uses Puppertino’s native search glyph. */
   icon: ReactNode;
   ariaLabel?: string;
   placeholder?: string;
@@ -144,8 +145,7 @@ export function FinderSearch({
   const input = useRef<HTMLInputElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   return expanded || value || !collapsible ? (
-    <label className="p-search pt-finder-search">
-      {icon}
+    <label className="p-search p-search-xlarge pt-finder-search">
       <input
         ref={input}
         type="search"

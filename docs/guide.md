@@ -457,7 +457,7 @@ import 'puppertino-table/style.css';
 | Window | `FinderWindow`, `FinderBody`, `FinderContent` | Native attributes, children and refs. Body accepts the shared density props. |
 | Toolbar | `FinderToolbar`, `FinderToolbarGroup`, `FinderToolbarButton`, `FinderTitle` | Compose children in your desired order. Title supports h1–h3. |
 | Window controls | `FinderWindowControls` | Optional close/minimize/zoom callbacks; decorative without handlers. Pass custom controls through `FinderToolbar.windowControls`. |
-| Navigation | `FinderHistory`, `FinderViewSwitcher`, `FinderSearch` | History callbacks are optional; missing ones disable their buttons. View and search use `value`/`onValueChange`. Supply icons as React nodes. |
+| Navigation | `FinderHistory`, `FinderViewSwitcher`, `FinderSearch` | History callbacks are optional; missing ones disable their buttons. View and search use `value`/`onValueChange`. Supply icons as React nodes. `FinderSearch.icon` belongs to its collapsed button; the expanded field uses Puppertino’s search glyph, capsule and focus styling. |
 | Commands | `FinderActions`, `ContextMenu` | Both accept the same typed `actions` entries. Your callbacks perform operations; the components handle menu interaction. |
 | Sidebar | `FinderSidebar`, `FinderSidebarGroup`, `FinderSidebarItem` | Group labels, item icons, controlled `selected` and native button handlers. |
 | Icons | `FinderIconGrid`, `FinderIconItem` | Supply artwork, label children, optional description and controlled `selected`. |

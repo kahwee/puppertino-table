@@ -34,6 +34,7 @@ export declare function FinderViewSwitcher({ value, onValueChange, icons, classN
 export interface FinderSearchProps {
     value: string;
     onValueChange(value: string): void;
+    /** Collapsed toolbar icon. The expanded field uses Puppertino’s native search glyph. */
     icon: ReactNode;
     ariaLabel?: string;
     placeholder?: string;

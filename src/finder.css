@@ -94,43 +94,11 @@
   text-overflow: ellipsis;
 }
 .pt-finder-search {
-  display: flex;
-  align-items: center;
-  gap: 5px;
   width: 150px;
-  height: 36px;
-  padding: 5px 12px;
-  border: 1px solid var(--finder-line);
-  border-radius: 18px;
-  color: var(--p-text-secondary);
-  background: var(--p-window-bg);
-}
-.pt-finder-search svg {
-  width: 14px;
-  height: 14px;
   flex-shrink: 0;
 }
-.pt-finder-search input {
-  min-width: 0;
+.pt-finder-search > input {
   width: 100%;
-  padding: 0;
-  margin: 0;
-  color: inherit;
-  font: inherit;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-}
-.pt-finder-search input::placeholder {
-  color: var(--p-text-secondary);
-  opacity: 1;
-}
-.pt-finder-search:focus-within {
-  outline: 2px solid var(--p-control-accent);
-  outline-offset: 1px;
-}
-.pt-finder-search input:focus {
-  outline: 0;
 }
 .pt-finder-workspace {
   height: 390px;

@@ -32,15 +32,15 @@ export function FinderSearch({ value, onValueChange, icon, ariaLabel = 'Search f
     const [expanded, setExpanded] = useState(false);
     const input = useRef(null);
     const trigger = useRef(null);
-    return expanded || value || !collapsible ? (_jsxs("label", { className: "p-search pt-finder-search", children: [icon, _jsx("input", { ref: input, type: "search", "aria-label": ariaLabel, placeholder: placeholder, disabled: disabled, value: value, onChange: (event) => onValueChange(event.target.value), onKeyDown: (event) => {
-                    if (event.key === 'Escape') {
-                        event.stopPropagation();
-                        onValueChange('');
-                        setExpanded(false);
-                        if (collapsible)
-                            requestAnimationFrame(() => trigger.current?.focus());
-                    }
-                } })] })) : (_jsx("button", { ref: trigger, type: "button", className: "p-toolbar-circle", "aria-label": "Search", title: "Search", disabled: disabled, onClick: () => {
+    return expanded || value || !collapsible ? (_jsx("label", { className: "p-search p-search-xlarge pt-finder-search", children: _jsx("input", { ref: input, type: "search", "aria-label": ariaLabel, placeholder: placeholder, disabled: disabled, value: value, onChange: (event) => onValueChange(event.target.value), onKeyDown: (event) => {
+                if (event.key === 'Escape') {
+                    event.stopPropagation();
+                    onValueChange('');
+                    setExpanded(false);
+                    if (collapsible)
+                        requestAnimationFrame(() => trigger.current?.focus());
+                }
+            } }) })) : (_jsx("button", { ref: trigger, type: "button", className: "p-toolbar-circle", "aria-label": "Search", title: "Search", disabled: disabled, onClick: () => {
             setExpanded(true);
             requestAnimationFrame(() => input.current?.focus());
         }, children: icon }));
