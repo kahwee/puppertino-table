@@ -140,14 +140,39 @@
   }
 }
 
-.pt-table .pt-selection {
+.pt-table :is(th, td).pt-selection {
   padding: 0;
   text-align: center;
   overflow: visible;
 }
-.pt-table .pt-selection input {
-  margin: 0;
+.pt-table .pt-selection-control {
+  display: inline-flex;
+  position: relative;
   vertical-align: middle;
+}
+.pt-table .pt-selection-control > input {
+  inset: 0;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  pointer-events: auto;
+  z-index: 1;
+}
+.pt-table .pt-selection-control > input:indeterminate + span {
+  background: var(--p-control-accent);
+}
+.pt-table .pt-selection-control > input:indeterminate + span::before {
+  opacity: 0;
+}
+.pt-table .pt-selection-control > input:indeterminate + span::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 7px;
+  width: 8px;
+  height: 2px;
+  border-radius: 1px;
+  background: #fff;
 }
 
 /* Scoped density. Native leaves the existing Puppertino table geometry untouched. */

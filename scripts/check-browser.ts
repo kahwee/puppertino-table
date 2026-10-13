@@ -294,6 +294,21 @@ try {
       await page.locator('#storybook-root').getByRole('table').count(),
       story === 'independent-tables' ? 2 : 1,
     );
+    if (story === 'default' || story === 'dark') {
+      const selection = await page.locator('table.pt-table').evaluate((table) => {
+        const header = table.querySelector('thead .pt-selection-control > span');
+        const row = table.querySelector('tbody .pt-selection-control > span');
+        return {
+          headerX: header?.getBoundingClientRect().x ?? -1,
+          rowX: row?.getBoundingClientRect().x ?? -2,
+          width: row?.getBoundingClientRect().width,
+          puppertino: row?.parentElement?.classList.contains('p-checkbox'),
+        };
+      });
+      assert.equal(selection.headerX, selection.rowX, 'selection controls align');
+      assert.equal(selection.width, 16);
+      assert.equal(selection.puppertino, true);
+    }
     if (story === 'external-atoms') {
       await page.waitForFunction(
         () => document.querySelector('[aria-label="Atom name width"]')?.textContent === '200',

@@ -13,20 +13,23 @@ export function RowSelectionCheckbox<T extends RowData>({
   return (
     <Subscribe source={row.table.atoms.rowSelection} selector={(selection) => !!selection[row.id]}>
       {(selected) => (
-        <input
-          type="checkbox"
-          aria-label={`Select ${label ?? row.id}`}
-          checked={selected}
-          disabled={disabled || !row.getCanSelect()}
-          onClick={(event) => {
-            event.stopPropagation();
-            select(row.id, {
-              shift: event.shiftKey,
-              toggle: !event.shiftKey || event.metaKey || event.ctrlKey,
-            });
-          }}
-          onChange={() => {}}
-        />
+        <label className="p-checkbox pt-selection-control">
+          <input
+            type="checkbox"
+            aria-label={`Select ${label ?? row.id}`}
+            checked={selected}
+            disabled={disabled || !row.getCanSelect()}
+            onClick={(event) => {
+              event.stopPropagation();
+              select(row.id, {
+                shift: event.shiftKey,
+                toggle: !event.shiftKey || event.metaKey || event.ctrlKey,
+              });
+            }}
+            onChange={() => {}}
+          />
+          <span aria-hidden="true" />
+        </label>
       )}
     </Subscribe>
   );

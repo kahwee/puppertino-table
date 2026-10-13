@@ -655,17 +655,23 @@ function CheckboxPrimitiveExample() {
   });
   return (
     <table className="p-table pt-table" aria-label="Custom checkbox layout">
+      <colgroup>
+        <col />
+        <col style={{ width: 36 }} />
+      </colgroup>
       <thead>
         <tr>
           <th scope="col">Person</th>
-          <th scope="col">Select</th>
+          <th className="pt-selection" scope="col">
+            <span className="pt-sr-only">Select</span>
+          </th>
         </tr>
       </thead>
       <tbody>
         {table.getRowModel().rows.map((row) => (
           <tr key={row.id}>
             <td>{row.original.name}</td>
-            <td>
+            <td className="pt-selection">
               <RowSelectionCheckbox row={row} label={row.original.name} />
             </td>
           </tr>

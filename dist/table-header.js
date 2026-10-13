@@ -19,15 +19,15 @@ export function TableHeader({ table, selectable: selectionOverride, disabled: di
                             const selected = rows.filter((row) => selection[row.id]).length;
                             const checked = rows.length > 0 && selected === rows.length;
                             const mixed = selected > 0 && !checked;
-                            return (_jsx("input", { type: "checkbox", "aria-label": "Select all visible rows", "aria-checked": mixed ? 'mixed' : checked, checked: checked, disabled: disabled || rows.length === 0, ref: (input) => {
-                                    if (input)
-                                        input.indeterminate = mixed;
-                                }, onClick: (event) => event.stopPropagation(), onChange: (event) => {
-                                    if (!disabled && rows.length > 0) {
-                                        selectionAnchorFor(table.atoms.rowSelection).current = null;
-                                        table.toggleAllPageRowsSelected(event.target.checked);
-                                    }
-                                } }));
+                            return (_jsxs("label", { className: "p-checkbox pt-selection-control", children: [_jsx("input", { type: "checkbox", "aria-label": "Select all visible rows", "aria-checked": mixed ? 'mixed' : checked, checked: checked, disabled: disabled || rows.length === 0, ref: (input) => {
+                                            if (input)
+                                                input.indeterminate = mixed;
+                                        }, onClick: (event) => event.stopPropagation(), onChange: (event) => {
+                                            if (!disabled && rows.length > 0) {
+                                                selectionAnchorFor(table.atoms.rowSelection).current = null;
+                                                table.toggleAllPageRowsSelected(event.target.checked);
+                                            }
+                                        } }), _jsx("span", { "aria-hidden": "true" })] }));
                         } }) })), group.headers.map((header) => {
                     if (header.isPlaceholder)
                         return _jsx("td", { colSpan: header.colSpan }, header.id);

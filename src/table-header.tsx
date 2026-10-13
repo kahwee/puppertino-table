@@ -34,23 +34,26 @@ export function TableHeader<T extends RowData>({
                   const checked = rows.length > 0 && selected === rows.length;
                   const mixed = selected > 0 && !checked;
                   return (
-                    <input
-                      type="checkbox"
-                      aria-label="Select all visible rows"
-                      aria-checked={mixed ? 'mixed' : checked}
-                      checked={checked}
-                      disabled={disabled || rows.length === 0}
-                      ref={(input) => {
-                        if (input) input.indeterminate = mixed;
-                      }}
-                      onClick={(event) => event.stopPropagation()}
-                      onChange={(event) => {
-                        if (!disabled && rows.length > 0) {
-                          selectionAnchorFor(table.atoms.rowSelection).current = null;
-                          table.toggleAllPageRowsSelected(event.target.checked);
-                        }
-                      }}
-                    />
+                    <label className="p-checkbox pt-selection-control">
+                      <input
+                        type="checkbox"
+                        aria-label="Select all visible rows"
+                        aria-checked={mixed ? 'mixed' : checked}
+                        checked={checked}
+                        disabled={disabled || rows.length === 0}
+                        ref={(input) => {
+                          if (input) input.indeterminate = mixed;
+                        }}
+                        onClick={(event) => event.stopPropagation()}
+                        onChange={(event) => {
+                          if (!disabled && rows.length > 0) {
+                            selectionAnchorFor(table.atoms.rowSelection).current = null;
+                            table.toggleAllPageRowsSelected(event.target.checked);
+                          }
+                        }}
+                      />
+                      <span aria-hidden="true" />
+                    </label>
                   );
                 }}
               </Subscribe>

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Center the shared table selection column, use Puppertino's checkbox appearance in headers and rows, preserve a direct input hit area, and tighten the checkbox composition story.
 - Add app-owned ready/loading/error table states, accessible busy/status/error semantics, retry content and refreshes that preserve existing rows.
 - Export reusable roving item focus with list/grid/panel navigation, Shift selection integration, Home/End and filename typeahead. Keep activation and application commands caller-owned.
 - Add Finder keyboard view/history shortcuts, Quick Look with native modal focus, double-click previews, Return rename with validation, column-pane navigation and persistent list sorting/selection across view changes. All file operations remain in memory.
