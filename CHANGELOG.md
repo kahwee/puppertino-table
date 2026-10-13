@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 0.12.2 — 2026-10-13
+
+- Upgrade TanStack React Table and its consumer peer to the latest stable 9.3.1. Update the full Storybook stack to 10.6.2 and refresh the lockfile.
 - Lead Code panels with shorter typed integrations and expandable supporting files; compile both parts against the installed package.
 - Add empty, long-name, large and read-only data presets to existing Table and document-workspace playgrounds. Improve workspace selection counts, empty-state recovery, action feedback and command focus recovery.
 

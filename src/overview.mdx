@@ -36,7 +36,7 @@ For typed rows, inferred cells and consumer Storybook files, start with the <a h
 
 ## Install
 
-<Source language="bash" code={`pnpm add puppertino-table@${packageJson.version} @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0`} />
+<Source language="bash" code={`pnpm add puppertino-table@${packageJson.version} @tanstack/react-table@${packageJson.peerDependencies['@tanstack/react-table']} @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0`} />
 
 <Source language="tsx" code={`import { TableView, createPuppertinoColumnHelper } from 'puppertino-table';
 import '@codedgar/puppertino/colors';
