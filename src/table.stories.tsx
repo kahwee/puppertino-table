@@ -792,6 +792,8 @@ export const DateColumns: Story = {
     await expect(canvas.getByText('Oct 10, 2026 at 4:40 PM')).toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: 'Sort by Date Added' }));
     await expect(canvas.getAllByRole('row')[1]).toHaveTextContent('November plan');
+    await expect(canvas.getAllByRole('row').at(-2)).toHaveTextContent('Undated draft');
+    await expect(canvas.getAllByRole('row').at(-1)).toHaveTextContent('Invalid imported timestamp');
     await userEvent.click(canvas.getByRole('button', { name: 'Sort by Date Added' }));
     await expect(canvas.getAllByRole('row')[1]).toHaveTextContent('September notes');
     await expect(canvas.getAllByRole('row')[2]).toHaveTextContent('Morning update');

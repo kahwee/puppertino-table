@@ -9,7 +9,7 @@ interface DatedItem {
 }
 // Validate timestamps at the app boundary; never put Invalid Date into a cell.
 export function parseAddedDate(value: string | null): Date | null {
-  if (!value) return null;
+  if (!value || !/(?:Z|[+-]\d{2}:\d{2})$/i.test(value)) return null;
   const date = new Date(value);
   return Number.isFinite(date.getTime()) ? date : null;
 }

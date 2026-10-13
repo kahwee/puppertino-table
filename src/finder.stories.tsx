@@ -651,12 +651,14 @@ function FinderDemo({
                   'data-file-id': row.id,
                   ...menu.getTriggerProps(row.id),
                   ...dragProps(row.original),
-                  onClick: (event) =>
+                  onClick: (event) => {
+                    event.currentTarget.focus();
                     selectFile(
                       row.id,
                       event,
                       row.table.getRowModel().rows.map((item) => item.id),
-                    ),
+                    );
+                  },
                   onDoubleClick: () => previewFile(row.id),
                   onKeyDown: (event) =>
                     itemKeyDown(
@@ -701,7 +703,10 @@ function FinderDemo({
                           data-file-id={file.id}
                           onKeyDown={(event) => itemKeyDown(file.id, event)}
                           onDoubleClick={() => previewFile(file.id)}
-                          onClick={(event) => selectFile(file.id, event)}
+                          onClick={(event) => {
+                            event.currentTarget.focus();
+                            selectFile(file.id, event);
+                          }}
                         >
                           {file.name}
                         </ColumnBrowserItem>
@@ -736,7 +741,10 @@ function FinderDemo({
                     data-file-id={file.id}
                     onKeyDown={(event) => itemKeyDown(file.id, event)}
                     onDoubleClick={() => previewFile(file.id)}
-                    onClick={(event) => selectFile(file.id, event)}
+                    onClick={(event) => {
+                      event.currentTarget.focus();
+                      selectFile(file.id, event);
+                    }}
                   >
                     {file.name}
                   </FinderIconItem>
@@ -760,7 +768,10 @@ function FinderDemo({
                       data-file-id={file.id}
                       onKeyDown={(event) => itemKeyDown(file.id, event)}
                       onDoubleClick={() => previewFile(file.id)}
-                      onClick={(event) => selectFile(file.id, event)}
+                      onClick={(event) => {
+                        event.currentTarget.focus();
+                        selectFile(file.id, event);
+                      }}
                     >
                       <FileArtwork file={file} />
                     </FinderGalleryItem>
@@ -890,7 +901,9 @@ function FinderDemo({
           event.preventDefault();
           setQuickLookOpen(false);
         }}
-        onClose={() => setQuickLookOpen(false)}
+        onClose={(event) => {
+          if (!event.currentTarget.open) setQuickLookOpen(false);
+        }}
         onKeyDown={(event) => {
           if (event.key === 'Escape') {
             event.preventDefault();
@@ -955,7 +968,9 @@ function FinderDemo({
           event.preventDefault();
           setRenamingId(null);
         }}
-        onClose={() => setRenamingId(null)}
+        onClose={(event) => {
+          if (!event.currentTarget.open) setRenamingId(null);
+        }}
       >
         <form
           onSubmit={(event) => {
@@ -1350,6 +1365,11 @@ export const KeyboardWorkflow: Story = {
     await userEvent.keyboard('{Control>}3{/Control}');
     await expect(canvas.getByRole('region', { name: 'Workspace columns' })).toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: 'Budget 2027.xlsx' })).toHaveFocus();
+    await userEvent.keyboard('{ArrowLeft}');
+    const workspace = within(canvas.getByRole('region', { name: 'Workspace' }));
+    await expect(workspace.getByRole('button', { name: 'Projects' })).toHaveFocus();
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(canvas.getByRole('button', { name: 'Budget 2027.xlsx' })).toHaveFocus();
     await userEvent.keyboard('{Control>}4{/Control}');
     await expect(canvas.getByRole('region', { name: 'Project file gallery' })).toBeInTheDocument();
     await userEvent.keyboard('{ArrowRight}');
@@ -1359,3 +1379,27 @@ export const KeyboardWorkflow: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Reset demo' }));
   },
 };
+
+export const QuickLook: Story = {
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          'Open Quick Look on a selected document. The native modal contains focus, restores the invoking item on close and supports Left/Right previews. Escape or the close control returns to the workspace.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('row', { name: /Project brief.pdf/ }));
+    await userEvent.keyboard(' ');
+    const preview = within(canvas.getByRole('dialog', { name: 'Quick Look' }));
+    await expect(preview.getByRole('button', { name: 'Close Quick Look' })).toHaveFocus();
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(preview.getByRole('heading', { name: 'Research notes.txt' })).toBeInTheDocument();
+    await userEvent.keyboard('{ArrowLeft}');
+    await expect(preview.getByRole('heading', { name: 'Project brief.pdf' })).toBeInTheDocument();
+  },
+};
+export const DarkQuickLook: Story = { ...QuickLook, globals: { theme: 'dark' } };

@@ -6,6 +6,15 @@ import { parseAddedDate } from '../demo/date-table-example.js';
 test('invalid and missing timestamps normalize at the application boundary', () => {
   assert.equal(parseAddedDate(null), null);
   assert.equal(parseAddedDate('not-a-date'), null);
+  assert.equal(
+    parseAddedDate('2026-10-10T23:40:00'),
+    null,
+    'An API timestamp needs an explicit timezone.',
+  );
+  assert.equal(
+    parseAddedDate('2026-10-10T16:40:00-07:00')?.toISOString(),
+    '2026-10-10T23:40:00.000Z',
+  );
   assert.equal(parseAddedDate('2026-10-10T23:40:00Z')?.toISOString(), '2026-10-10T23:40:00.000Z');
 });
 test('time-zone display handles the repeated daylight-saving hour without changing timestamps', () => {

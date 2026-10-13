@@ -75,7 +75,7 @@ helper.accessor('added', {
 
 This renders `Oct 10, 2026 at 4:40 PM` for the corresponding timestamp. Applications choose their locale/time zone; keep that choice consistent between server rendering and hydration. Validate missing or invalid timestamps in the app before creating `Date` values. Automatic sorting also detects valid Date values when `sortFn` is omitted. The table registers TanStack's standard text, natural-text, basic and datetime sorting functions; custom `sortFn` functions remain supported.
 
-Missing timestamps can normalize to `null` in the app. An accessor returning `undefined` for those values, with `sortUndefined: 'last'`, keeps them last in both sort directions. Give accessor-function columns an explicit `id`. Render an em dash with accessible “No date added” text instead of calling `toISOString()` on an absent or invalid date. The Date Columns story includes invalid imports, timezone choices and the repeated daylight-saving hour; ISO timestamps in `<time dateTime>` preserve the actual instant.
+Missing timestamps can normalize to `null` in the app. API timestamps should include `Z` or an explicit UTC offset; reject timezone-less strings rather than silently interpreting them in the browser's local zone. An accessor returning `undefined` for those values, with `sortUndefined: 'last'`, keeps them last in both sort directions. Give accessor-function columns an explicit `id`. Render an em dash with accessible “No date added” text instead of calling `toISOString()` on an absent or invalid date. The Date Columns story includes invalid imports, timezone choices and the repeated daylight-saving hour; ISO timestamps in `<time dateTime>` preserve the actual instant.
 
 ### Loading and request errors
 
