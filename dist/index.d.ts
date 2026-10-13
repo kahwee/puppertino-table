@@ -1,6 +1,6 @@
 export { ColumnBrowser, ColumnBrowserItem, type ColumnBrowserItemButtonProps, type ColumnBrowserItemLinkProps, type ColumnBrowserItemProps, type ColumnBrowserPanel, type ColumnBrowserProps, type ColumnBrowserWidths, } from './column-browser.js';
 export { type ColumnBrowserLayoutOptions, fitColumnBrowser } from './column-browser-layout.js';
-export { ContextMenu, type ContextMenuAction, type ContextMenuItem, type ContextMenuLink, type ContextMenuPosition, type ContextMenuProps, type ContextMenuSeparator, type DelegatedContextMenuOptions, useContextMenu, } from './context-menu.js';
+export { ContextMenu, type ContextMenuAction, type ContextMenuItem, type ContextMenuLink, type ContextMenuPosition, type ContextMenuProps, type ContextMenuSeparator, type ContextMenuState, type DelegatedContextMenuOptions, useContextMenu, } from './context-menu.js';
 export { type DensityMetrics, DensityScope, type DensityScopeProps, type TableDensity, } from './density.js';
 export { createPuppertinoColumnHelper, type PuppertinoColumnDef, type PuppertinoTableInstance, puppertinoTableFeatures, } from './model.js';
 export { ColumnResizeHandle } from './resize-handle.js';

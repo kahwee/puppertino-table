@@ -1,7 +1,6 @@
 import type { RowData } from '@tanstack/react-table';
 import type { PuppertinoTableInstance } from './model.js';
 import type { ColumnResizeOptions } from './resize-types.js';
-export type { ColumnResizeOptions } from './resize-types.js';
 export declare function useColumnResize<T extends RowData>(table: PuppertinoTableInstance<T>, options?: ColumnResizeOptions): {
     cancel: () => void;
     handle: (id: string) => {

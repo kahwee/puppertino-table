@@ -21,7 +21,9 @@ export type PuppertinoRowProps = PuppertinoDataAttributes &
 export type PuppertinoCellProps = PuppertinoDataAttributes &
   Omit<ComponentPropsWithoutRef<'td'>, 'children' | 'dangerouslySetInnerHTML'>;
 export interface PuppertinoBodyOptions<T extends RowData> {
+  /** Render the selection column. Match the hook selection setting in custom layouts. */
   selectable?: boolean;
+  /** Disable body selection controls. */
   disabled?: boolean;
   getRowLabel?: (row: T) => string;
   emptyContent?: ReactNode;
@@ -41,11 +43,15 @@ export interface PuppertinoBodyOptions<T extends RowData> {
 export interface PuppertinoTableProps<T extends RowData>
   extends PuppertinoTableOptions<T>,
     PuppertinoBodyOptions<T> {
+  /** Show pointer and keyboard resize handles. Default: true. */
   resizable?: boolean;
+  /** Cancel an unfinished drag when this media query matches. */
   cancelMediaQuery?: string;
+  /** Accessible name for the table and its horizontal scroll region. */
   ariaLabel: string;
   caption?: ReactNode;
   className?: string;
+  /** Inherits the enclosing DensityScope when omitted. */
   density?: TableDensity;
   densityMetrics?: DensityMetrics;
 }

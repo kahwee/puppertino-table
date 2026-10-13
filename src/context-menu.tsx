@@ -15,6 +15,8 @@ export interface ContextMenuPosition {
   y: number;
 }
 interface MenuItemPresentation {
+  /** Commands and links have no separator discriminator. */
+  type?: never;
   id: string;
   label: string;
   disabled?: boolean;
@@ -25,6 +27,9 @@ interface MenuItemPresentation {
 export interface ContextMenuAction extends MenuItemPresentation {
   onSelect(): void;
   href?: never;
+  target?: never;
+  rel?: never;
+  download?: never;
 }
 export interface ContextMenuLink extends MenuItemPresentation {
   href: string;
@@ -36,6 +41,14 @@ export interface ContextMenuLink extends MenuItemPresentation {
 export interface ContextMenuSeparator {
   id: string;
   type: 'separator';
+  onSelect?: never;
+  href?: never;
+  target?: never;
+  rel?: never;
+  download?: never;
+  disabled?: never;
+  icon?: never;
+  shortcut?: never;
 }
 export type ContextMenuItem = ContextMenuAction | ContextMenuLink | ContextMenuSeparator;
 const enabledItems = '[role="menuitem"]:not(:disabled):not([aria-disabled="true"])';
@@ -50,12 +63,15 @@ export interface DelegatedContextMenuOptions<T> {
   /** Resolve only app-owned items. Return undefined/null to preserve the native menu. */
   resolveContext(target: Element, root: HTMLElement): T | null | undefined;
 }
+/** Open menu context, viewport coordinates and focus-restoration target. */
+export interface ContextMenuState<T> {
+  context: T;
+  position: ContextMenuPosition;
+  returnFocus: HTMLElement;
+}
+
 export function useContextMenu<T>() {
-  const [state, setState] = useState<{
-    context: T;
-    position: ContextMenuPosition;
-    returnFocus: HTMLElement;
-  } | null>(null);
+  const [state, setState] = useState<ContextMenuState<T> | null>(null);
   const close = useCallback(() => setState(null), []);
   const open = useCallback(
     (context: T, event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {

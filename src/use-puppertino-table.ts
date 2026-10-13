@@ -13,8 +13,6 @@ import { validateAtomIdentity, validateAtomOwnership } from './state-ownership.j
 import type { PuppertinoTableOptions } from './table-options.js';
 import { useColumnSizingPersistence } from './use-column-sizing-persistence.js';
 
-export type { PuppertinoTableOptions } from './table-options.js';
-
 /** Shared state wiring for complete tables and custom semantic layouts. */
 export function usePuppertinoTable<T extends RowData>({
   data,

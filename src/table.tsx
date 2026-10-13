@@ -7,16 +7,6 @@ import { TableHeader } from './table-header.js';
 import type { PuppertinoTableProps } from './table-types.js';
 import { usePuppertinoTable } from './use-puppertino-table.js';
 
-export type {
-  PuppertinoBodyContext,
-  PuppertinoCell,
-  PuppertinoCellProps,
-  PuppertinoDataAttributes,
-  PuppertinoRow,
-  PuppertinoRowProps,
-  PuppertinoTableProps,
-} from './table-types.js';
-
 export function PuppertinoTable<T extends RowData>({
   data,
   columns,

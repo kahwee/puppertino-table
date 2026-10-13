@@ -75,7 +75,7 @@ import { createAtom } from '@tanstack/react-store';
 import type { ColumnSizingState, SortingState, RowSelectionState } from '@tanstack/react-table';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { PuppertinoBodyContext, PuppertinoRowProps, ColumnResizeHandleProps, TableHeaderProps, TableBodyProps, RowSelectionCheckboxProps, PuppertinoTableOptions, PuppertinoTableAtoms } from 'puppertino-table';
-import { type DelegatedContextMenuOptions, type ContextMenuItem, type ColumnBrowserItemLinkProps, PuppertinoTable, DensityScope, ColumnBrowser, ColumnBrowserItem, ContextMenu, useContextMenu, usePuppertinoTable, useRowSelectionGestures, applySelectionGesture, fitColumnBrowser, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
+import { type DelegatedContextMenuOptions, type ContextMenuItem, type ContextMenuState, type ColumnBrowserItemLinkProps, PuppertinoTable, DensityScope, ColumnBrowser, ColumnBrowserItem, ContextMenu, useContextMenu, usePuppertinoTable, useRowSelectionGestures, applySelectionGesture, fitColumnBrowser, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
 type Item = { id: string; title: string; price: number };
 const helper = createPuppertinoColumnHelper<Item>();
 const columns = helper.columns([
@@ -90,6 +90,12 @@ const linkProps: ColumnBrowserItemLinkProps = { href: '/resources', target: '_bl
 const nativeLink = renderToStaticMarkup(createElement(ColumnBrowserItem, linkProps, 'Resources'));
 if (!nativeLink.includes('<a ') || !nativeLink.includes('href="/resources"') || nativeLink.includes('aria-pressed')) throw new Error('Native browser link consumer failed');
 const richActions: ContextMenuItem[] = [{ id: 'group', type: 'separator' }, { id: 'docs', label: 'Docs', href: '/docs', shortcut: '⌘D' }, { id: 'action', label: 'Action', onSelect: () => {} }];
+const menuLabels = richActions.filter(item => 'label' in item).map(item => item.label.toUpperCase());
+if (menuLabels.join(',') !== 'DOCS,ACTION') throw new Error('Menu label narrowing failed');
+function menuLabel(item: ContextMenuItem): string {
+  return 'label' in item ? item.label.toUpperCase() : '';
+}
+if (menuLabel(richActions[0]) !== '') throw new Error('Separator narrowing failed');
 const richMenu = renderToStaticMarkup(createElement(ContextMenu, { position: { x: 8, y: 8 }, actions: richActions, ariaLabel: 'Rich commands', onClose: () => {} }));
 if (!richMenu.includes('href="/docs"') || !richMenu.includes('pt-menu-separator')) throw new Error('Rich menu consumer failed');
 if (!browserMarkup.includes('Consumer browser') || !browserMarkup.includes('aria-pressed="true"')) throw new Error('Column browser consumer failed');
@@ -108,6 +114,8 @@ function HookConsumer() {
   const table = usePuppertinoTable({ data, columns, getRowId: item => item.id, initialSorting: [{ id: 'price', desc: false }], manualSorting: false, selectable: true });
   const gestures = useRowSelectionGestures(table);
   const menu = useContextMenu<string>();
+  const menuState: ContextMenuState<string> | null = menu.state;
+  void menuState;
   const delegated: DelegatedContextMenuOptions<string> = { resolveContext: (_target, _root) => 'ten' };
   if (typeof menu.getDelegatedTriggerProps(delegated).onKeyDownCapture !== 'function') throw new Error('Delegated menu consumer failed');
   if (menu.state !== null || typeof menu.getTriggerProps('ten').onContextMenu !== 'function') throw new Error('Context menu hook consumer failed');

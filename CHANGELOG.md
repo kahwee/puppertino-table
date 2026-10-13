@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Clarify Storybook setup versus live controls, state ownership, defaults and resize completion callbacks.
+- Export `ContextMenuState` and reject separator/command/link prop combinations that cannot be rendered meaningfully.
+- Remove redundant type re-exports from internal implementation modules; package-root type imports remain available.
+
 ## 0.7.1 — 2026-10-12
 
 - Rebuild the Finder Storybook workspace with an aligned sidebar/titlebar, compact icon toolbar, search, folder history, path/status bars and original file artwork.

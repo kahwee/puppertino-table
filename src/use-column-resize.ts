@@ -4,8 +4,6 @@ import type { PuppertinoTableInstance } from './model.js';
 import type { ColumnResizeOptions } from './resize-types.js';
 import { useResizeGesture } from './use-resize-gesture.js';
 
-export type { ColumnResizeOptions } from './resize-types.js';
-
 export function useColumnResize<T extends RowData>(
   table: PuppertinoTableInstance<T>,
   options: ColumnResizeOptions = {},

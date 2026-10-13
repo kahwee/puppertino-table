@@ -3,8 +3,6 @@ import { type RowData, Subscribe } from '@tanstack/react-table';
 import type { ColumnResizeHandleProps } from './resize-types.js';
 import { useColumnResize } from './use-column-resize.js';
 
-export type { ColumnResizeHandleProps } from './resize-types.js';
-
 export function ColumnResizeHandle<T extends RowData>({
   table,
   header,

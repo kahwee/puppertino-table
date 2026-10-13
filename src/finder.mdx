@@ -15,7 +15,7 @@ Click a sortable header, select checkboxes (Shift-click extends a range), and sw
 
 <Controls of={Finder.FileTable} />
 
-Starting controls restart the workspace when changed. The in-app controls let you compare views and density while keeping your file moves. In a narrow docs canvas, the table scrolls horizontally; open the story in its own canvas to see the full desktop layout.
+**Workspace setup** controls restart the workspace when changed. **Table behavior** controls update selection, resizing, disabled state and sorting without resetting search or moved files. Table controls appear when the starting view is List; the first-preview control applies to Columns. Gallery always renders a preview. The in-app controls let you compare views and density while keeping your file moves. In a narrow docs canvas, the table scrolls horizontally; open the story in its own canvas to see the full desktop layout.
 
 ## Icon and Gallery views
 
@@ -42,7 +42,7 @@ The recording drags the Name divider, double-clicks to reset it, then switches t
   widths={widths} onWidthsChange={setWidths}
   onWidthsCommit={committed => savePreferences(committed)} />;`} />
 
-Table resize options expose the matching `onCommit`. Supplying controlled widths without a change callback makes them read-only. <a href="./?path=/story/puppertino-resource-browser--controlled-panels" target="_top">Try controlled panels</a>.
+Custom table headers expose the matching `resizeOptions.onCommit`; individual resize handles use `options.onCommit`. The complete table saves internal widths with `storageKey` and does not expose a commit callback. Supplying controlled widths without a change callback makes them read-only. <a href="./?path=/story/puppertino-resource-browser--controlled-panels" target="_top">Try controlled panels</a>.
 
 ## Column browser
 

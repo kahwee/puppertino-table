@@ -127,7 +127,7 @@ import { ColumnBrowser, ColumnBrowserItem } from 'puppertino-table';
 ]} />
 ```
 
-Panels require unique stable `id`, an accessible `label` for their region, and caller-rendered `content`. Ancestors default to 224px, bounded to 120–640px. `minimumCurrentWidth` defaults to 288px. Give the component or its parent a bounded height; it fills that height. Standalone browser items use compact fallback metrics; omitted density inherits an enclosing scope. Optional `widths` and `onWidthsChange` provide controlled ancestor sizing. Widths without a callback are read-only and omit resize handles. `resizable={false}` or `resizeDisabled` cancels active gestures; `cancelMediaQuery` can cancel when a responsive layout removes the controls. Panel removal and changed bounds also cancel. Uncontrolled widths remain local unless you supply a `storageKey` for automatic persistence. Controlled widths keep restoration and saving app-owned. Change callbacks include previews and cancellations. The `onWidthsCommit` callback supplies a copied snapshot after completed pointer, keyboard and reset operations only; use it to save app-owned preferences. Table resize options offer the matching `onCommit` callback. Storage failure does not suppress either callback.
+Panels require unique stable `id`, an accessible `label` for their region, and caller-rendered `content`. Ancestors default to 224px, bounded to 120–640px. `minimumCurrentWidth` defaults to 288px. Give the component or its parent a bounded height; it fills that height. Standalone browser items use compact fallback metrics; omitted density inherits an enclosing scope. Optional `widths` and `onWidthsChange` provide controlled ancestor sizing. Widths without a callback are read-only and omit resize handles. `resizable={false}` or `resizeDisabled` cancels active gestures; `cancelMediaQuery` can cancel when a responsive layout removes the controls. Panel removal and changed bounds also cancel. Uncontrolled widths remain local unless you supply a `storageKey` for automatic persistence. Controlled widths keep restoration and saving app-owned. Change callbacks include previews and cancellations. The `onWidthsCommit` callback supplies a copied snapshot after completed pointer, keyboard and reset operations only; use it to save app-owned preferences. Custom table headers offer `resizeOptions.onCommit`, and individual handles offer `options.onCommit`. `PuppertinoTable` saves internal widths through `storageKey`; it does not expose a commit callback. Storage failure does not suppress either callback.
 
 `ColumnBrowserItem` defaults to a native button with `icon`, `trailing`, `selected` and `pathSelected` slots/states. It shares density metrics, ellipsis, hover and keyboard-focus styling. Selection and path indication are separate. Standard button props provide actions, labels, disabled state and context-menu triggers. The browser does not fetch records, enter folders, select items or open documents. Compose your navigation, `useRowSelectionGestures`, and custom content around it. Its geometry is measured only after hydration; initial server markup uses deterministic panel widths.
 
@@ -195,7 +195,7 @@ Supplying `href` renders a native anchor: `target`, `rel`, `download`, modifier-
   ]} />
 ```
 
-`ContextMenuItem` includes existing `ContextMenuAction` commands, `ContextMenuLink` links and `ContextMenuSeparator` entries. Arrows/Home/End skip separators and disabled entries. Links activate with Enter or Space and retain native modifier-click/target/download behavior. Icons and shortcut hints are decorative; shortcut bindings stay caller-owned. Existing command-only menus continue to work.
+`ContextMenuItem` is a union of `ContextMenuAction` commands, `ContextMenuLink` links and `ContextMenuSeparator` entries. Commands require `onSelect`; links require `href` and may also observe activation with `onSelect`. Separators accept only `id` and `type`. Link attributes such as `target` and `download` belong to links. `ContextMenuState<T>` describes the open context, position and return-focus target; `menu.state` is `null` when closed. Arrows/Home/End skip separators and disabled entries. Links activate with Enter or Space and retain native modifier-click/target/download behavior. Icons and shortcut hints are decorative; shortcut bindings stay caller-owned.
 
 ### Stable item styling hooks
 
@@ -229,7 +229,7 @@ The public presentation classes are `.pt-browser-item`, `.pt-item-label`, `.pt-i
 
 ### Anchored item selection in custom layouts
 
-`useRowSelectionGestures(table, options)` adds opt-in desktop item selection to a custom list, card grid or table. A normal click replaces the selection, Command/Ctrl-click toggles one item, and Shift-click extends or shrinks a range from its original anchor. Shift with a toggle modifier adds a range. This policy is separate from the existing checkbox range behavior.
+`useRowSelectionGestures(table, options)` adds opt-in desktop item selection to a custom list, card grid or table. A normal click replaces the selection, Command/Ctrl-click toggles one item, and Shift-click extends or shrinks a range from its original anchor. Shift with a toggle modifier adds a range. This policy is separate from checkbox range behavior.
 
 ```tsx
 import { useRef } from 'react';
@@ -344,9 +344,25 @@ Pass matching `selectable` values to the hook, header and body; include a 36-pix
 
 For a fully custom header or body, use `ColumnResizeHandle` and `RowSelectionCheckbox` individually. The checkbox handles Shift ranges, keyboard toggling and event isolation from row clicks. Give it `row`, an optional row-description `label`, and `disabled` when appropriate. Keep your `<thead>`/`<tbody>` and `<th>`/`<td>` markup semantic and supply accessible sort state.
 
+### Defaults and ownership at a glance
+
+| Option | Default or omitted behavior |
+| --- | --- |
+| `manualSorting` | `true`: preserve supplied row order; `false` sorts the supplied rows locally |
+| `selectable` | `false`: no selection column or selection gestures |
+| `disabled` | `false`; the complete table disables sorting, selection and resizing UI |
+| `resizable` | `true`; controlled `columnSizing` without `onColumnSizingChange` is read-only. Atom-owned widths resize without a callback |
+| `density` | Inherit the nearest scope; standalone tables use native spacing |
+| `sorting` / `rowSelection` | Internal state; callbacks may observe changes |
+| `columnSizing` | Internal widths; a sizing callback is used only with a controlled value |
+| `atoms` | Optional app-owned state slices; cannot share a slice with its value/callback |
+| `storageKey` | No persistence when omitted; automatic persistence applies to internal widths |
+
+Keep each slice's owner stable while mounted. Initial sorting and selection seed internal state only; remount with a new React key to reinitialize. Table change callbacks accept values or functional updaters. Browser width callbacks receive snapshots, and completion callbacks exclude previews and cancellation.
+
 ### Public type contracts
 
-All existing root imports remain supported. Rendering modules consume dedicated type contracts: table state options, body/customization types and resize options are defined separately from component implementations. Import these contracts with `import type`:
+Import public contracts from the package root with `import type`. Component implementation paths are internal and are not package exports:
 
 ```tsx
 import type {
@@ -358,13 +374,13 @@ import type {
 } from 'puppertino-table';
 ```
 
-The controller's gesture engine, browser effects and persistence are internal modules. `useColumnResize` manages React lifecycle and adapts events; it continues to provide the existing `handle(columnId)` API.
+The controller's gesture engine, browser effects and persistence are internal modules. `useColumnResize` manages React lifecycle and adapts events; it returns `handle(columnId)` for wiring a custom resize target.
 
 The hook initializes sizing but does not install resize listeners; `TableHeader` installs them through its shared resize handles. `ColumnResizeHandle` infers its accessible label from a string header or column ID; pass `label` for a custom or translated name. Its props type is exported as `ColumnResizeHandleProps`. `ColumnResizeHandle` and `useColumnResize` automatically share a controller keyed by the table's sizing store, with one pair of global keydown/blur listeners and one active gesture. The initiating handle's options govern that gesture; pass consistent storage and responsive settings to all handles. Removing the active handle, disabling it or changing its resize settings cancels its preview. Removing other handles leaves the gesture running. Cancellation restores only the dragged column, preserving concurrent changes to other widths. Separate tables remain independent. Pass `options={{ enabled: false }}` to hide a primitive handle when your layout is disabled; the hook's `disabled` controls selection, while primitive UI controls remain yours to disable.
 
 The checkbox and resize primitives subscribe internally to their selection and sizing atoms, so they update even when wrapped in `React.memo` with stable row/header props. This follows the [v9 React Compiler guide](https://tanstack.com/table/latest/docs/framework/react/guide/react-compiler); the regression suite tests this with memoized primitives.
 
-For more specialized state wiring, the existing `puppertinoTableFeatures`, `PuppertinoTableInstance`, sizing helpers and TanStack `useTable` remain available. In custom layouts, use `TableBody` or memoize your custom row body separately from the `columnSizing` subscription to avoid rerendering cells during drags.
+For more specialized state wiring, `puppertinoTableFeatures`, `PuppertinoTableInstance`, sizing helpers and TanStack `useTable` remain available. In custom layouts, use `TableBody` or memoize your custom row body separately from the `columnSizing` subscription to avoid rerendering cells during drags.
 
 ### Server-paginated complete table
 

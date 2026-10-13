@@ -13,9 +13,12 @@ import { useBrowserWidthPreferences } from './use-browser-width-preferences.js';
 import { useResizeGesture } from './use-resize-gesture.js';
 
 export interface ColumnBrowserPanel {
+  /** Unique stable panel ID; retained when navigating or restoring widths. */
   id: string;
+  /** Accessible name for this panel region. */
   label: string;
   content: ReactNode;
+  /** Ancestor width in CSS pixels. The final panel fills remaining space. Default: 224. */
   width?: number;
   minWidth?: number;
   maxWidth?: number;
@@ -30,7 +33,9 @@ export interface ColumnBrowserProps {
   resizable?: boolean;
   resizeDisabled?: boolean;
   cancelMediaQuery?: string;
+  /** App-owned ancestor widths. Without onWidthsChange, resizing is read-only. */
   widths?: ColumnBrowserWidths;
+  /** Width snapshots during previews, cancellation and completion; not a React updater. */
   onWidthsChange?: (widths: ColumnBrowserWidths) => void;
   /** Completed resize/reset operations only, suitable for saving preferences. */
   onWidthsCommit?: (widths: ColumnBrowserWidths) => void;

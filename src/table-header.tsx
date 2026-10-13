@@ -3,7 +3,6 @@ import type { RowData } from '@tanstack/react-table';
 import { ColumnResizeHandle } from './resize-handle.js';
 import type { TableHeaderProps } from './table-types.js';
 
-export type { TableHeaderProps } from './table-types.js';
 export function TableHeader<T extends RowData>({
   table,
   selectable = false,

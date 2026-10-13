@@ -4,8 +4,6 @@ import { memo } from 'react';
 import { RowSelectionCheckbox } from './row-selection-checkbox.js';
 import type { PuppertinoBodyContext, TableBodyProps } from './table-types.js';
 
-export type { TableBodyProps } from './table-types.js';
-
 function RenderTableBody<T extends RowData>({
   table,
   selectable = false,
