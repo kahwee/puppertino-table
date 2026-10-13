@@ -36,7 +36,7 @@ import 'puppertino-table/style.css';`;
     if (from < 0 || to === -1) throw new Error(`Missing Storybook recipe section: ${start}`);
     return source.slice(from, to);
   }
-  const controlled = section(stories, 'function Example(', 'const meta =')
+  const controlled = section(stories, 'function Example(', '// Bind the row model once')
     .replace('function Example(', 'export function PeopleTable(')
     .replace("'atoms'>>)", "'atoms'>> = {})");
 

@@ -1,5 +1,5 @@
 import { Meta, Source, Canvas } from '@storybook/addon-docs/blocks';
-import * as TypedStories from './typed-table.stories';
+import * as TableStories from './table.stories';
 import { tableRecipes } from '../.storybook/table-sources';
 
 <Meta title="Start here/TypeScript" />
@@ -43,10 +43,12 @@ export const Disabled = { args: { disabled: true } } satisfies Story;
 
 Use Controls for serializable behavior options. Columns contain functions and dates need deliberate construction; keep those fixtures in TypeScript. Change density, selection or disabled mode in the full canvas to explore the same component props your app will use.
 
-<Canvas of={TypedStories.Default} />
+The default Table story binds `PuppertinoTable<Person>` using this same pattern. All main Table story args are checked against that public component type.
+
+<Canvas of={TableStories.Default} />
 
 ## State ownership
 
 Automatic sorting is the default. React-controlled sorting uses `SortingState` with `useState<SortingState>([])`; selection uses `RowSelectionState`. Set `manualSorting` when the app supplies an already ordered server page. External atoms and controlled props cannot own the same state slice. The package checks these conflicts at compile time.
 
-<a href="./?path=/docs/puppertino-table--docs" target="_top">Explore state ownership and gesture recipes</a> · <a href="./?path=/story/puppertino-typed-table--default" target="_top">Open the typed table canvas</a>
+<a href="./?path=/docs/puppertino-table--docs" target="_top">Explore state ownership and gesture recipes</a> · <a href="./?path=/story/puppertino-table--default" target="_top">Open the default table canvas</a>

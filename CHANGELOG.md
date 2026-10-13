@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Make the main Table stories bind the public generic component directly and typecheck their real props. Remove the redundant Typed table section and point the TypeScript guide at Table Default.
+
 - Remove dedicated dark-mode stories and use the existing Storybook Theme toolbar for every example; retain dark-theme browser and modal coverage through shared globals.
 
 - Focus the Table Storybook sidebar on nine primary examples; keep specialized stories available to browser checks by direct URL. Open Default without an automatic sort, and verify sorting in browser checks instead.

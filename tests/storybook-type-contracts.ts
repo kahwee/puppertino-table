@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { createPuppertinoColumnHelper, PuppertinoTable } from '../src/index.js';
-import type meta from '../src/typed-table.stories.js';
-import type { Story } from '../src/typed-table.stories.js';
+import type meta from '../src/table.stories.js';
+import type { Story } from '../src/table.stories.js';
 
 const valid = { args: { density: 'compact' } } satisfies Story;
 // @ts-expect-error Story overrides retain the library's density union.
 const invalidDensity = { args: { density: 'tiny' } } satisfies Story;
-// @ts-expect-error Story data must match the bound Asset row model.
+// @ts-expect-error Story data must match the bound Person row model.
 const invalidData = { args: { data: [{ id: 'bad', name: 'Missing fields' }] } } satisfies Story;
 const inferred: StoryObj<typeof meta> = { args: { getRowLabel: (asset) => asset.name } };
 const helper = createPuppertinoColumnHelper<{ id: string; bytes: number }>();

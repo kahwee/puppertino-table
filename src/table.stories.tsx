@@ -50,9 +50,12 @@ function Example(args: Partial<Omit<PuppertinoTableProps<Person>, 'atoms'>>) {
     </>
   );
 }
+// Bind the row model once so Storybook checks the real public component props.
+const PeopleTable = PuppertinoTable<Person>;
 const meta = {
   title: 'Puppertino/Table',
-  component: Example,
+  component: PeopleTable,
+  render: (args) => <Example {...args} />,
   parameters: {
     controls: {
       include: [
@@ -69,12 +72,16 @@ const meta = {
       source: { language: 'tsx', type: 'code' },
       description: {
         component:
-          'Start with Default for an internally managed table. Selection shows React-controlled sorting and selection; External Atoms shares app-owned state. Automatic sorting is the default. Set manualSorting for server pages or app-owned ordering. The visible stories cover the main integration paths; advanced interaction and state cases remain tested by direct story URL. Each Show code panel includes public imports, typed columns and sample data.',
+          'Default is the typed public PuppertinoTable<Person> component with internally managed state. Selection shows React-controlled sorting and selection; External Atoms shares app-owned state. Automatic sorting is the default. Set manualSorting for server pages or app-owned ordering. The visible stories cover the main integration paths; advanced interaction and state cases remain tested by direct story URL. Each Show code panel includes public imports, typed columns and sample data.',
       },
     },
   },
   args: {
     ...tableDefaults,
+    data: people.slice(0, 12),
+    columns: personColumns,
+    getRowId: (row) => row.id,
+    getRowLabel: (row) => row.name,
     selectable: true,
     density: 'native',
     ariaLabel: 'People',
@@ -117,22 +124,13 @@ const meta = {
     data: { control: false },
     columns: { control: false },
   },
-} satisfies Meta<typeof Example>;
+} satisfies Meta<typeof PeopleTable>;
 export default meta;
-type Story = StoryObj<typeof meta>;
+export type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   parameters: { docs: { source: { code: tableRecipes.uncontrolled } } },
-  render: (args) => (
-    <PuppertinoTable
-      data={people.slice(0, 12)}
-      columns={personColumns}
-      getRowId={(row) => row.id}
-      getRowLabel={(row) => row.name}
-      {...args}
-      ariaLabel={args.ariaLabel ?? 'People'}
-    />
-  ),
+  render: (args) => <PeopleTable {...args} />,
 };
 
 function ItemGestureExample({ ownership }: { ownership: 'controlled' | 'local' | 'atom' }) {

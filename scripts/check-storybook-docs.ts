@@ -81,7 +81,7 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   console.log('Checking Storybook docs: typed integration guide');
   await page.goto(`${base}/iframe.html?id=start-here-typescript--docs&viewMode=docs`);
   await page.locator('#typescript-usage').waitFor();
-  await page.getByRole('table', { name: 'Assets', exact: true }).waitFor();
+  await page.getByRole('table', { name: 'People', exact: true }).waitFor();
   await page.waitForFunction(() => {
     const sources = Array.from(document.querySelectorAll('pre'), (node) => node.textContent ?? '');
     return [
