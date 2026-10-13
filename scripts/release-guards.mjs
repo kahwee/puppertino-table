@@ -157,7 +157,7 @@ async function main() {
   if (mode === 'validate-packed') return output({ integrity: packed.integrity });
   if (mode === 'registry-state') return output({ state: (await lookup(packed)).state });
   assert.equal(mode, 'verify-registry');
-  for (let attempt = 0; attempt < 12; attempt++) {
+  for (let attempt = 0; attempt < 180; attempt++) {
     const result = await lookup(packed);
     if (result.state === 'existing') {
       await writeFile(

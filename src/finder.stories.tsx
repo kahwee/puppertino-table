@@ -1,18 +1,28 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { RowSelectionState, SortingState } from '@tanstack/react-table';
+import { useCreateAtom } from '@tanstack/react-store';
+import type { ColumnSizingState, RowSelectionState, SortingState } from '@tanstack/react-table';
 import type { DragEvent, KeyboardEvent, MouseEvent } from 'react';
-import { useEffect, useEffectEvent, useId, useReducer, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useId, useMemo, useReducer, useRef, useState } from 'react';
 import { useArgs } from 'storybook/preview-api';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { finderViewRecipes } from '../.storybook/finder-recipes.js';
 import { formatDateTime } from '../demo/date-format.js';
 import { FileArtwork, FilePreview, Glyph, ViewGlyph } from '../demo/finder-artwork.js';
 import { DemoToolbar } from '../demo/finder-chrome.js';
 import { type FileItem, finderFilesReducer, initialFinderFiles } from '../demo/finder-files.js';
+import {
+  type FinderOutlineItem,
+  finderAncestors,
+  finderGroupIds,
+  finderOutlineItems,
+  finderVisibleFiles,
+  isFinderGroup,
+} from '../demo/finder-outline.js';
 import { FinderTags } from '../demo/finder-tags.js';
 import {
   applySelectionGesture,
-  ColumnBrowser,
-  ColumnBrowserItem,
+  ColumnView,
+  ColumnViewItem,
   ContextMenu,
   createPuppertinoColumnHelper,
   FinderBody,
@@ -30,14 +40,17 @@ import {
   FinderStatusBar,
   type FinderView,
   FinderWindow,
+  finderViews,
   nextItemId,
-  PuppertinoTable,
+  type OutlineExpandedState,
+  OutlineView,
+  TableView,
   useContextMenu,
   useItemNavigation,
 } from './index.js';
 import './finder-demo.css';
 
-const helper = createPuppertinoColumnHelper<FileItem>();
+const helper = createPuppertinoColumnHelper<FinderOutlineItem>();
 const columns = helper.columns([
   helper.accessor('name', {
     header: 'Name',
@@ -47,7 +60,7 @@ const columns = helper.columns([
     cell: (cell) => (
       <span className="finder-demo-filename">
         <span className="pt-icon">
-          <Glyph kind={cell.row.original.kind} />
+          <Glyph kind={cell.row.original.kind} folder={isFinderGroup(cell.row.original)} />
         </span>
         {cell.getValue()}
       </span>
@@ -58,9 +71,11 @@ const columns = helper.columns([
     size: 260,
     minSize: 240,
     sortFn: 'datetime',
-    cell: (cell) => (
-      <time dateTime={cell.getValue().toISOString()}>{formatDateTime(cell.getValue())}</time>
-    ),
+    sortUndefined: 'last',
+    cell: (cell) => {
+      const value = cell.getValue();
+      return value ? <time dateTime={value.toISOString()}>{formatDateTime(value)}</time> : '—';
+    },
   }),
   helper.accessor('size', { header: 'Size', size: 90, minSize: 70 }),
   helper.accessor('kind', { header: 'Kind', size: 160, minSize: 120 }),
@@ -93,6 +108,15 @@ function FinderDemo({
   const { files, trash, lastDeletedIds } = fileState;
   const [selection, setSelection] = useState<RowSelectionState>({});
   const [sorting, setSorting] = useState<SortingState>([]);
+  const columnSizing = useCreateAtom<ColumnSizingState>({});
+  const [outlineExpanded, setOutlineExpanded] = useState<OutlineExpandedState>(() =>
+    Object.fromEntries(
+      finderGroupIds(finderOutlineItems(initialFinderFiles.files, 'Projects')).map((id) => [
+        id,
+        true,
+      ]),
+    ),
+  );
   const selectionAnchor = useRef<string | null>(null);
   const selectionSummary = useRef<HTMLOutputElement>(null);
   const [tagNames, setTagNames] = useState(['Project Alpine', 'Work', 'Review']);
@@ -125,7 +149,7 @@ function FinderDemo({
   const renameInput = useRef<HTMLInputElement>(null);
   const renameLabelId = useId();
   const renameErrorId = useId();
-  const pendingViewFocus = useRef<string | null>(null);
+  const pendingViewFocus = useRef<{ id: string; view: FinderView } | null>(null);
   const [history, setHistory] = useState({ folders: ['Projects'], index: 0 });
   const [dragging, setDragging] = useState<string[]>([]);
   const [over, setOver] = useState<string | null>(null);
@@ -135,15 +159,35 @@ function FinderDemo({
   const activeTag = folder.startsWith('tag:') ? folder.slice(4) : null;
   const folderTitle = activeTag ?? folder;
   const inTrash = folder === 'Trash';
-  const folderFiles = activeTag
-    ? files.filter((file) => file.tags?.includes(activeTag))
-    : inTrash
-      ? trash
-      : files.filter((file) => file.folder === folder);
-  const visible = folderFiles.filter((file) =>
-    file.name.toLowerCase().includes(query.toLowerCase()),
+  const folderFiles = useMemo(
+    () =>
+      activeTag
+        ? files.filter((file) => file.tags?.includes(activeTag))
+        : inTrash
+          ? trash
+          : files.filter((file) => file.folder === folder),
+    [activeTag, files, folder, inTrash, trash],
   );
-  const selectedFiles = visible.filter((file) => selection[file.id]);
+  const visible = useMemo(
+    () => folderFiles.filter((file) => file.name.toLowerCase().includes(query.toLowerCase())),
+    [folderFiles, query],
+  );
+  const outlineItems = useMemo(() => finderOutlineItems(visible, folder), [visible, folder]);
+  useEffect(() => {
+    if (view !== 'outline') return;
+    const ids = finderGroupIds(outlineItems);
+    setOutlineExpanded((previous) => {
+      const missing = ids.filter((id) => previous[id] === undefined);
+      return missing.length
+        ? { ...previous, ...Object.fromEntries(missing.map((id) => [id, true])) }
+        : previous;
+    });
+  }, [outlineItems, view]);
+  const actionFiles =
+    view === 'outline' ? finderVisibleFiles(outlineItems, outlineExpanded) : visible;
+  const selectedFiles = actionFiles.filter((file) => selection[file.id]);
+  const CollectionView =
+    view === 'outline' ? OutlineView<FinderOutlineItem> : TableView<FinderOutlineItem>;
   const applyPreviewSetup = useEffectEvent((show: boolean, next: FinderView) => {
     if (next === 'columns')
       setDetail(selectedFiles[0]?.id ?? (show ? (visible[0]?.id ?? null) : null));
@@ -224,15 +268,22 @@ function FinderDemo({
       selectFile(id, { shiftKey: !!modifiers.shift, metaKey: false, ctrlKey: false }, displayIds()),
   });
   useEffect(() => {
-    if (pendingViewFocus.current) {
-      const id = pendingViewFocus.current;
+    const pending = pendingViewFocus.current;
+    if (pending?.view === view && navigation.focus(pending.id)) {
       pendingViewFocus.current = null;
-      navigation.focus(id);
     }
-  }, [navigation.focus]);
+  }, [navigation.focus, view]);
   const changeView = (next: FinderView) => {
     if (document.activeElement instanceof HTMLElement && document.activeElement.dataset.fileId)
-      pendingViewFocus.current = document.activeElement.dataset.fileId;
+      pendingViewFocus.current = { id: document.activeElement.dataset.fileId, view: next };
+    else if (pendingViewFocus.current) pendingViewFocus.current.view = next;
+    if (next === 'outline' && pendingViewFocus.current) {
+      const parents = finderAncestors(outlineItems, pendingViewFocus.current.id);
+      setOutlineExpanded((previous) => ({
+        ...previous,
+        ...Object.fromEntries(parents.map((id) => [id, true])),
+      }));
+    }
     setView(next);
     if ((next === 'columns' || next === 'gallery') && !detail) setDetail(visible[0]?.id ?? null);
   };
@@ -275,7 +326,7 @@ function FinderDemo({
       }
       return;
     }
-    navigation.getItemProps(id).onKeyDown(event);
+    if (view !== 'outline') navigation.getItemProps(id).onKeyDown(event);
     if (event.defaultPrevented) return;
     if (event.key === 'Enter' && !event.shiftKey && !event.metaKey && !event.ctrlKey) {
       event.preventDefault();
@@ -381,7 +432,7 @@ function FinderDemo({
     setInfoOpen(false);
     setQuery('');
   };
-  const context = visible.find((file) => file.id === menu.state?.context);
+  const context = actionFiles.find((file) => file.id === menu.state?.context);
   const contextTargets = context ? (selection[context.id] ? selectedFiles : [context]) : [];
   const dragProps = (file: FileItem) => ({
     draggable: canAct && !inTrash,
@@ -415,7 +466,7 @@ function FinderDemo({
       event.preventDefault();
       const id = event.dataTransfer.getData('text/plain');
       if (!canAct || !dragging.includes(id)) return;
-      const targets = visible.filter((file) => dragging.includes(file.id));
+      const targets = actionFiles.filter((file) => dragging.includes(file.id));
       if (target === 'Trash') deleteFiles(targets);
       else if (target === 'Archive' || target === 'Projects') moveFiles(targets, target);
       setDragging([]);
@@ -424,7 +475,10 @@ function FinderDemo({
   });
   const selectAll = () => {
     if (!canAct) return;
-    setSelection(Object.fromEntries(visible.map((file) => [file.id, true])));
+    setSelection((previous) => ({
+      ...previous,
+      ...Object.fromEntries(actionFiles.map((file) => [file.id, true])),
+    }));
     selectionAnchor.current = null;
   };
   const undoDelete = () => {
@@ -533,10 +587,9 @@ function FinderDemo({
           )
             return;
           if (event.defaultPrevented || disabled || !(event.metaKey || event.ctrlKey)) return;
-          if (['1', '2', '3', '4'].includes(event.key)) {
+          if (['1', '2', '3', '4', '5'].includes(event.key)) {
             event.preventDefault();
-            const views: FinderView[] = ['icons', 'list', 'columns', 'gallery'];
-            changeView(views[Number(event.key) - 1]);
+            changeView(finderViews[Number(event.key) - 1]);
           }
           if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
             event.preventDefault();
@@ -640,21 +693,33 @@ function FinderDemo({
             onPointerDown={(event) => {
               if (
                 event.target instanceof HTMLElement &&
-                !event.target.closest('[data-file-id],button,input,[role="separator"],thead')
+                !event.target.closest(
+                  '[data-file-id],[data-outline-id],button,input,[role="separator"],thead',
+                )
               ) {
                 clearSelection();
                 setDetail(null);
               }
             }}
           >
-            {view === 'list' ? (
-              <PuppertinoTable
+            {view === 'list' || view === 'outline' ? (
+              <CollectionView
                 key={revision}
-                data={visible}
+                data={view === 'outline' ? outlineItems : visible}
+                {...(view === 'outline'
+                  ? {
+                      getChildren: (item: FinderOutlineItem) =>
+                        isFinderGroup(item) ? item.children : undefined,
+                      expanded: outlineExpanded,
+                      onExpandedChange: setOutlineExpanded,
+                    }
+                  : {})}
+                isRowSelectable={(item) => !isFinderGroup(item)}
+                atoms={{ columnSizing }}
                 columns={columns}
                 getRowId={(file) => file.id}
                 getRowLabel={(file) => file.name}
-                ariaLabel="Project files"
+                ariaLabel={view === 'outline' ? 'Project file hierarchy' : 'Project files'}
                 selectionAnchor={selectionAnchor}
                 rowSelection={selection}
                 onRowSelectionChange={setSelection}
@@ -665,34 +730,36 @@ function FinderDemo({
                 manualSorting={manualSorting}
                 sorting={sorting}
                 onSortingChange={setSorting}
-                getRowProps={(row) => ({
-                  ...navigation.getItemProps(row.id),
-                  'data-file-id': row.id,
-                  ...menu.getTriggerProps(row.id),
-                  ...dragProps(row.original),
-                  onClick: (event) => {
-                    event.currentTarget.focus();
-                    selectFile(
-                      row.id,
-                      event,
-                      row.table.getRowModel().rows.map((item) => item.id),
-                    );
-                  },
-                  onDoubleClick: () => previewFile(row.id),
-                  onKeyDown: (event) =>
-                    itemKeyDown(
-                      row.id,
-                      event,
-                      row.table.getRowModel().rows.map((item) => item.id),
-                    ),
-                })}
+                getRowProps={(row) => {
+                  if (isFinderGroup(row.original)) return { 'data-outline-id': row.id };
+                  return {
+                    ...(view === 'list' ? navigation.getItemProps(row.id) : {}),
+                    'data-file-id': row.id,
+                    ...menu.getTriggerProps(row.id),
+                    ...dragProps(row.original),
+                    onFocus: () => {
+                      if (view === 'list') navigation.getItemProps(row.id).onFocus();
+                      if (!disabled) setDetail(row.id);
+                    },
+                    onClick: (event) => {
+                      if ((event.target as HTMLElement).closest('button,input,a')) return;
+                      event.preventDefault();
+                      event.currentTarget.focus();
+                      selectFile(row.id, event, displayIds());
+                    },
+                    onDoubleClick: () => previewFile(row.id),
+                    onKeyDown: (event) => itemKeyDown(row.id, event, displayIds()),
+                  };
+                }}
                 emptyContent={emptyMessage}
               />
             ) : view === 'columns' ? (
-              <ColumnBrowser
+              <ColumnView
                 key={revision}
                 ariaLabel="Workspace columns"
-                panels={[
+                resizable={resizable}
+                resizeDisabled={disabled}
+                columns={[
                   {
                     id: 'workspace',
                     label: 'Workspace',
@@ -711,7 +778,7 @@ function FinderDemo({
                     width: 280,
                     content: visible.length ? (
                       visible.map((file) => (
-                        <ColumnBrowserItem
+                        <ColumnViewItem
                           disabled={disabled}
                           key={file.id}
                           selected={!!selection[file.id]}
@@ -728,7 +795,7 @@ function FinderDemo({
                           }}
                         >
                           {file.name}
-                        </ColumnBrowserItem>
+                        </ColumnViewItem>
                       ))
                     ) : (
                       <p className="finder-demo-no-results">{emptyMessage}</p>
@@ -906,7 +973,6 @@ function FinderDemo({
                     href: 'data:text/plain,Fictional%20project%20brief',
                     download: 'sample.txt',
                   },
-                  { id: 'rename', label: 'Rename', disabled: true, onSelect: () => {} },
                 ]
               : []
           }
@@ -1050,6 +1116,14 @@ function FinderDemo({
             clearSelection();
             setInfoOpen(false);
             setSorting([]);
+            columnSizing.set({});
+            setOutlineExpanded(
+              Object.fromEntries(
+                finderGroupIds(finderOutlineItems(initialFinderFiles.files, 'Projects')).map(
+                  (id) => [id, true],
+                ),
+              ),
+            );
             setFolder('Projects');
             setDetail(view === 'columns' || view === 'gallery' ? 'brief' : null);
             setDragging([]);
@@ -1069,35 +1143,6 @@ function FinderDemo({
   );
 }
 
-const finderViewRecipes = {
-  columns: `import { ColumnBrowser, ColumnBrowserItem, DensityScope } from 'puppertino-table';
-
-export function Workspace() {
-  return <DensityScope density="compact" style={{ height: 390 }}>
-    <ColumnBrowser ariaLabel="Workspace" panels={[
-      { id: 'folders', label: 'Folders', content: <ColumnBrowserItem href="#projects" pathSelected>Projects</ColumnBrowserItem> },
-      { id: 'files', label: 'Files', content: <ColumnBrowserItem href="#brief">Project brief.pdf</ColumnBrowserItem> },
-      { id: 'preview', label: 'Preview', content: <p>Your app-owned preview</p> },
-    ]} />
-  </DensityScope>;
-}`,
-  icons: `// Your app owns the icon grid and selected item.
-const menu = useContextMenu<string>();
-<div className="my-icon-grid">{files.map(file => <button key={file.id}
-  type="button" aria-pressed={selectedId === file.id}
-  onClick={() => setSelectedId(file.id)} {...menu.getTriggerProps(file.id)}>
-  <FileArtwork file={file} /><span>{file.name}</span>
-</button>)}</div>;`,
-  gallery: `// Your app renders the preview and filmstrip.
-<>
-<Preview file={files.find(file => file.id === selectedId)} />
-<section aria-label="Gallery files">{files.map(file => <button key={file.id}
-  type="button" aria-label={file.name} aria-pressed={selectedId === file.id}
-  onClick={() => setSelectedId(file.id)} {...menu.getTriggerProps(file.id)}>
-  <FileArtwork file={file} />
-</button>)}</section>
-</>;`,
-};
 const meta = {
   title: 'Examples/Finder',
   component: FinderDemo,
@@ -1137,14 +1182,13 @@ const meta = {
       control: 'boolean',
       description:
         'Show optional table checkboxes when selection is enabled. Finder uses row selection by default.',
-      table: { category: 'Table behavior' },
-      if: { arg: 'initialView', eq: 'list' },
+      table: { category: 'Collection behavior' },
     },
     initialView: {
       name: 'View',
       table: { category: 'Workspace' },
       control: 'inline-radio',
-      options: ['icons', 'list', 'columns', 'gallery'],
+      options: [...finderViews],
       description:
         'Live view, synchronized with the toolbar. Preserves files, folder history and selection.',
     },
@@ -1171,8 +1215,7 @@ const meta = {
     resizable: {
       control: 'boolean',
       description: 'Enable pointer and keyboard column resizing.',
-      if: { arg: 'initialView', eq: 'list' },
-      table: { category: 'Table behavior' },
+      table: { category: 'Collection behavior' },
     },
     disabled: {
       control: 'boolean',
@@ -1182,8 +1225,7 @@ const meta = {
     manualSorting: {
       control: 'boolean',
       description: 'Keep app-owned row order when sorting changes; disable for local sorting.',
-      if: { arg: 'initialView', eq: 'list' },
-      table: { category: 'Table behavior' },
+      table: { category: 'Collection behavior' },
     },
   },
   parameters: {
@@ -1196,25 +1238,11 @@ const meta = {
         },
         language: 'tsx',
         type: 'code',
-        code: `import { PuppertinoTable, createPuppertinoColumnHelper } from 'puppertino-table';
-
-type FileItem = { id: string; name: string; kind: string };
-const helper = createPuppertinoColumnHelper<FileItem>();
-const columns = helper.columns([
-  helper.accessor('name', { header: 'Name', size: 280, minSize: 160 }),
-  helper.accessor('kind', { header: 'Kind', size: 160 }),
-]);
-const files: FileItem[] = [{ id: 'brief', name: 'Project brief.pdf', kind: 'PDF' }];
-
-export function FileTable() {
-  return <PuppertinoTable data={files} columns={columns}
-    getRowId={file => file.id} getRowLabel={file => file.name}
-    ariaLabel="Files" selectable density="compact" manualSorting={false} />;
-}`,
+        code: finderViewRecipes.list,
       },
       description: {
         component:
-          'Fictional Finder-style workspace with shared selection across four views, bulk moves, Trash, restore and undo. File operations and native HTML drag/drop are owned by this example. The Move menu command is the keyboard alternative. No filesystem access.',
+          'Fictional Finder-style workspace with shared selection across five views, bulk moves, Trash, restore and undo. File operations and native HTML drag/drop are owned by this example. The Move menu command is the keyboard alternative. No filesystem access.',
       },
     },
   },
@@ -1279,7 +1307,7 @@ export const KeyboardWorkflow: Story = {
     docs: {
       description: {
         story:
-          'Finder-style keys across all four views: arrows, Shift ranges, type-to-select, Command/Ctrl+1–4, Space Quick Look, Return rename and Command/Ctrl+Backspace to Trash. Operations stay in the demo.',
+          'Finder-style keys across all five views: arrows, Shift ranges, type-to-select, Command/Ctrl+1–4, Space Quick Look, Return rename and Command/Ctrl+Backspace to Trash. Operations stay in the demo.',
       },
     },
   },

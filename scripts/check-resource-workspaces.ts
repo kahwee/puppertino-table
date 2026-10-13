@@ -292,11 +292,7 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
     await target.click({ button: 'right' });
     const menu = page.getByRole('menu', { name: 'Resource commands', exact: true });
     await menu.waitFor();
-    assert.ok(
-      await menu
-        .getByRole('menuitem', { name: 'Show details' })
-        .evaluate((element) => element === document.activeElement),
-    );
+    await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'menu');
     assert.equal(await menu.getByRole('separator').count(), 1);
     assert.equal(
       await menu.getByRole('menuitem', { name: 'Unavailable resource link' }).getAttribute('href'),
@@ -326,7 +322,16 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
     await menu.waitFor({ state: 'detached' });
     await target.press('Shift+F10');
     await menu.waitFor();
+    await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'menu');
     await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await page.waitForFunction(
+      () => document.activeElement?.textContent === 'Select only this item',
+    );
+    assert.equal(
+      await page.evaluate(() => document.activeElement?.textContent),
+      'Select only this item',
+    );
     await page.keyboard.press('Enter');
     await menu.waitFor({ state: 'detached' });
     assert.equal(await page.getByLabel('Resource selection count').textContent(), '1 selected');
@@ -356,12 +361,30 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
     await target.click({ button: 'right' });
     await menu.waitFor();
     assert.ok(await menu.getByRole('menuitem', { name: 'Clear selection' }).isDisabled());
+    await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'menu');
     await page.keyboard.press('End');
+    await page.waitForFunction(
+      () => document.activeElement?.textContent === 'Unavailable resource link',
+    );
+    assert.ok(
+      await menu
+        .getByRole('menuitem', { name: 'Unavailable resource link' })
+        .evaluate((element) => element === document.activeElement),
+      'Base UI keeps disabled commands discoverable through keyboard navigation',
+    );
+    await page.keyboard.press('Enter');
+    assert.equal(
+      await menu.isVisible(),
+      true,
+      'Disabled links cannot activate or dismiss the menu',
+    );
+    await page.keyboard.press('ArrowUp');
+    await page.waitForFunction(() => document.activeElement?.textContent === 'Open resource link');
     assert.ok(
       await menu
         .getByRole('menuitem', { name: 'Open resource link' })
         .evaluate((element) => element === document.activeElement),
-      'Menu navigation skips disabled links/actions and separators',
+      'Arrow navigation reaches the previous enabled link',
     );
     const popupPromise = page.context().waitForEvent('page');
     await page.keyboard.press(story === 'controlled-panels' ? ' ' : 'Enter');

@@ -18,6 +18,8 @@ Only the publish job receives `id-token: write`; other jobs receive `contents: r
 
 If the version already exists with the same integrity, the workflow verifies it and skips publication. Different bytes under an existing version fail. Authentication, rate-limit and server errors fail rather than being treated as an absent version. The original manual 0.1.0 release cannot be replayed through this workflow.
 
+npm publish-time scanning can delay availability; registry verification allows up to 15 minutes after an accepted upload. Never repeat an accepted upload while scanning is pending.
+
 After the run, compare registry metadata and SHA1/SHA512 against its downloaded `pack.json` and tarball. Confirm npm `latest`, provenance, all three workflow jobs, and the clean registry consumers. On any uncertain upload result, inspect the registry before retrying; never submit an accepted version again. Rerun failed verification or consumer jobs only after resolving their failure.
 
 ## Existing trusted publisher

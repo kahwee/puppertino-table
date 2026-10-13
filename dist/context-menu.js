@@ -1,7 +1,7 @@
 'use client';
 import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, } from 'react';
-const enabledItems = '[role="menuitem"]:not(:disabled):not([aria-disabled="true"])';
+import { ContextMenu as BaseContextMenu } from '@base-ui/react/context-menu';
+import { useCallback, useEffect, useMemo, useRef, useState, } from 'react';
 export function useContextMenu() {
     const [state, setState] = useState(null);
     const close = useCallback(() => setState(null), []);
@@ -55,52 +55,39 @@ export function useContextMenu() {
         },
     };
 }
-/** Caller-owned commands; popover placement, keyboard navigation and focus stay shared. */
+/** Caller-owned commands; Base UI owns menu focus, navigation, dismissal and placement. */
 export function ContextMenu({ position, actions, ariaLabel, onClose, returnFocus, }) {
     const menu = useRef(null);
     const close = useRef(onClose);
     close.current = onClose;
-    useLayoutEffect(() => {
-        const element = menu.current;
-        if (!position || !element)
-            return;
-        element.showPopover?.();
-        const rect = element.getBoundingClientRect();
-        element.style.left = `${Math.max(8, Math.min(position.x, innerWidth - rect.width - 8))}px`;
-        element.style.top = `${Math.max(8, Math.min(position.y, innerHeight - rect.height - 8))}px`;
-        (element.querySelector(enabledItems) ?? element).focus();
-        return () => {
-            if (returnFocus?.isConnected)
-                returnFocus.focus({ preventScroll: true });
-        };
-    }, [position, returnFocus]);
+    const anchor = useMemo(() => position
+        ? {
+            contextElement: returnFocus ?? undefined,
+            getBoundingClientRect: () => ({
+                x: position.x,
+                y: position.y,
+                left: position.x,
+                top: position.y,
+                right: position.x,
+                bottom: position.y,
+                width: 0,
+                height: 0,
+                toJSON: () => ({}),
+            }),
+        }
+        : null, [position, returnFocus]);
     useEffect(() => {
         if (!position)
             return;
-        const outside = (event) => {
-            if (!menu.current?.contains(event.target))
-                close.current();
-        };
         const dismiss = () => close.current();
         const outsideScroll = (event) => {
             if (!menu.current?.contains(event.target))
-                close.current();
+                dismiss();
         };
-        const onEscape = (event) => {
-            if (event.key === 'Escape') {
-                event.preventDefault();
-                event.stopPropagation();
-                close.current();
-            }
-        };
-        document.addEventListener('pointerdown', outside, true);
-        document.addEventListener('keydown', onEscape, true);
         document.addEventListener('scroll', outsideScroll, true);
         window.addEventListener('resize', dismiss);
         window.addEventListener('blur', dismiss);
         return () => {
-            document.removeEventListener('pointerdown', outside, true);
-            document.removeEventListener('keydown', onEscape, true);
             document.removeEventListener('scroll', outsideScroll, true);
             window.removeEventListener('resize', dismiss);
             window.removeEventListener('blur', dismiss);
@@ -109,56 +96,38 @@ export function ContextMenu({ position, actions, ariaLabel, onClose, returnFocus
     if (!position)
         return null;
     const hasIcons = actions.some((action) => 'icon' in action && !!action.icon);
-    const navigate = (event) => {
-        const items = Array.from(menu.current?.querySelectorAll(enabledItems) ?? []);
-        if (event.key === ' ' && event.target instanceof HTMLAnchorElement) {
-            event.preventDefault();
-            event.target.click();
-            return;
-        }
-        const current = items.indexOf(document.activeElement);
-        let next = current;
-        if (event.key === 'ArrowDown')
-            next = (current + 1) % items.length;
-        else if (event.key === 'ArrowUp')
-            next = (current - 1 + items.length) % items.length;
-        else if (event.key === 'Home')
-            next = 0;
-        else if (event.key === 'End')
-            next = items.length - 1;
-        else if (event.key === 'Tab') {
-            close.current();
-            return;
-        }
-        else
-            return;
-        event.preventDefault();
-        items[next]?.focus();
-    };
-    return (_jsx("div", { ref: menu, popover: "manual", className: "pt-context-menu", role: "menu", tabIndex: -1, "aria-label": ariaLabel, onKeyDown: navigate, onPointerMove: (event) => {
-            if (event.pointerType === 'touch' || !(event.target instanceof Element))
-                return;
-            const item = event.target.closest(enabledItems);
-            if (item && event.currentTarget.contains(item))
-                item.focus({ preventScroll: true });
-        }, onContextMenu: (event) => event.preventDefault(), style: { left: position.x, top: position.y }, children: actions.map((action) => {
-            if ('type' in action && action.type === 'separator')
-                return _jsx("hr", { className: "pt-menu-separator" }, action.id);
-            if (!('label' in action))
-                return null;
-            const content = (_jsxs(_Fragment, { children: [hasIcons && (_jsx("span", { className: "pt-menu-icon", "aria-hidden": "true", children: action.icon })), _jsx("span", { className: "pt-menu-label", children: action.label }), action.shortcut && (_jsx("span", { className: "pt-menu-shortcut", "aria-hidden": "true", children: action.shortcut }))] }));
-            if (action.href !== undefined)
-                return (_jsx("a", { role: "menuitem", href: action.disabled ? undefined : action.href, target: action.target, rel: action.rel, download: action.download, "aria-disabled": action.disabled || undefined, tabIndex: action.disabled ? -1 : 0, onClick: (event) => {
-                        if (action.disabled) {
+    const theme = returnFocus?.closest('.p-dark-mode,.p-light-mode,[data-p-theme]');
+    const themeClass = theme?.matches('.p-dark-mode,[data-p-theme="darkmode"]')
+        ? 'p-dark-mode'
+        : theme?.matches('.p-light-mode,[data-p-theme="lightmode"]')
+            ? 'p-light-mode'
+            : '';
+    const container = returnFocus?.closest('dialog[open],[popover]:popover-open') ?? undefined;
+    return (_jsx(BaseContextMenu.Root, { open: true, onOpenChange: (open) => {
+            if (!open)
+                close.current();
+        }, children: _jsx(BaseContextMenu.Portal, { container: container, children: _jsx(BaseContextMenu.Positioner, { role: "region", "aria-label": ariaLabel, anchor: anchor, side: "bottom", align: "start", sideOffset: 0, alignOffset: 0, collisionPadding: 8, positionMethod: "fixed", className: "pt-context-positioner", children: _jsx(BaseContextMenu.Popup, { ref: menu, className: `pt-context-menu ${themeClass}`, "aria-label": ariaLabel, finalFocus: () => (returnFocus?.isConnected ? returnFocus : false), onContextMenu: (event) => event.preventDefault(), onKeyDown: (event) => {
+                        if (event.key === ' ' && event.target instanceof HTMLAnchorElement) {
                             event.preventDefault();
-                            return;
+                            event.target.click();
                         }
-                        onClose();
-                        action.onSelect?.();
-                    }, children: content }, action.id));
-            return (_jsx("button", { type: "button", role: "menuitem", disabled: action.disabled, onClick: () => {
-                    onClose();
-                    action.onSelect();
-                }, children: content }, action.id));
-        }) }));
+                    }, children: actions.map((action) => {
+                        if ('type' in action && action.type === 'separator')
+                            return _jsx(BaseContextMenu.Separator, { className: "pt-menu-separator" }, action.id);
+                        if (!('label' in action))
+                            return null;
+                        const content = (_jsxs(_Fragment, { children: [hasIcons && (_jsx("span", { className: "pt-menu-icon", "aria-hidden": "true", children: action.icon })), _jsx("span", { className: "pt-menu-label", children: action.label }), action.shortcut && (_jsx("span", { className: "pt-menu-shortcut", "aria-hidden": "true", children: action.shortcut }))] }));
+                        if (action.href !== undefined) {
+                            if (action.disabled)
+                                return (_jsx(BaseContextMenu.Item, { disabled: true, label: action.label, children: content }, action.id));
+                            return (_jsx(BaseContextMenu.LinkItem, { href: action.href, target: action.target, rel: action.rel, download: action.download, label: action.label, closeOnClick: false, onClick: () => {
+                                    close.current();
+                                    action.onSelect?.();
+                                }, children: content }, action.id));
+                        }
+                        return (_jsx(BaseContextMenu.Item, { nativeButton: true, render: _jsx("button", { type: "button" }), disabled: action.disabled, label: action.label, closeOnClick: false, onClick: () => {
+                                close.current();
+                                action.onSelect();
+                            }, children: content }, action.id));
+                    }) }) }) }) }));
 }

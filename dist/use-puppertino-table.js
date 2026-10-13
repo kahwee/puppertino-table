@@ -8,7 +8,7 @@ import { validateAtomIdentity, validateAtomOwnership } from './state-ownership.j
 import { tableDefaults } from './table-behavior.js';
 import { useColumnSizingPersistence } from './use-column-sizing-persistence.js';
 /** Shared state wiring for complete tables and custom semantic layouts. */
-export function usePuppertinoTable({ data, columns, atoms, getRowId, getSubRows, sorting: controlledSorting, onSortingChange, initialSorting = [], initialRowSelection = {}, manualSorting = tableDefaults.manualSorting, rowSelection: controlledSelection, onRowSelectionChange, selectable = tableDefaults.selectable, selectionAnchor, disabled = tableDefaults.disabled, columnSizing, onColumnSizingChange, selectionCheckboxes = tableDefaults.selectionCheckboxes, resizable = tableDefaults.resizable, storageKey, storage, }) {
+export function usePuppertinoTable({ data, columns, atoms, getRowId, getSubRows, sorting: controlledSorting, onSortingChange, initialSorting = [], initialRowSelection = {}, manualSorting = tableDefaults.manualSorting, rowSelection: controlledSelection, onRowSelectionChange, selectable = tableDefaults.selectable, selectionAnchor, isRowSelectable, disabled = tableDefaults.disabled, columnSizing, onColumnSizingChange, selectionCheckboxes = tableDefaults.selectionCheckboxes, resizable = tableDefaults.resizable, storageKey, storage, }) {
     const mountedAtoms = useRef(atoms ? { ...atoms } : undefined);
     validateAtomIdentity(mountedAtoms.current, atoms);
     validateAtomOwnership({
@@ -56,7 +56,7 @@ export function usePuppertinoTable({ data, columns, atoms, getRowId, getSubRows,
         },
         enableMultiSort: false,
         enableSortingRemoval: false,
-        enableRowSelection: canSelect,
+        enableRowSelection: canSelect && (isRowSelectable ? (row) => isRowSelectable(row.original) : true),
         enableSubRowSelection: false,
         initialState: {
             ...(!atomSorting && controlledSorting === undefined ? { sorting: initialSorting } : {}),

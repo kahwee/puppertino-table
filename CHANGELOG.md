@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.12.0 — 2026-10-13
+
+- Add Outline to both Finder examples and shared view metadata, preserving the established four-view API for existing icon maps. Share file IDs, selection, sorting and column sizing across List/Outline; retain search, tags, history, rename, Quick Look and file commands.
+- Add `isRowSelectable` and composable Outline row/cell hooks. Filter nested row gestures correctly, preserve treegrid semantics, and exclude non-file groups and collapsed selections from Finder bulk actions.
+- Replace custom menu navigation/positioning with Base UI 1.9.0 context-menu primitives while preserving public action/link/separator and trigger APIs, Puppertino styling, portal theme, focus restoration and app-owned commands. Disabled entries remain keyboard discoverable without activation. Add React DOM as a peer and commit the runtime dependency lockfile.
+
+
 - Refresh the README media with the refined Finder sidebar, standalone Sidebar, nested Outline and Split views. Record real lazy-load/retry and pane resize/hide/restore workflows alongside Finder gestures; add public screenshot and video links.
 
 ## 0.11.0 — 2026-10-13

@@ -19,6 +19,7 @@ import {
   MagnifyingGlassIcon,
   SquaresFourIcon,
   TrashIcon,
+  TreeStructureIcon,
 } from '@phosphor-icons/react';
 import type { CSSProperties } from 'react';
 import { FinderEmptyState, FinderPreview } from '../src/index.js';
@@ -37,6 +38,7 @@ const viewIcons = {
   list: ListIcon,
   columns: ColumnsIcon,
   gallery: ImagesIcon,
+  outline: TreeStructureIcon,
   search: MagnifyingGlassIcon,
   back: CaretLeftIcon,
   forward: CaretRightIcon,

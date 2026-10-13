@@ -2,7 +2,7 @@
 
 Curated documentation assets recorded from the working Finder, Sidebar, Outline view and Split view Storybook playgrounds, using fictional files and in-memory state. These are public demo media, not uploaded documents or browser regression artifacts.
 
-Run `pnpm capture:readme` from the repository root. It builds Storybook, captures eighteen PNG screenshots, and records five real interaction sequences as animated GIFs, MP4s and WebMs. Requirements: Chromium, Playwright's video helper (`pnpm exec playwright install ffmpeg`), and `ffmpeg` with libx264 and libvpx-vp9. `FFMPEG_EXECUTABLE` can select a locally installed encoder. `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can select a system browser.
+Run `pnpm capture:readme` from the repository root. It builds Storybook, captures nineteen PNG screenshots, and records five real interaction sequences as animated GIFs, MP4s and WebMs. Requirements: Chromium, Playwright's video helper (`pnpm exec playwright install ffmpeg`), and `ffmpeg` with libx264 and libvpx-vp9. `FFMPEG_EXECUTABLE` can select a locally installed encoder. `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can select a system browser.
 
 - **Resizing:** table divider drag, double-click reset, independent browser-panel drag.
 - **Context menu:** right-click in a close-up, Get Info, Shift+F10, arrow-key navigation, Escape.
@@ -16,4 +16,4 @@ The README uses absolute GitHub image URLs so images also resolve on npm. Storyb
 
 Storybook offers WebM first and MP4 second so playback does not depend on a browser build shipping the H.264 decoder.
 
-Finder references: [Apple’s Finder guide](https://support.apple.com/guide/mac-help/organize-your-files-in-the-finder-mchle9f0a1b2/mac), reviewed 2026-10-13. Sidebar/titlebar alignment, four-view toolbar, column ancestry and gallery filmstrip follow those references. Toolbar and file-type icons use Phosphor; Alpine preview artwork is original example content. Screenshots include list/selection/density/dark, light/dark/narrow columns, icons, gallery and the open menu. Standalone captures include light/dark Sidebar, the touch variant, expanded light/dark Outline, and horizontal/vertical Split views.
+Finder references: [Apple’s Finder guide](https://support.apple.com/guide/mac-help/organize-your-files-in-the-finder-mchle9f0a1b2/mac), reviewed 2026-10-13. Sidebar/titlebar alignment, Finder view toolbar, column ancestry and gallery filmstrip follow those references. Toolbar and file-type icons use Phosphor; Alpine preview artwork is original example content. Screenshots include list/selection/density/dark, light/dark/narrow columns, icons, gallery, the Finder hierarchy and the open menu. Standalone captures include light/dark Sidebar, the touch variant, expanded light/dark Outline, and horizontal/vertical Split views.

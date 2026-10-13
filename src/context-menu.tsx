@@ -1,11 +1,12 @@
 'use client';
+import { ContextMenu as BaseContextMenu } from '@base-ui/react/context-menu';
 import {
   type KeyboardEvent,
   type MouseEvent,
   type ReactNode,
   useCallback,
   useEffect,
-  useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -51,7 +52,6 @@ export interface ContextMenuSeparator {
   shortcut?: never;
 }
 export type ContextMenuItem = ContextMenuAction | ContextMenuLink | ContextMenuSeparator;
-const enabledItems = '[role="menuitem"]:not(:disabled):not([aria-disabled="true"])';
 export interface ContextMenuProps {
   position: ContextMenuPosition | null;
   actions: readonly ContextMenuItem[];
@@ -130,7 +130,7 @@ export function useContextMenu<T>() {
   };
 }
 
-/** Caller-owned commands; popover placement, keyboard navigation and focus stay shared. */
+/** Caller-owned commands; Base UI owns menu focus, navigation, dismissal and placement. */
 export function ContextMenu({
   position,
   actions,
@@ -141,42 +141,36 @@ export function ContextMenu({
   const menu = useRef<HTMLDivElement>(null);
   const close = useRef(onClose);
   close.current = onClose;
-  useLayoutEffect(() => {
-    const element = menu.current;
-    if (!position || !element) return;
-    element.showPopover?.();
-    const rect = element.getBoundingClientRect();
-    element.style.left = `${Math.max(8, Math.min(position.x, innerWidth - rect.width - 8))}px`;
-    element.style.top = `${Math.max(8, Math.min(position.y, innerHeight - rect.height - 8))}px`;
-    (element.querySelector<HTMLElement>(enabledItems) ?? element).focus();
-    return () => {
-      if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
-    };
-  }, [position, returnFocus]);
+  const anchor = useMemo(
+    () =>
+      position
+        ? {
+            contextElement: returnFocus ?? undefined,
+            getBoundingClientRect: () => ({
+              x: position.x,
+              y: position.y,
+              left: position.x,
+              top: position.y,
+              right: position.x,
+              bottom: position.y,
+              width: 0,
+              height: 0,
+              toJSON: () => ({}),
+            }),
+          }
+        : null,
+    [position, returnFocus],
+  );
   useEffect(() => {
     if (!position) return;
-    const outside = (event: PointerEvent) => {
-      if (!menu.current?.contains(event.target as Node)) close.current();
-    };
     const dismiss = () => close.current();
     const outsideScroll = (event: Event) => {
-      if (!menu.current?.contains(event.target as Node)) close.current();
+      if (!menu.current?.contains(event.target as Node)) dismiss();
     };
-    const onEscape = (event: globalThis.KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
-        close.current();
-      }
-    };
-    document.addEventListener('pointerdown', outside, true);
-    document.addEventListener('keydown', onEscape, true);
     document.addEventListener('scroll', outsideScroll, true);
     window.addEventListener('resize', dismiss);
     window.addEventListener('blur', dismiss);
     return () => {
-      document.removeEventListener('pointerdown', outside, true);
-      document.removeEventListener('keydown', onEscape, true);
       document.removeEventListener('scroll', outsideScroll, true);
       window.removeEventListener('resize', dismiss);
       window.removeEventListener('blur', dismiss);
@@ -184,100 +178,111 @@ export function ContextMenu({
   }, [position]);
   if (!position) return null;
   const hasIcons = actions.some((action) => 'icon' in action && !!action.icon);
-  const navigate = (event: KeyboardEvent<HTMLDivElement>) => {
-    const items = Array.from(menu.current?.querySelectorAll<HTMLElement>(enabledItems) ?? []);
-    if (event.key === ' ' && event.target instanceof HTMLAnchorElement) {
-      event.preventDefault();
-      event.target.click();
-      return;
-    }
-    const current = items.indexOf(document.activeElement as HTMLElement);
-    let next = current;
-    if (event.key === 'ArrowDown') next = (current + 1) % items.length;
-    else if (event.key === 'ArrowUp') next = (current - 1 + items.length) % items.length;
-    else if (event.key === 'Home') next = 0;
-    else if (event.key === 'End') next = items.length - 1;
-    else if (event.key === 'Tab') {
-      close.current();
-      return;
-    } else return;
-    event.preventDefault();
-    items[next]?.focus();
-  };
+  const theme = returnFocus?.closest('.p-dark-mode,.p-light-mode,[data-p-theme]');
+  const themeClass = theme?.matches('.p-dark-mode,[data-p-theme="darkmode"]')
+    ? 'p-dark-mode'
+    : theme?.matches('.p-light-mode,[data-p-theme="lightmode"]')
+      ? 'p-light-mode'
+      : '';
+  const container =
+    returnFocus?.closest<HTMLElement>('dialog[open],[popover]:popover-open') ?? undefined;
   return (
-    <div
-      ref={menu}
-      popover="manual"
-      className="pt-context-menu"
-      role="menu"
-      tabIndex={-1}
-      aria-label={ariaLabel}
-      onKeyDown={navigate}
-      onPointerMove={(event) => {
-        if (event.pointerType === 'touch' || !(event.target instanceof Element)) return;
-        const item = event.target.closest<HTMLElement>(enabledItems);
-        if (item && event.currentTarget.contains(item)) item.focus({ preventScroll: true });
+    <BaseContextMenu.Root
+      open
+      onOpenChange={(open) => {
+        if (!open) close.current();
       }}
-      onContextMenu={(event) => event.preventDefault()}
-      style={{ left: position.x, top: position.y }}
     >
-      {actions.map((action) => {
-        if ('type' in action && action.type === 'separator')
-          return <hr key={action.id} className="pt-menu-separator" />;
-        if (!('label' in action)) return null;
-        const content = (
-          <>
-            {hasIcons && (
-              <span className="pt-menu-icon" aria-hidden="true">
-                {action.icon}
-              </span>
-            )}
-            <span className="pt-menu-label">{action.label}</span>
-            {action.shortcut && (
-              <span className="pt-menu-shortcut" aria-hidden="true">
-                {action.shortcut}
-              </span>
-            )}
-          </>
-        );
-        if (action.href !== undefined)
-          return (
-            <a
-              key={action.id}
-              role="menuitem"
-              href={action.disabled ? undefined : action.href}
-              target={action.target}
-              rel={action.rel}
-              download={action.download}
-              aria-disabled={action.disabled || undefined}
-              tabIndex={action.disabled ? -1 : 0}
-              onClick={(event) => {
-                if (action.disabled) {
-                  event.preventDefault();
-                  return;
-                }
-                onClose();
-                action.onSelect?.();
-              }}
-            >
-              {content}
-            </a>
-          );
-        return (
-          <button
-            type="button"
-            key={action.id}
-            role="menuitem"
-            disabled={action.disabled}
-            onClick={() => {
-              onClose();
-              action.onSelect();
+      <BaseContextMenu.Portal container={container}>
+        <BaseContextMenu.Positioner
+          role="region"
+          aria-label={ariaLabel}
+          anchor={anchor}
+          side="bottom"
+          align="start"
+          sideOffset={0}
+          alignOffset={0}
+          collisionPadding={8}
+          positionMethod="fixed"
+          className="pt-context-positioner"
+        >
+          <BaseContextMenu.Popup
+            ref={menu}
+            className={`pt-context-menu ${themeClass}`}
+            aria-label={ariaLabel}
+            finalFocus={() => (returnFocus?.isConnected ? returnFocus : false)}
+            onContextMenu={(event) => event.preventDefault()}
+            onKeyDown={(event) => {
+              if (event.key === ' ' && event.target instanceof HTMLAnchorElement) {
+                event.preventDefault();
+                event.target.click();
+              }
             }}
           >
-            {content}
-          </button>
-        );
-      })}
-    </div>
+            {actions.map((action) => {
+              if ('type' in action && action.type === 'separator')
+                return <BaseContextMenu.Separator key={action.id} className="pt-menu-separator" />;
+              if (!('label' in action)) return null;
+              const content = (
+                <>
+                  {hasIcons && (
+                    <span className="pt-menu-icon" aria-hidden="true">
+                      {action.icon}
+                    </span>
+                  )}
+                  <span className="pt-menu-label">{action.label}</span>
+                  {action.shortcut && (
+                    <span className="pt-menu-shortcut" aria-hidden="true">
+                      {action.shortcut}
+                    </span>
+                  )}
+                </>
+              );
+              if (action.href !== undefined) {
+                if (action.disabled)
+                  return (
+                    <BaseContextMenu.Item key={action.id} disabled label={action.label}>
+                      {content}
+                    </BaseContextMenu.Item>
+                  );
+                return (
+                  <BaseContextMenu.LinkItem
+                    key={action.id}
+                    href={action.href}
+                    target={action.target}
+                    rel={action.rel}
+                    download={action.download}
+                    label={action.label}
+                    closeOnClick={false}
+                    onClick={() => {
+                      close.current();
+                      action.onSelect?.();
+                    }}
+                  >
+                    {content}
+                  </BaseContextMenu.LinkItem>
+                );
+              }
+              return (
+                <BaseContextMenu.Item
+                  key={action.id}
+                  nativeButton
+                  render={<button type="button" />}
+                  disabled={action.disabled}
+                  label={action.label}
+                  closeOnClick={false}
+                  onClick={() => {
+                    close.current();
+                    action.onSelect();
+                  }}
+                >
+                  {content}
+                </BaseContextMenu.Item>
+              );
+            })}
+          </BaseContextMenu.Popup>
+        </BaseContextMenu.Positioner>
+      </BaseContextMenu.Portal>
+    </BaseContextMenu.Root>
   );
 }

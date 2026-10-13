@@ -1,6 +1,7 @@
 import { type ComponentPropsWithRef, type ReactNode } from 'react';
 import { type ContextMenuItem } from './context-menu.js';
-export type FinderView = 'icons' | 'list' | 'columns' | 'gallery';
+export declare const finderViews: readonly ['icons', 'list', 'columns', 'gallery', 'outline'];
+export type FinderView = (typeof finderViews)[number];
 export interface FinderWindowControlsProps {
     onClose?(): void;
     onMinimize?(): void;
@@ -28,9 +29,13 @@ export declare function FinderHistory({ onBack, onForward, backIcon, forwardIcon
 export interface FinderViewSwitcherProps extends Omit<ComponentPropsWithRef<'fieldset'>, 'onChange' | 'children'> {
     value: FinderView;
     onValueChange(value: FinderView): void;
-    icons: Readonly<Record<FinderView, ReactNode>>;
+    icons: Readonly<Record<Exclude<FinderView, 'outline'>, ReactNode> & {
+        outline?: ReactNode;
+    }>;
+    /** Omit to show supplied views; existing four-icon callers keep their original toolbar. */
+    views?: readonly FinderView[];
 }
-export declare function FinderViewSwitcher({ value, onValueChange, icons, className, ...props }: FinderViewSwitcherProps): import("react").JSX.Element;
+export declare function FinderViewSwitcher({ value, onValueChange, icons, views, className, ...props }: FinderViewSwitcherProps): import("react").JSX.Element;
 export interface FinderSearchProps {
     value: string;
     onValueChange(value: string): void;

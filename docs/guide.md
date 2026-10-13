@@ -222,7 +222,7 @@ const menu = useContextMenu<string>();
   actions={menu.state ? commandsFor(menu.state.context) : []} />
 ```
 
-For tables, spread trigger props in `getRowProps` and make the target keyboard-focusable, or attach them to a button inside a cell. `ContextMenu` accepts command actions with stable `id`, `label`, optional `disabled`, and `onSelect`. It fits the viewport, focuses the first enabled action, supports arrows/Home/End, skips disabled actions, closes on Escape/Tab/outside pointer/scroll/resize/blur, and restores the invoking target's focus. It uses a manual popover where supported so a table or panel's overflow does not clip it. Place it in the same themed DOM subtree as its trigger. Commands, right-click selection policy and authorization remain caller-owned; the component never invents file operations.
+For tables, spread trigger props in `getRowProps` and make the target keyboard-focusable, or attach them to a button inside a cell. `ContextMenu` accepts command actions with stable `id`, `label`, optional `disabled`, and `onSelect`. It fits the viewport, focuses the menu, supports arrows/Home/End, keeps disabled actions discoverable without allowing activation, closes on Escape/Tab/outside pointer/scroll/resize/blur, and restores the invoking target's focus. It uses [Base UI Context Menu](https://base-ui.com/react/components/context-menu) for portal placement, collision handling, keyboard navigation and dismissal. The wrapper retains the invoking control's theme and can portal within an existing native dialog/popover. Supply `returnFocus` from the hook for focus restoration. Commands, right-click selection policy and authorization remain caller-owned; the component never invents file operations.
 
 ### Delegated context-menu triggers
 
@@ -263,7 +263,7 @@ Supplying `href` renders a native anchor: `target`, `rel`, `download`, modifier-
   ]} />
 ```
 
-`ContextMenuItem` is a union of `ContextMenuAction` commands, `ContextMenuLink` links and `ContextMenuSeparator` entries. Commands require `onSelect`; links require `href` and may also observe activation with `onSelect`. Separators accept only `id` and `type`. Link attributes such as `target` and `download` belong to links. `ContextMenuState<T>` describes the open context, position and return-focus target; `menu.state` is `null` when closed. Arrows/Home/End skip separators and disabled entries. Links activate with Enter or Space and retain native modifier-click/target/download behavior. Icons and shortcut hints are decorative; shortcut bindings stay caller-owned.
+`ContextMenuItem` is a union of `ContextMenuAction` commands, `ContextMenuLink` links and `ContextMenuSeparator` entries. Commands require `onSelect`; links require `href` and may also observe activation with `onSelect`. Separators accept only `id` and `type`. Link attributes such as `target` and `download` belong to links. `ContextMenuState<T>` describes the open context, position and return-focus target; `menu.state` is `null` when closed. Arrows/Home/End skip separators. Disabled entries remain focusable but cannot activate. Links activate with Enter or Space and retain native modifier-click/target/download behavior. Icons and shortcut hints are decorative; shortcut bindings stay caller-owned.
 
 ### Stable item styling hooks
 
@@ -596,7 +596,7 @@ window, sidebar and bottom bars share those metrics. No private demo stylesheet,
 icon package, fictional artwork or file reducer is required.
 
 See [the live composition example](https://kahwee.github.io/puppertino-table/?path=/docs/puppertino-finder-composition--docs)
-for controlled view/search args and all four views.
+for controlled view/search args and all five views.
 
 ## Apple-style view names
 
@@ -671,3 +671,11 @@ export function FolderColumns() {
 ```
 
 Column navigation, paths and item commands remain app-owned. `ColumnView` shares the existing independent column-width controls and completion-only persistence of `ColumnBrowser`.
+
+### Finder Outline integration
+
+`FinderView` includes `outline`; `finderViews` exports the shared ordered view list. Existing four-icon `FinderViewSwitcher` callers retain their original toolbar. Supply `icons.outline` to show the extra view, or use `views` to choose a subset. The complete demo adds Command/Ctrl+5 while retaining 1–4 for the established views.
+
+Both Finder examples compose the public `OutlineView`. The complete demo shares leaf IDs, selection anchors, sorting and a column-width atom with `TableView`; the hierarchy and file commands remain application-owned. Non-file group rows use `isRowSelectable(item)` to exclude them from selection. This optional predicate is available to complete tables and the shared hook too; eligibility never authorizes a command.
+
+`OutlineView` accepts the same `getRowProps` and `getCellProps` as `TableView`. Row attributes and classes compose with treegrid semantics, focus and selection. A custom `onClick` or `onKeyDown` can call `event.preventDefault()` to handle an application action before the internal selection/navigation handler. Disclosure controls and checkbox events remain isolated. Use row hooks for app context-menu, drag/drop and activation behavior.

@@ -5,7 +5,7 @@ import * as Finder from './finder.stories';
 
 # Finder walkthrough
 
-Compare all four Finder-style views, watch a gesture, then try it and copy the integration recipe. All files are fictional; moves update only the example's in-memory state. Videos have controls and never autoplay.
+Compare all five Finder-style views, watch a gesture, then try it and copy the integration recipe. All files are fictional; moves update only the example's in-memory state. Videos have controls and never autoplay.
 
 The window, toolbar, sidebar, view controls, search, action menus, icon/gallery layouts,
 preview containers, tags and bottom bars are public exports. Start with the
@@ -22,6 +22,14 @@ Use **View**, **Density** and **Selection checkboxes** in Controls instead of op
 <Controls of={Finder.FileTable} />
 
 **View** and **Density** are synchronized with the in-app controls and preserve workspace state. **Select first preview** changes column preview setup without resetting files. **Table behavior** controls update selection, resizing, disabled state and sorting without resetting search or moved files. Table controls appear when the view is List; the first-preview control applies to Columns. Gallery always renders a preview. The in-app controls let you compare views and density while keeping your file moves. In a narrow docs canvas, the table scrolls horizontally; open the story in its own canvas to see the full desktop layout.
+
+## Outline in Finder
+
+Choose **Outline** in the toolbar or Controls (`initialView="outline"`), or use Command/Ctrl+5. Groups expand with disclosure controls; Left/Right move through the hierarchy. File rows retain rename, Quick Look, context menus, drag/drop and shared selection. List and Outline use the same columns, sorting and width atom.
+
+The example groups its current app-owned collection by kind; group rows are not selectable file commands. Collapsing a group preserves its file selection, while bulk commands only target currently exposed files. Search, tags, folder history and Trash remain app-owned. Expansion survives view changes.
+
+<a href="./?path=/story/examples-finder--file-table&args=initialView:outline" target="_top">Open Finder in Outline view</a>.
 
 ## Select, organize and delete in bulk
 
@@ -99,7 +107,7 @@ Use native `href` items for links or `onClick` items for buttons. Stable panel I
   <a href="./media/context-menu.mp4">Download the context-menu screencast</a>
 </video>
 
-The close-up recording opens a file menu, chooses Get Info, then opens another menu with Shift+F10, moves through commands with an arrow key and closes it with Escape. Focus a row before trying Shift+F10. Arrows/Home/End navigate enabled commands; disabled entries and separators are skipped. Escape restores focus to the invoking target. Shortcut hints are labels; your app binds any actual shortcuts.
+The close-up recording opens a file menu, chooses Get Info, then opens another menu with Shift+F10, moves through commands with an arrow key and closes it with Escape. Focus a row before trying Shift+F10. Arrows/Home/End navigate menu items and skip separators. Disabled entries remain focusable for discovery but cannot activate. Escape restores focus to the invoking target. Shortcut hints are labels; your app binds any actual shortcuts.
 
 <Source language="tsx" code={`const menu = useContextMenu<string>();
 <ColumnBrowserItem {...menu.getTriggerProps(file.id)}>{file.name}</ColumnBrowserItem>
@@ -107,7 +115,7 @@ The close-up recording opens a file menu, chooses Get Info, then opens another m
   returnFocus={menu.state?.returnFocus} onClose={menu.close}
   actions={menu.state ? commandsFor(menu.state.context) : []} />;`} />
 
-For tables, spread trigger props in `getRowProps` and include `tabIndex: 0`. Compose existing key handlers with the trigger's `onKeyDown`. Keep menus in the same themed subtree as their triggers. Commands and right-click selection policy stay caller-owned.
+For tables, spread trigger props in `getRowProps` and include `tabIndex: 0`. Compose existing key handlers with the trigger's `onKeyDown`. Base UI portals prevent clipping; the wrapper retains the invoking control's light/dark theme and focus. Commands and right-click selection policy stay caller-owned.
 
 ## App-owned drag and drop
 
@@ -177,7 +185,7 @@ Selection preserves inherited icon and secondary-text contrast. <a href="./?path
 
 ## Finder references
 
-The examples follow the sidebar, compact toolbar, four-view switcher and preview hierarchy in [Apple’s Finder guide](https://support.apple.com/guide/mac-help/organize-your-files-in-the-finder-mchle9f0a1b2/mac). Artwork is original fictional content; these are web composition examples, not native macOS controls.
+The examples follow the sidebar, compact toolbar, five-view switcher and preview hierarchy in [Apple’s Finder guide](https://support.apple.com/guide/mac-help/organize-your-files-in-the-finder-mchle9f0a1b2/mac). Artwork is original fictional content; these are web composition examples, not native macOS controls.
 
 ## Next steps
 

@@ -2,6 +2,7 @@
 import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useRef, useState } from 'react';
 import { ContextMenu } from './context-menu.js';
+export const finderViews = ['icons', 'list', 'columns', 'gallery', 'outline'];
 /** Without handlers, traffic lights are decoration rather than inert buttons. */
 export function FinderWindowControls({ onClose, onMinimize, onZoom }) {
     return (_jsx("span", { className: "p-traffic-lights", children: [
@@ -25,8 +26,8 @@ export function FinderTitle({ as: Heading = 'h1', className = '', ...props }) {
 export function FinderHistory({ onBack, onForward, backIcon, forwardIcon }) {
     return (_jsxs(FinderToolbarGroup, { "aria-label": "Navigation history", className: "pt-finder-history", children: [_jsx(FinderToolbarButton, { "aria-label": "Back", title: "Back", disabled: !onBack, onClick: onBack, children: backIcon }), _jsx("span", { className: "p-toolbar-divider", "aria-hidden": "true" }), _jsx(FinderToolbarButton, { "aria-label": "Forward", title: "Forward", disabled: !onForward, onClick: onForward, children: forwardIcon })] }));
 }
-export function FinderViewSwitcher({ value, onValueChange, icons, className = '', ...props }) {
-    return (_jsx(FinderToolbarGroup, { "aria-label": "View", ...props, className: `pt-finder-views ${className}`, children: ['icons', 'list', 'columns', 'gallery'].map((view) => (_jsx(FinderToolbarButton, { "aria-label": view[0].toUpperCase() + view.slice(1), title: `${view === 'icons' ? 'Icon' : view[0].toUpperCase() + view.slice(1)} view`, "aria-pressed": value === view, onClick: () => onValueChange(view), children: icons[view] }, view))) }));
+export function FinderViewSwitcher({ value, onValueChange, icons, views = finderViews.filter((view) => view !== 'outline' || icons.outline != null || value === 'outline'), className = '', ...props }) {
+    return (_jsx(FinderToolbarGroup, { "aria-label": "View", ...props, className: `pt-finder-views ${className}`, children: views.map((view) => (_jsx(FinderToolbarButton, { "aria-label": view[0].toUpperCase() + view.slice(1), title: `${view === 'icons' ? 'Icon' : view[0].toUpperCase() + view.slice(1)} view`, "aria-pressed": value === view, onClick: () => onValueChange(view), children: icons[view] ?? view[0].toUpperCase() + view.slice(1) }, view))) }));
 }
 export function FinderSearch({ value, onValueChange, icon, ariaLabel = 'Search files', placeholder = 'Search', disabled, collapsible = true, }) {
     const [expanded, setExpanded] = useState(false);

@@ -1,5 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { finderViewRecipes } from '../.storybook/finder-recipes.js';
 import { createTableRecipes } from '../.storybook/table-recipes.js';
 
 const [
@@ -44,7 +45,12 @@ const recipes = createTableRecipes({
 });
 const directory = process.argv[2];
 if (!directory) throw new Error('Provide the installed consumer directory.');
-const files = Object.entries(recipes).map(([name, source]) => ({
+const files = Object.entries({
+  ...recipes,
+  'finder-list': finderViewRecipes.list,
+  'finder-outline': finderViewRecipes.outline,
+  'finder-columns': finderViewRecipes.columns,
+}).map(([name, source]) => ({
   name: `recipe-${name}.tsx`,
   source,
 }));

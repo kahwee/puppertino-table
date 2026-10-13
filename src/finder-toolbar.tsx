@@ -2,7 +2,8 @@
 import { type ComponentPropsWithRef, type ReactNode, useEffect, useRef, useState } from 'react';
 import { ContextMenu, type ContextMenuItem, type ContextMenuState } from './context-menu.js';
 
-export type FinderView = 'icons' | 'list' | 'columns' | 'gallery';
+export const finderViews = ['icons', 'list', 'columns', 'gallery', 'outline'] as const;
+export type FinderView = (typeof finderViews)[number];
 export interface FinderWindowControlsProps {
   onClose?(): void;
   onMinimize?(): void;
@@ -97,18 +98,23 @@ export interface FinderViewSwitcherProps
   extends Omit<ComponentPropsWithRef<'fieldset'>, 'onChange' | 'children'> {
   value: FinderView;
   onValueChange(value: FinderView): void;
-  icons: Readonly<Record<FinderView, ReactNode>>;
+  icons: Readonly<Record<Exclude<FinderView, 'outline'>, ReactNode> & { outline?: ReactNode }>;
+  /** Omit to show supplied views; existing four-icon callers keep their original toolbar. */
+  views?: readonly FinderView[];
 }
 export function FinderViewSwitcher({
   value,
   onValueChange,
   icons,
+  views = finderViews.filter(
+    (view) => view !== 'outline' || icons.outline != null || value === 'outline',
+  ),
   className = '',
   ...props
 }: FinderViewSwitcherProps) {
   return (
     <FinderToolbarGroup aria-label="View" {...props} className={`pt-finder-views ${className}`}>
-      {(['icons', 'list', 'columns', 'gallery'] as const).map((view) => (
+      {views.map((view) => (
         <FinderToolbarButton
           key={view}
           aria-label={view[0].toUpperCase() + view.slice(1)}
@@ -116,7 +122,7 @@ export function FinderViewSwitcher({
           aria-pressed={value === view}
           onClick={() => onValueChange(view)}
         >
-          {icons[view]}
+          {icons[view] ?? view[0].toUpperCase() + view.slice(1)}
         </FinderToolbarButton>
       ))}
     </FinderToolbarGroup>

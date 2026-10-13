@@ -31,6 +31,7 @@ export function usePuppertinoTable<T extends RowData>({
   onRowSelectionChange,
   selectable = tableDefaults.selectable,
   selectionAnchor,
+  isRowSelectable,
   disabled = tableDefaults.disabled,
   columnSizing,
   onColumnSizingChange,
@@ -91,7 +92,8 @@ export function usePuppertinoTable<T extends RowData>({
       },
       enableMultiSort: false,
       enableSortingRemoval: false,
-      enableRowSelection: canSelect,
+      enableRowSelection:
+        canSelect && (isRowSelectable ? (row) => isRowSelectable(row.original) : true),
       enableSubRowSelection: false,
       initialState: {
         ...(!atomSorting && controlledSorting === undefined ? { sorting: initialSorting } : {}),

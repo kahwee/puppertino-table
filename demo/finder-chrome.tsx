@@ -60,6 +60,7 @@ export function DemoToolbar({
           list: <ViewGlyph view="list" selected={view === 'list'} />,
           columns: <ViewGlyph view="columns" selected={view === 'columns'} />,
           gallery: <ViewGlyph view="gallery" selected={view === 'gallery'} />,
+          outline: <ViewGlyph view="outline" selected={view === 'outline'} />,
         }}
       />
       <FinderToolbarGroup aria-label="File commands">

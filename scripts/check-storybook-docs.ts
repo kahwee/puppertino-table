@@ -41,8 +41,19 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
     );
   }
   console.log('Checking Storybook docs: live app reset and controls');
-  await app.getByRole('row').filter({ hasText: 'Project brief.pdf' }).click({ button: 'right' });
-  await app.getByRole('menuitem', { name: 'Move to Archive', exact: true }).click();
+  const filename = app.getByText('Project brief.pdf', { exact: true });
+  await filename.scrollIntoViewIfNeeded();
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+  await filename.click({ button: 'right' });
+  await page
+    .getByRole('menu', { name: 'File actions', exact: true })
+    .getByRole('menuitem', { name: 'Move to Archive', exact: true })
+    .click();
   assert.equal(await app.getByRole('row').filter({ hasText: 'Project brief.pdf' }).count(), 0);
   await app.getByRole('button', { name: 'Reset demo', exact: true }).click();
   await app.getByRole('row').filter({ hasText: 'Project brief.pdf' }).waitFor();

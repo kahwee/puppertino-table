@@ -37,6 +37,8 @@ interface TableOptions<T extends RowData> {
   onRowSelectionChange?: OnChangeFn<RowSelectionState>;
   /** Enable row selection. Default: false. Selection never authorizes an action. */
   selectable?: boolean;
+  /** Application-owned eligibility; this filters selection, never command authorization. */
+  isRowSelectable?: (item: T) => boolean;
   /** Shared range anchor for checkboxes, row gestures and other layouts. */
   selectionAnchor?: RefObject<string | null>;
   /** Disable sorting, selection and resizing across complete and custom layouts. */

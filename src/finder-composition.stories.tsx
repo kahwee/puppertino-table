@@ -8,14 +8,15 @@ import {
   MagnifyingGlassIcon,
   SquaresFourIcon,
   TagIcon,
+  TreeStructureIcon,
 } from '@phosphor-icons/react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { useArgs } from 'storybook/preview-api';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import {
-  ColumnBrowser,
-  ColumnBrowserItem,
+  ColumnView,
+  ColumnViewItem,
   createPuppertinoColumnHelper,
   FinderActions,
   FinderBody,
@@ -39,13 +40,17 @@ import {
   type FinderView,
   FinderViewSwitcher,
   FinderWindow,
-  PuppertinoTable,
+  finderViews,
+  type OutlineExpandedState,
+  OutlineView,
+  TableView,
   TagPicker,
 } from './index.js';
 
 interface Document {
   id: string;
   name: string;
+  children?: readonly Document[];
 }
 const helper = createPuppertinoColumnHelper<Document>();
 const columns = helper.columns([helper.accessor('name', { header: 'Name', size: 340 })]);
@@ -61,11 +66,13 @@ function Composition({ view, query, onViewChange, onQueryChange }: CompositionPr
     { id: 'brief', name: 'Brief.pdf' },
     { id: 'notes', name: 'Notes.md' },
   ]);
+  const [expanded, setExpanded] = useState<OutlineExpandedState>({ 'collection:documents': true });
   const [selected, setSelected] = useState<Record<string, true>>({});
   const [tags, setTags] = useState<Record<string, string[]>>({});
   const visible = documents.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()));
   const chosen = visible.filter((item) => selected[item.id]);
   const active = chosen[0];
+  const CollectionView = view === 'outline' ? OutlineView<Document> : TableView<Document>;
   const choose = (id: string) => setSelected({ [id]: true });
   const preview = (
     <FinderPreview
@@ -82,6 +89,12 @@ function Composition({ view, query, onViewChange, onQueryChange }: CompositionPr
           value={view}
           onValueChange={onViewChange}
           icons={{
+            outline: (
+              <TreeStructureIcon
+                weight={view === 'outline' ? 'fill' : 'regular'}
+                aria-hidden="true"
+              />
+            ),
             icons: (
               <SquaresFourIcon
                 size={20}
@@ -169,9 +182,22 @@ function Composition({ view, query, onViewChange, onQueryChange }: CompositionPr
             <FinderEmptyState role="status">
               {query ? 'No matching documents' : 'No documents'}
             </FinderEmptyState>
-          ) : view === 'list' ? (
-            <PuppertinoTable
-              data={visible}
+          ) : view === 'list' || view === 'outline' ? (
+            <CollectionView
+              data={
+                view === 'outline'
+                  ? [{ id: 'collection:documents', name: 'Documents', children: visible }]
+                  : visible
+              }
+              {...(view === 'outline'
+                ? {
+                    getChildren: (item: Document) => item.children,
+                    expanded,
+                    onExpandedChange: setExpanded,
+                  }
+                : {})}
+              isRowSelectable={(item) => !item.children}
+              getRowLabel={(item) => item.name}
               columns={columns}
               getRowId={(item) => item.id}
               ariaLabel="Documents"
@@ -179,7 +205,16 @@ function Composition({ view, query, onViewChange, onQueryChange }: CompositionPr
               selectionCheckboxes={false}
               rowSelection={selected}
               onRowSelectionChange={setSelected}
-              getRowProps={(row) => ({ onClick: () => choose(row.id) })}
+              getRowProps={(row) =>
+                row.original.children
+                  ? undefined
+                  : {
+                      onClick: (event) => {
+                        event.preventDefault();
+                        choose(row.id);
+                      },
+                    }
+              }
             />
           ) : view === 'icons' ? (
             <FinderIconGrid aria-label="Document icons">
@@ -195,20 +230,20 @@ function Composition({ view, query, onViewChange, onQueryChange }: CompositionPr
               ))}
             </FinderIconGrid>
           ) : view === 'columns' ? (
-            <ColumnBrowser
+            <ColumnView
               ariaLabel="Document columns"
-              panels={[
+              columns={[
                 {
                   id: 'files',
                   label: 'Documents',
                   content: visible.map((item) => (
-                    <ColumnBrowserItem
+                    <ColumnViewItem
                       key={item.id}
                       selected={selected[item.id]}
                       onClick={() => choose(item.id)}
                     >
                       {item.name}
-                    </ColumnBrowserItem>
+                    </ColumnViewItem>
                   )),
                 },
                 { id: 'preview', label: 'Preview', content: preview },
@@ -252,7 +287,7 @@ const meta = {
   argTypes: {
     view: {
       control: 'inline-radio',
-      options: ['icons', 'list', 'columns', 'gallery'],
+      options: [...finderViews],
       description:
         'Live view, synchronized with the Finder toolbar. Preserves documents and selection.',
       table: { category: 'State' },

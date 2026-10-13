@@ -112,3 +112,29 @@ test('split view validates pane identities and size bounds, including the detail
   assert.match(markup, /aria-orientation="horizontal"/);
   assert.match(markup, /data-orientation="vertical"/);
 });
+
+test('outline row/cell hooks compose without replacing hierarchy and selection semantics', () => {
+  const helper = createPuppertinoColumnHelper<Item>();
+  const markup = renderToStaticMarkup(
+    createElement(OutlineView<Item>, {
+      data: [{ id: 'group', name: 'Group', children: [{ id: 'file', name: 'File' }] }],
+      columns: helper.columns([helper.accessor('name', { header: 'Name' })]),
+      getRowId: id,
+      getRowLabel: (item) => item.name,
+      getChildren: children,
+      initialExpanded: { group: true },
+      selectable: true,
+      isRowSelectable: (item) => !item.children,
+      ariaLabel: 'Hooked outline',
+      getRowProps: (row) => ({ 'data-item': row.id, role: 'button', className: 'custom-row' }),
+      getCellProps: () => ({ 'data-cell': 'name' }),
+    }),
+  );
+  assert.match(markup, /data-item="file"/);
+  assert.match(markup, /data-cell="name"/);
+  assert.match(markup, /custom-row/);
+  assert.doesNotMatch(markup, /role="button"/);
+  assert.match(markup, /aria-level="2"/);
+  assert.match(markup, /aria-label="Select Group"[^>]*disabled/);
+  assert.doesNotMatch(markup, /aria-label="Select File"[^>]*disabled/);
+});

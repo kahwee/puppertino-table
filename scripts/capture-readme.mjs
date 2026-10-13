@@ -259,6 +259,7 @@ try {
   await columns.context.close();
 
   for (const [story, name] of [
+    ['outline-workspace', 'finder-outline'],
     ['column-workspace', 'columns-dark'],
     ['icon-workspace', 'icons-light'],
     ['gallery-workspace', 'gallery-preview'],
@@ -457,7 +458,7 @@ try {
   await finish(panes.context, panes.page, 'split-panes');
   assert.deepEqual(errors, []);
   console.log(
-    'README media captured: eighteen composed screenshots, five asserted interaction GIFs, MP4s and WebMs.',
+    'README media captured: nineteen composed screenshots, five asserted interaction GIFs, MP4s and WebMs.',
   );
 } finally {
   await browser.close();

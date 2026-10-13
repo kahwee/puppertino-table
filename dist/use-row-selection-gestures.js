@@ -11,7 +11,7 @@ export function useRowSelectionGestures(table, { orderedIds, anchor: externalAnc
         if (disabled || table.options.enableRowSelection === false)
             return;
         const rows = table.getRowModel().rows;
-        const byId = new Map(rows.map((row) => [row.id, row]));
+        const byId = new Map(table.getRowModel().flatRows.map((row) => [row.id, row]));
         const ids = (orderedIds ?? rows.map((row) => row.id)).filter((key) => {
             const row = byId.get(key);
             // A row predicate cannot decide eligibility for a caller-owned leading item.

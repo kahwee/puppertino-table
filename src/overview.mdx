@@ -15,8 +15,8 @@ Composable Finder workspaces, semantic React tables and independently resizable 
   <table className="storybook-guide-table" aria-label="Choose a Storybook example">
     <thead><tr><th scope="col">Goal</th><th scope="col">Start here</th><th scope="col">What to try</th></tr></thead>
     <tbody>
-      <tr><td>Build a Finder-style app</td><td><a href="./?path=/docs/examples-finder--docs" target="_top">Finder walkthrough</a></td><td>All four views, Four views, gestures, preview and app-owned commands</td></tr>
-      <tr><td>Compose your own Finder</td><td><a href="./?path=/docs/puppertino-finder-composition--docs" target="_top">Finder primitives</a></td><td>Reusable window, toolbar, sidebar, four views, tags and content slots</td></tr>
+      <tr><td>Build a Finder-style app</td><td><a href="./?path=/docs/examples-finder--docs" target="_top">Finder walkthrough</a></td><td>All five views, Five views, gestures, preview and app-owned commands</td></tr>
+      <tr><td>Compose your own Finder</td><td><a href="./?path=/docs/puppertino-finder-composition--docs" target="_top">Finder primitives</a></td><td>Reusable window, toolbar, sidebar, five views, tags and content slots</td></tr>
       <tr><td>Explore table APIs</td><td><a href="./?path=/docs/puppertino-table--docs" target="_top">Table</a></td><td>Sorting, checkbox ranges, grouped headers, controlled state and external atoms</td></tr>
       <tr><td>Load a hierarchy on expansion</td><td><a href="./?path=/docs/puppertino-outline-view--docs" target="_top">Outline view</a></td><td>Nested disclosure, sibling sorting, lazy children, retry and keyboard navigation</td></tr>
       <tr><td>Arrange sidebar and detail panes</td><td><a href="./?path=/docs/puppertino-split-view--docs" target="_top">Split view</a></td><td>Horizontal/vertical resizing, compact navigation and hidden panes</td></tr>
@@ -65,7 +65,7 @@ The library owns table semantics, column/panel sizing gestures, selection primit
 
 Omitted density inherits an enclosing `DensityScope` through CSS custom properties. Explicit presets start a new scope; partial metrics override just the supplied values. Scoped table rules require CSS `@scope` support: Chrome/Edge 118+, Safari 17.4+, Firefox 146+.
 
-React 19 (`^19.3.0`), TanStack Table and Puppertino are peers. Import Puppertino's dark-mode CSS when using `.p-dark-mode`. No React provider is needed for density.
+React and React DOM (`^19.3.0`), TanStack Table and Puppertino are peers. Base UI is a runtime dependency for context menus. Import Puppertino's dark-mode CSS when using `.p-dark-mode`. No React provider is needed for density.
 
 ## More detail
 

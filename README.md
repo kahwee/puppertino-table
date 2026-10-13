@@ -43,10 +43,10 @@ Import Puppertino's sidebar CSS and `puppertino-table/style.css`. Use `size="sma
 ## Install
 
 ```sh
-pnpm add puppertino-table@0.11.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
+pnpm add puppertino-table@0.12.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
 ```
 
-React 19 (`^19.3.0`), TanStack Table and Puppertino are peer dependencies. Import the Puppertino styles used by your components, followed by the library stylesheet:
+React and React DOM (`^19.3.0`), TanStack Table and Puppertino are peer dependencies. Base UI is included as a runtime dependency for shared context-menu behavior. Import the Puppertino styles used by your components, followed by the library stylesheet:
 
 ```tsx
 import { TableView, createPuppertinoColumnHelper } from 'puppertino-table';
@@ -78,9 +78,9 @@ export function Files() {
 
 Sorting automatically orders the supplied rows by default. Set `manualSorting` for server-paginated data or other app-owned ordering. The [API guide](https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md) covers controlled state, server pagination, persistence, styling and primitive composition.
 
-## Four views, one workspace
+## Five views, one workspace
 
-The Finder example shares selection between List, Icons, Columns and Gallery. Search, folder history, tags, previews and in-memory file operations belong to the example app. The public components provide layout, table/browser geometry, gestures and menus.
+The Finder example shares selection between List, Icons, Columns, Gallery and Outline. Search, folder history, tags, previews and in-memory file operations belong to the example app. The public components provide layout, table/browser geometry, gestures and menus.
 
 ![Column browser with a selected document and app-owned preview](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/columns-preview.png)
 
@@ -88,7 +88,7 @@ The Finder example shares selection between List, Icons, Columns and Gallery. Se
 | --- | --- |
 | ![Icon view with document thumbnails](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/icons-light.png) | ![Gallery view with a document preview and filmstrip](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/gallery-preview.png) |
 
-[Try the Finder](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--file-table) · [Build it from public components](https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md#compose-a-finder)
+[Try Outline in Finder](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--file-table&args=initialView:outline) · [Try the Finder](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--file-table) · [Build it from public components](https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md#compose-a-finder)
 
 ### Selection, spacing and themes
 
@@ -101,6 +101,10 @@ Command/Ctrl-click toggles an item; Shift-click extends a range from a fixed anc
 [Compare comfortable spacing](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--file-table&args=initialDensity:comfortable) · [Dark columns](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--file-table&args=initialView:columns&globals=theme:dark) · [Narrow columns](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--narrow-columns)
 
 ## Hierarchy and split views
+
+Finder’s Outline view groups the current file collection into expandable Documents, PDFs, Notes, Spreadsheets and Artwork. It shares file IDs, selection, commands and sorting with the other views; List and Outline also share column widths. The demo groups are app-owned collections, not filesystem access.
+
+![Finder Outline with expandable groups and shared file columns](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/finder-outline.png)
 
 `OutlineView` keeps disclosure in the first column, sorts siblings together, and supports keyboard navigation and visible-row bulk selection. Supply `loadChildren(item, { signal })` to fetch a branch on expansion. Loading, retry, cancellation and caching stay scoped to that branch.
 
@@ -130,7 +134,7 @@ Drag a divider or use arrow keys. Shift-arrows take larger steps, Home/End reach
 
 [WebM](https://kahwee.github.io/puppertino-table/media/context-menu.webm) · [MP4](https://kahwee.github.io/puppertino-table/media/context-menu.mp4) · [Menu recipe](https://kahwee.github.io/puppertino-table/?path=/docs/examples-finder--docs#right-click-and-keyboard-menus)
 
-Right-click or press Shift+F10 on a focused item. Arrow keys navigate enabled commands; Escape closes the menu and restores focus. Your app supplies commands such as Get Info, Move to Archive and Move to Trash.
+The shared `ContextMenu` composes [Base UI’s context-menu primitives](https://base-ui.com/react/components/context-menu), retaining Puppertino styling. Right-click or press Shift+F10 on a focused item. Arrow keys navigate menu items; disabled entries cannot activate. Escape closes the menu and restores focus. Your app supplies commands such as Get Info, Move to Archive and Move to Trash.
 
 ### Move a file and verify its destination
 
@@ -236,4 +240,4 @@ pnpm capture:readme  # regenerate screenshots and screencasts; Chromium + ffmpeg
 
 GitHub Actions uses native [`parallel` step groups](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsparallel) to run the same gates as `pnpm check` with separate step logs: lint/types/unit tests, library/demo/Storybook builds, then browser and packed-consumer checks. Within browser verification, the demo gesture/accessibility suite and Storybook interaction/docs suite run concurrently in separate browser contexts; both must finish successfully before Chromium closes. Chromium is cached by OS, architecture and lockfile, while system dependencies are installed each run. These checks share one runner and retain every failure gate across CI and npm preparation/release verification. GitHub Pages publishes Storybook after main passes verification. Media is kept in the repository and Pages, outside the npm package. See [media capture](https://github.com/kahwee/puppertino-table/blob/main/docs/media/README.md), [releasing](https://github.com/kahwee/puppertino-table/blob/main/RELEASING.md) and [pointer profiling](https://github.com/kahwee/puppertino-table/blob/main/docs/pointer-performance.md).
 
-MIT. React, TanStack Table, Puppertino and Phosphor retain their respective licenses.
+MIT. React, React DOM, TanStack Table, Puppertino, Base UI and Phosphor retain their respective licenses.

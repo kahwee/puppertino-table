@@ -71,6 +71,6 @@ export declare function useContextMenu<T>(): {
         onKeyDownCapture: (event: KeyboardEvent<HTMLElement>) => void;
     };
 };
-/** Caller-owned commands; popover placement, keyboard navigation and focus stay shared. */
+/** Caller-owned commands; Base UI owns menu focus, navigation, dismissal and placement. */
 export declare function ContextMenu({ position, actions, ariaLabel, onClose, returnFocus, }: ContextMenuProps): import("react").JSX.Element | null;
 export {};

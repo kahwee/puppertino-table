@@ -177,6 +177,12 @@ const outlineProps = {
   getRowId: (item) => item.id,
   getRowLabel: (item) => item.name,
   getChildren: (item) => item.children,
+  isRowSelectable: (item) => !item.children,
+  getRowProps: (row, context) => ({
+    'data-item-id': row.original.id,
+    className: context.disabled ? 'disabled' : undefined,
+  }),
+  getCellProps: (cell) => ({ 'data-column-id': cell.column.id }),
   hasChildren: (item) => item.name === 'Root',
   ariaLabel: 'Outline',
   loadChildren: async (_item, { signal }) => {
@@ -223,3 +229,13 @@ const invalidSidebar: SidebarProps = { size: 'giant' };
 // @ts-expect-error A sidebar link needs a real destination.
 const invalidSidebarLink: SidebarItemLinkProps = { selected: true };
 void [sidebar, sidebarLink, sidebarButton, invalidSidebar, invalidSidebarLink];
+
+import { finderViews } from '../src/index.js';
+
+const outlineSwitcher = {
+  value: 'outline',
+  onValueChange: () => {},
+  icons: { ...viewIcons, outline: null },
+  views: finderViews,
+} satisfies FinderViewSwitcherProps;
+void outlineSwitcher;

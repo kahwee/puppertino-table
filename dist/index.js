@@ -4,7 +4,7 @@ export { ColumnView, ColumnViewItem, } from './column-view.js';
 export { ContextMenu, useContextMenu, } from './context-menu.js';
 export { DensityScope, } from './density.js';
 export { FinderBody, FinderContent, FinderDetails, FinderEmptyState, FinderFilmstrip, FinderGallery, FinderGalleryItem, FinderIconGrid, FinderIconItem, FinderPathBar, FinderPreview, FinderSidebar, FinderSidebarGroup, FinderSidebarItem, FinderStatusBar, FinderWindow, } from './finder-layout.js';
-export { FinderActions, FinderHistory, FinderSearch, FinderTitle, FinderToolbar, FinderToolbarButton, FinderToolbarGroup, FinderViewSwitcher, FinderWindowControls, } from './finder-toolbar.js';
+export { FinderActions, FinderHistory, FinderSearch, FinderTitle, FinderToolbar, FinderToolbarButton, FinderToolbarGroup, FinderViewSwitcher, FinderWindowControls, finderViews, } from './finder-toolbar.js';
 export { nextItemId, } from './item-navigation.js';
 export { createPuppertinoColumnHelper, puppertinoTableFeatures, } from './model.js';
 export { OutlineView } from './outline-view.js';

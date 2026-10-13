@@ -14,16 +14,7 @@ import { usePuppertinoTable } from './use-puppertino-table.js';
 import { useRowSelectionGestures } from './use-row-selection-gestures.js';
 
 type OutlineTableProps<P> = P extends unknown
-  ? Omit<
-      P,
-      | 'getSubRows'
-      | 'getRowProps'
-      | 'getCellProps'
-      | 'leadingRows'
-      | 'status'
-      | 'loadingContent'
-      | 'errorContent'
-    >
+  ? Omit<P, 'getSubRows' | 'leadingRows' | 'status' | 'loadingContent' | 'errorContent'>
   : never;
 export type OutlineViewProps<T extends RowData> = OutlineTableProps<PuppertinoTableProps<T>> &
   Omit<OutlineOptions<T>, 'getItemId'> & {
@@ -57,12 +48,16 @@ type OutlineBodyProps<T extends RowData> = {
   outline: ReturnType<typeof useOutline<T>>;
   visible: readonly OutlineRow<T>[];
   getRowLabel: (item: T) => string;
+  getRowProps?: OutlineViewProps<T>['getRowProps'];
+  getCellProps?: OutlineViewProps<T>['getCellProps'];
 };
 function OutlineBody<T extends RowData>({
   table,
   outline,
   visible,
   getRowLabel,
+  getRowProps,
+  getCellProps,
 }: OutlineBodyProps<T>) {
   const elements = useRef(new Map<string, HTMLTableRowElement>());
   const orderedIds = visible.map(({ row }) => row.id);
@@ -135,8 +130,19 @@ function OutlineBody<T extends RowData>({
         const canExpand = outline.canExpand(row.original);
         const expanded = outline.expanded[row.id] === true;
         const load = outline.loads.get(row.id);
+        const context = {
+          table,
+          columnCount: table.getAllLeafColumns().length + (showSelection ? 1 : 0),
+          selectable: behavior.selectable,
+          disabled: behavior.disabled,
+        };
+        const rowProps = getRowProps?.(row, context);
+        const rowAttributes = { ...rowProps };
+        // Application attributes cannot replace native treegrid row semantics.
+        delete rowAttributes.role;
         return (
           <tr
+            {...rowAttributes}
             key={row.id}
             ref={(element) => {
               if (element) elements.current.set(row.id, element);
@@ -149,11 +155,23 @@ function OutlineBody<T extends RowData>({
             aria-expanded={canExpand ? expanded : undefined}
             aria-busy={load?.status === 'loading' || undefined}
             aria-selected={behavior.selectable ? row.getIsSelected() : undefined}
-            className={row.getIsSelected() ? 'p-selected' : undefined}
-            onFocus={navigation.getItemProps(row.id).onFocus}
-            onKeyDown={(event) => keyDown(event, item)}
+            className={
+              [row.getIsSelected() ? 'p-selected' : '', rowProps?.className]
+                .filter(Boolean)
+                .join(' ') || undefined
+            }
+            onFocus={(event) => {
+              navigation.getItemProps(row.id).onFocus();
+              rowProps?.onFocus?.(event);
+            }}
+            onKeyDown={(event) => {
+              rowProps?.onKeyDown?.(event);
+              if (!event.defaultPrevented) keyDown(event, item);
+            }}
             onClick={(event) => {
-              if ((event.target as HTMLElement).closest('button,input,a')) return;
+              rowProps?.onClick?.(event);
+              if (event.defaultPrevented || (event.target as HTMLElement).closest('button,input,a'))
+                return;
               navigation.focus(row.id);
               gestures.select(row.id, {
                 shift: event.shiftKey,
@@ -172,7 +190,7 @@ function OutlineBody<T extends RowData>({
               </td>
             )}
             {row.getAllCells().map((cell, index) => (
-              <td role="gridcell" key={cell.id}>
+              <td {...getCellProps?.(cell, context)} role="gridcell" key={cell.id}>
                 {index === 0 ? (
                   <div className="pt-outline-cell" style={{ paddingInlineStart: row.depth * 18 }}>
                     {canExpand ? (
@@ -293,6 +311,8 @@ export function OutlineView<T extends RowData>(props: OutlineViewProps<T>) {
                 outline={outline}
                 visible={visible}
                 getRowLabel={props.getRowLabel}
+                getRowProps={props.getRowProps}
+                getCellProps={props.getCellProps}
               />
             ) : (
               <tbody>

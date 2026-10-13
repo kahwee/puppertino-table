@@ -2,6 +2,7 @@
 // biome-ignore-all lint/a11y/useFocusableInteractive: This treegrid uses row focus, so cells are reached through their parent row.
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { createElement as _createElement } from "react";
 import { memo, useMemo, useRef } from 'react';
 import { DensityScope } from './density.js';
 import { RowSelectionCheckbox } from './row-selection-checkbox.js';
@@ -23,7 +24,7 @@ export function visibleOutlineRows(rows, expanded) {
     visit(rows);
     return visible;
 }
-function OutlineBody({ table, outline, visible, getRowLabel, }) {
+function OutlineBody({ table, outline, visible, getRowLabel, getRowProps, getCellProps, }) {
     const elements = useRef(new Map());
     const orderedIds = visible.map(({ row }) => row.id);
     const behavior = tableBehavior(table);
@@ -100,26 +101,48 @@ function OutlineBody({ table, outline, visible, getRowLabel, }) {
             const canExpand = outline.canExpand(row.original);
             const expanded = outline.expanded[row.id] === true;
             const load = outline.loads.get(row.id);
-            return (_jsxs("tr", { ref: (element) => {
+            const context = {
+                table,
+                columnCount: table.getAllLeafColumns().length + (showSelection ? 1 : 0),
+                selectable: behavior.selectable,
+                disabled: behavior.disabled,
+            };
+            const rowProps = getRowProps?.(row, context);
+            const rowAttributes = { ...rowProps };
+            // Application attributes cannot replace native treegrid row semantics.
+            delete rowAttributes.role;
+            return (_createElement("tr", { ...rowAttributes, key: row.id, ref: (element) => {
                     if (element)
                         elements.current.set(row.id, element);
                     else
                         elements.current.delete(row.id);
-                }, tabIndex: navigation.getItemProps(row.id).tabIndex, "aria-level": row.depth + 1, "aria-posinset": position, "aria-setsize": siblingCount, "aria-expanded": canExpand ? expanded : undefined, "aria-busy": load?.status === 'loading' || undefined, "aria-selected": behavior.selectable ? row.getIsSelected() : undefined, className: row.getIsSelected() ? 'p-selected' : undefined, onFocus: navigation.getItemProps(row.id).onFocus, onKeyDown: (event) => keyDown(event, item), onClick: (event) => {
-                    if (event.target.closest('button,input,a'))
+                }, tabIndex: navigation.getItemProps(row.id).tabIndex, "aria-level": row.depth + 1, "aria-posinset": position, "aria-setsize": siblingCount, "aria-expanded": canExpand ? expanded : undefined, "aria-busy": load?.status === 'loading' || undefined, "aria-selected": behavior.selectable ? row.getIsSelected() : undefined, className: [row.getIsSelected() ? 'p-selected' : '', rowProps?.className]
+                    .filter(Boolean)
+                    .join(' ') || undefined, onFocus: (event) => {
+                    navigation.getItemProps(row.id).onFocus();
+                    rowProps?.onFocus?.(event);
+                }, onKeyDown: (event) => {
+                    rowProps?.onKeyDown?.(event);
+                    if (!event.defaultPrevented)
+                        keyDown(event, item);
+                }, onClick: (event) => {
+                    rowProps?.onClick?.(event);
+                    if (event.defaultPrevented || event.target.closest('button,input,a'))
                         return;
                     navigation.focus(row.id);
                     gestures.select(row.id, {
                         shift: event.shiftKey,
                         toggle: event.metaKey || event.ctrlKey,
                     });
-                }, children: [showSelection && (_jsx("td", { role: "gridcell", className: "pt-selection", children: _jsx(RowSelectionCheckbox, { row: row, label: getRowLabel(row.original), orderedIds: orderedIds, disabled: behavior.disabled }) })), row.getAllCells().map((cell, index) => (_jsx("td", { role: "gridcell", children: index === 0 ? (_jsxs("div", { className: "pt-outline-cell", style: { paddingInlineStart: row.depth * 18 }, children: [canExpand ? (_jsx("button", { type: "button", className: "pt-outline-disclosure", "aria-label": `${expanded ? 'Collapse' : 'Expand'} ${getRowLabel(row.original)}`, "aria-expanded": expanded, disabled: outline.readOnly, onClick: (event) => {
+                } },
+                showSelection && (_jsx("td", { role: "gridcell", className: "pt-selection", children: _jsx(RowSelectionCheckbox, { row: row, label: getRowLabel(row.original), orderedIds: orderedIds, disabled: behavior.disabled }) })),
+                row.getAllCells().map((cell, index) => (_createElement("td", { ...getCellProps?.(cell, context), role: "gridcell", key: cell.id }, index === 0 ? (_jsxs("div", { className: "pt-outline-cell", style: { paddingInlineStart: row.depth * 18 }, children: [canExpand ? (_jsx("button", { type: "button", className: "pt-outline-disclosure", "aria-label": `${expanded ? 'Collapse' : 'Expand'} ${getRowLabel(row.original)}`, "aria-expanded": expanded, disabled: outline.readOnly, onClick: (event) => {
+                                event.stopPropagation();
+                                toggle(row, event.altKey);
+                            }, children: _jsx("span", { className: "pt-outline-triangle", "data-expanded": expanded, "aria-hidden": "true" }) })) : (_jsx("span", { className: "pt-outline-spacer", "aria-hidden": "true" })), _jsx("span", { className: "pt-outline-label", children: _jsx(table.FlexRender, { cell: cell }) }), load?.status === 'loading' && (_jsx("span", { role: "status", className: "pt-outline-status", children: "Loading\u2026" })), load?.status === 'error' && (_jsxs("span", { className: "pt-outline-error", children: [_jsx("span", { role: "alert", children: "Could not load children." }), _jsxs("button", { type: "button", className: "p-button", disabled: outline.readOnly, onClick: (event) => {
                                         event.stopPropagation();
-                                        toggle(row, event.altKey);
-                                    }, children: _jsx("span", { className: "pt-outline-triangle", "data-expanded": expanded, "aria-hidden": "true" }) })) : (_jsx("span", { className: "pt-outline-spacer", "aria-hidden": "true" })), _jsx("span", { className: "pt-outline-label", children: _jsx(table.FlexRender, { cell: cell }) }), load?.status === 'loading' && (_jsx("span", { role: "status", className: "pt-outline-status", children: "Loading\u2026" })), load?.status === 'error' && (_jsxs("span", { className: "pt-outline-error", children: [_jsx("span", { role: "alert", children: "Could not load children." }), _jsxs("button", { type: "button", className: "p-button", disabled: outline.readOnly, onClick: (event) => {
-                                                event.stopPropagation();
-                                                void outline.retry(row.original);
-                                            }, children: ["Retry ", getRowLabel(row.original)] })] }))] })) : (_jsx(table.FlexRender, { cell: cell })) }, cell.id)))] }, row.id));
+                                        void outline.retry(row.original);
+                                    }, children: ["Retry ", getRowLabel(row.original)] })] }))] })) : (_jsx(table.FlexRender, { cell: cell })))))));
         }) }));
 }
 const MemoOutlineBody = memo(OutlineBody);
@@ -142,5 +165,5 @@ export function OutlineView(props) {
                             storage: props.storage,
                             cancelMediaQuery: props.cancelMediaQuery,
                             onCommit: props.onColumnSizingCommit,
-                        } }), visible.length ? (_jsx(MemoOutlineBody, { table: table, outline: outline, visible: visible, getRowLabel: props.getRowLabel })) : (_jsx("tbody", { children: _jsx("tr", { children: _jsx("td", { colSpan: table.getAllLeafColumns().length + (showSelection ? 1 : 0), children: props.emptyContent ?? 'No items' }) }) }))] })) }) }));
+                        } }), visible.length ? (_jsx(MemoOutlineBody, { table: table, outline: outline, visible: visible, getRowLabel: props.getRowLabel, getRowProps: props.getRowProps, getCellProps: props.getCellProps })) : (_jsx("tbody", { children: _jsx("tr", { children: _jsx("td", { colSpan: table.getAllLeafColumns().length + (showSelection ? 1 : 0), children: props.emptyContent ?? 'No items' }) }) }))] })) }) }));
 }

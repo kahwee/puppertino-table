@@ -1,7 +1,7 @@
 import type { RowData } from '@tanstack/react-table';
 import type { PuppertinoRow, PuppertinoTableProps } from './table-types.js';
 import { type OutlineOptions } from './use-outline.js';
-type OutlineTableProps<P> = P extends unknown ? Omit<P, 'getSubRows' | 'getRowProps' | 'getCellProps' | 'leadingRows' | 'status' | 'loadingContent' | 'errorContent'> : never;
+type OutlineTableProps<P> = P extends unknown ? Omit<P, 'getSubRows' | 'leadingRows' | 'status' | 'loadingContent' | 'errorContent'> : never;
 export type OutlineViewProps<T extends RowData> = OutlineTableProps<PuppertinoTableProps<T>> & Omit<OutlineOptions<T>, 'getItemId'> & {
     /** IDs must be globally unique across every hierarchy level. */
     getRowId(item: T): string;

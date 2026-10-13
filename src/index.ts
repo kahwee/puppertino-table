@@ -76,6 +76,7 @@ export {
   type FinderViewSwitcherProps,
   FinderWindowControls,
   type FinderWindowControlsProps,
+  finderViews,
 } from './finder-toolbar.js';
 export {
   type ItemNavigationOptions,

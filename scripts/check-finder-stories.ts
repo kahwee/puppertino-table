@@ -32,6 +32,7 @@ export async function checkFinderStories(page: Page, base: string, evidence: str
     'column-workspace',
     'icon-workspace',
     'gallery-workspace',
+    'outline-workspace',
     'narrow-columns',
   ]) {
     await page.goto(`${base}/iframe.html?${storyQuery(`examples-finder--${story}`)}`);
@@ -181,8 +182,9 @@ export async function checkFinderStories(page: Page, base: string, evidence: str
   await checkFinderBulkActions(page, base, evidence);
   await checkFinderTags(page, base, evidence);
   await checkFinderFocus(page, base, evidence);
+  await checkFinderOutline(page, base, evidence);
   console.log(
-    'Finder stories passed: four views, light/dark/narrow, axe, search, history, shared keyboard menus and reset.',
+    'Finder stories passed: five views, light/dark/narrow, axe, search, history, shared keyboard menus and reset.',
   );
 }
 
@@ -196,11 +198,12 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
     ['icon-workspace', 'icons'],
     ['column-workspace', 'columns'],
     ['gallery-workspace', 'gallery'],
+    ['outline-workspace', 'outline'],
   ]) {
     await page.goto(`${base}/iframe.html?${storyQuery(`examples-finder--${story}`)}`);
     await page.getByRole('heading', { name: 'Projects', exact: true }).waitFor();
     assert.equal(await commandDisabled(page, 'Move to Trash'), true);
-    if (view === 'list') {
+    if (view === 'list' || view === 'outline') {
       await page.getByRole('row').filter({ hasText: 'Project brief.pdf' }).click();
       await page
         .getByRole('row')
@@ -319,7 +322,7 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
   await page.screenshot({ path: `${evidence}/finder-bulk-narrow.png` });
   await page.setViewportSize({ width: 1080, height: 640 });
   console.log(
-    'Finder bulk actions passed: shared selection, four-view delete/undo/restore, hidden-result safety, keyboard context commands, Trash and narrow accessibility.',
+    'Finder bulk actions passed: shared selection, five-view delete/undo/restore, hidden-result safety, keyboard context commands, Trash and narrow accessibility.',
   );
 }
 
@@ -402,5 +405,99 @@ async function checkFinderTags(page: Page, base: string, evidence: string) {
   await page.setViewportSize({ width: 1080, height: 640 });
   console.log(
     'Finder tags passed: bulk assignment, tokens, creation, removal, sidebar filters, Escape focus and accessibility.',
+  );
+}
+
+export async function checkFinderOutline(page: Page, base: string, evidence: string) {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(`${base}/iframe.html?${storyQuery('examples-finder--outline-workspace')}`);
+  const grid = page.getByRole('treegrid', { name: 'Project file hierarchy' });
+  await grid.waitFor();
+  const brief = grid.locator('[data-file-id="brief"]');
+  await brief.click();
+  assert.equal(await brief.getAttribute('aria-selected'), 'true');
+  const summary = page.getByLabel('Selection summary');
+  assert.equal(await summary.textContent(), '1 of 6 selected');
+  await page.getByRole('button', { name: 'Collapse PDFs', exact: true }).click();
+  assert.equal(await brief.count(), 0);
+  assert.equal(
+    await commandDisabled(page, 'Move to Trash'),
+    true,
+    'Collapsed selections cannot become bulk command targets',
+  );
+  await page.getByRole('button', { name: 'List', exact: true }).click();
+  const listBrief = page.getByRole('table').locator('[data-file-id="brief"]');
+  assert.equal(
+    (await listBrief.getAttribute('class'))?.includes('p-selected'),
+    true,
+    'File selection survives view changes',
+  );
+  const handle = page.getByRole('separator', { name: 'Resize Name column' });
+  await handle.focus();
+  await handle.press('ArrowRight');
+  const width = await handle.getAttribute('aria-valuenow');
+  await page.getByRole('button', { name: 'Outline', exact: true }).click();
+  assert.equal(
+    await page.getByRole('separator', { name: 'Resize Name column' }).getAttribute('aria-valuenow'),
+    width,
+    'List and Outline share widths',
+  );
+  await page.getByRole('button', { name: 'Expand PDFs', exact: true }).click();
+  assert.equal(await brief.getAttribute('aria-selected'), 'true');
+  await brief.click({ modifiers: ['Control'] });
+  assert.equal(
+    await brief.getAttribute('aria-selected'),
+    'false',
+    'Custom row hooks do not double-toggle selection',
+  );
+  await brief.focus();
+  await brief.press('Shift+F10');
+  const menu = page.getByRole('menu', { name: 'File actions' });
+  await menu.waitFor();
+  await page.getByRole('menuitem', { name: 'Rename', exact: true }).click();
+  const rename = page.getByRole('textbox', { name: 'New filename' });
+  await rename.waitFor();
+  assert.equal(
+    await rename.evaluate((element) => element === document.activeElement),
+    true,
+    'Menu command does not steal modal input focus',
+  );
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await brief.click();
+  await brief.press('ArrowLeft');
+  assert.equal(
+    await grid
+      .locator('[data-outline-id]')
+      .filter({ hasText: 'PDFs' })
+      .evaluate((element) => element === document.activeElement),
+    true,
+    'Left returns to the parent group',
+  );
+  await brief.focus();
+  await brief.press('Control+1');
+  await page.getByRole('button', { name: 'Project brief.pdf PDF document', exact: true }).waitFor();
+  await page.keyboard.press('Control+5');
+  await brief.waitFor();
+  await page.waitForFunction(
+    () => document.activeElement?.getAttribute('data-file-id') === 'brief',
+  );
+  await brief.dblclick();
+  await page.getByRole('dialog', { name: 'Quick Look' }).waitFor();
+  await page.keyboard.press('Escape');
+  await page.getByRole('dialog', { name: 'Quick Look' }).waitFor({ state: 'hidden' });
+  for (const theme of ['light', 'dark']) {
+    await setStorybookTheme(page, theme);
+    await brief.click({ button: 'right' });
+    await menu.waitFor();
+    assert.deepEqual(await finderViolations(page), [], `Outline ${theme} with Base UI menu`);
+    await page.screenshot({ path: `${evidence}/finder-outline-${theme}.png` });
+    await page.keyboard.press('Escape');
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+  assert.deepEqual(await finderViolations(page), [], 'Narrow outline accessibility');
+  await page.screenshot({ path: `${evidence}/finder-outline-narrow.png` });
+  console.log(
+    'Finder Outline passed: shared selection/widths, collapse safety, row-hook cancellation, hierarchy keys, view focus, menus, rename, Quick Look, and light/dark/narrow accessibility.',
   );
 }

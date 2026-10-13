@@ -1,4 +1,5 @@
 const aliases = {
+  'examples-finder--outline-workspace': ['examples-finder--file-table', 'initialView:outline'],
   'examples-finder--column-workspace': ['examples-finder--file-table', 'initialView:columns'],
   'examples-finder--icon-workspace': ['examples-finder--file-table', 'initialView:icons'],
   'examples-finder--gallery-workspace': ['examples-finder--file-table', 'initialView:gallery'],
