@@ -343,7 +343,7 @@
     background: Highlight;
     color: HighlightText;
   }
-  .pt-context-menu > [role="menuitem"]:focus-visible {
+  .pt-context-menu > [role="menuitem"]:focus:not(:disabled):not([aria-disabled="true"]) {
     background: Highlight;
     color: HighlightText;
   }

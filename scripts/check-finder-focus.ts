@@ -152,6 +152,17 @@ export async function checkFinderFocus(page: Page, base: string, evidence: strin
     'Forced colors retain a visible field focus indicator',
   );
   await page.screenshot({ path: `${evidence}/focus-forced-colors.png` });
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Actions', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Move to Trash', exact: true }).hover();
+  assert.notEqual(
+    await page
+      .getByRole('menuitem', { name: 'Move to Trash', exact: true })
+      .evaluate((node) => getComputedStyle(node).backgroundColor),
+    await page.getByRole('menu').evaluate((node) => getComputedStyle(node).backgroundColor),
+    'Forced colors preserve pointer menu highlighting',
+  );
+  await page.keyboard.press('Escape');
   await page.emulateMedia({ forcedColors: 'none' });
   console.log(
     'Finder focus passed: pointer/keyboard toolbar, clipped headers, tag input/token, menu and forced colors.',
