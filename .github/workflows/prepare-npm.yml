@@ -27,44 +27,27 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium --no-shell
       - name: Select installed Chromium
         run: pnpm exec node -e "const {chromium}=require('playwright'); require('node:fs').appendFileSync(process.env.GITHUB_ENV, 'PLAYWRIGHT_CHROMIUM_EXECUTABLE=' + chromium.executablePath() + '\n')"
-      # Same gates as pnpm check; every background exit status is collected.
-      - name: Lint, type-check and unit tests
-        run: |
-          pnpm lint &
-          task_0_pid=$!
-          pnpm typecheck &
-          task_1_pid=$!
-          pnpm test &
-          task_2_pid=$!
-          status=0
-          wait "$task_0_pid" || status=1
-          wait "$task_1_pid" || status=1
-          wait "$task_2_pid" || status=1
-          exit "$status"
-      - name: Build library, demo and Storybook
-        run: |
-          pnpm build &
-          task_0_pid=$!
-          pnpm build:demo &
-          task_1_pid=$!
-          pnpm build:storybook &
-          task_2_pid=$!
-          status=0
-          wait "$task_0_pid" || status=1
-          wait "$task_1_pid" || status=1
-          wait "$task_2_pid" || status=1
-          exit "$status"
+      # Same gates as pnpm check; each native parallel group waits and propagates failures.
+      - parallel:
+          - name: Lint
+            run: pnpm lint
+          - name: Type-check
+            run: pnpm typecheck
+          - name: Unit and release tests
+            run: pnpm test
+      - parallel:
+          - name: Build library
+            run: pnpm build
+          - name: Build demo
+            run: pnpm build:demo
+          - name: Build Storybook
+            run: pnpm build:storybook
       # Browser checks use built demo/Storybook and source; package checks own dist/prepack.
-      - name: Verify browsers and packed consumers
-        run: |
-          pnpm test:browser &
-          task_0_pid=$!
-          pnpm test:package &
-          task_1_pid=$!
-          status=0
-          wait "$task_0_pid" || status=1
-          wait "$task_1_pid" || status=1
-          exit "$status"
+      - parallel:
+          - name: Browser verification
+            run: pnpm test:browser
+          - name: Packed-consumer verification
+            run: pnpm test:package
       - name: Verify checked-in build
         run: git diff --exit-code -- dist
       - name: Preview public npm publication
