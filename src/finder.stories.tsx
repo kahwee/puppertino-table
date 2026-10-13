@@ -32,7 +32,6 @@ import {
   FinderWindow,
   nextItemId,
   PuppertinoTable,
-  type TableDensity,
   useContextMenu,
   useItemNavigation,
 } from './index.js';
@@ -88,7 +87,7 @@ function FinderDemo({
   disabled?: boolean;
   manualSorting?: boolean;
   onViewChange?(view: FinderView): void;
-  onDensityChange?(density: TableDensity): void;
+  onDensityChange?(density: 'compact' | 'comfortable'): void;
 }) {
   const [fileState, dispatchFiles] = useReducer(finderFilesReducer, initialFinderFiles);
   const { files, trash, lastDeletedIds } = fileState;
@@ -99,14 +98,14 @@ function FinderDemo({
   const [tagNames, setTagNames] = useState(['Project Alpine', 'Work', 'Review']);
   const [folder, setFolder] = useState('Projects');
   const [view, setLocalView] = useState(initialView);
-  const [density, setLocalDensity] = useState<TableDensity>(initialDensity);
+  const [density, setLocalDensity] = useState<'compact' | 'comfortable'>(initialDensity);
   useEffect(() => setLocalView(initialView), [initialView]);
   useEffect(() => setLocalDensity(initialDensity), [initialDensity]);
   const setView = (next: FinderView) => {
     setLocalView(next);
     onViewChange?.(next);
   };
-  const setDensity = (next: TableDensity) => {
+  const setDensity = (next: 'compact' | 'comfortable') => {
     setLocalDensity(next);
     onDensityChange?.(next);
   };
@@ -1036,7 +1035,7 @@ function FinderDemo({
           <select
             aria-label="Row density"
             value={density}
-            onChange={(event) => setDensity(event.target.value as TableDensity)}
+            onChange={(event) => setDensity(event.target.value as 'compact' | 'comfortable')}
           >
             <option value="compact">Compact</option>
             <option value="comfortable">Comfortable</option>
@@ -1116,7 +1115,7 @@ const meta = {
     onDensityChange: fn(),
   },
   render: function Playground(args) {
-    const [, updateArgs] = useArgs();
+    const [, updateArgs] = useArgs<typeof args>();
     return (
       <FinderDemo
         {...args}
@@ -1254,6 +1253,7 @@ export const NarrowColumns: Story = {
 };
 
 export const Tags: Story = {
+  tags: ['!dev', '!autodocs'],
   parameters: {
     docs: {
       description: {
@@ -1333,6 +1333,7 @@ export const KeyboardWorkflow: Story = {
 };
 
 export const QuickLook: Story = {
+  tags: ['!dev', '!autodocs'],
   parameters: {
     controls: { disable: true },
     docs: {

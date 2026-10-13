@@ -3,6 +3,7 @@ import dateExample from '../demo/date-table-example.tsx?raw';
 import fixtures from '../demo/fixtures.tsx?raw';
 import navigationExample from '../demo/keyboard-navigation-example.tsx?raw';
 import outlineExample from '../demo/outline-view-example.tsx?raw';
+import sidebarExample from '../demo/sidebar-example.tsx?raw';
 import splitExample from '../demo/split-view-example.tsx?raw';
 import stateExamples from '../demo/table-state-examples.tsx?raw';
 import statusExample from '../demo/table-status-example.tsx?raw';
@@ -21,4 +22,5 @@ export const tableRecipes = createTableRecipes({
   typedExample,
   outlineExample,
   splitExample,
+  sidebarExample,
 });

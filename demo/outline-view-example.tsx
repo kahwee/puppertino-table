@@ -5,6 +5,7 @@ import {
   createPuppertinoColumnHelper,
   type OutlineExpandedState,
   OutlineView,
+  type OutlineViewProps,
   SplitView,
 } from '../src/index.js';
 
@@ -61,7 +62,18 @@ const columns = helper.columns([
   }),
 ]);
 
-export function OutlineViewExample({ disabled = false }: { disabled?: boolean }) {
+export type OutlineViewExampleProps = Pick<
+  OutlineViewProps<OutlineItem>,
+  'disabled' | 'density' | 'selectable' | 'selectionCheckboxes' | 'resizable' | 'manualSorting'
+>;
+export function OutlineViewExample({
+  disabled = false,
+  density = 'comfortable',
+  selectable = true,
+  selectionCheckboxes = true,
+  resizable = true,
+  manualSorting = false,
+}: OutlineViewExampleProps) {
   const [selection, setSelection] = useState<RowSelectionState>({});
   const [expanded, setExpanded] = useState<OutlineExpandedState>({});
   const [activePane, setActivePane] = useState('outline');
@@ -148,8 +160,11 @@ export function OutlineViewExample({ disabled = false }: { disabled?: boolean })
                   expanded={expanded}
                   onExpandedChange={setExpanded}
                   ariaLabel="Document hierarchy"
-                  density="comfortable"
-                  selectable
+                  density={density}
+                  selectable={selectable}
+                  selectionCheckboxes={selectionCheckboxes}
+                  resizable={resizable}
+                  manualSorting={manualSorting}
                   rowSelection={selection}
                   onRowSelectionChange={setSelection}
                   disabled={disabled}

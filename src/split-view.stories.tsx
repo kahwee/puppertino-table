@@ -6,8 +6,23 @@ import { SplitViewExample } from '../demo/split-view-example.js';
 const meta = {
   title: 'Puppertino/Split view',
   component: SplitViewExample,
-  args: { orientation: 'horizontal' },
-  argTypes: { orientation: { control: 'inline-radio', options: ['horizontal', 'vertical'] } },
+  args: { orientation: 'horizontal', resizable: true, disabled: false },
+  argTypes: {
+    orientation: {
+      control: 'inline-radio',
+      options: ['horizontal', 'vertical'],
+      table: { category: 'Layout', defaultValue: { summary: 'horizontal' } },
+    },
+    resizable: {
+      control: 'boolean',
+      table: { category: 'Sizing', defaultValue: { summary: 'true' } },
+    },
+    disabled: {
+      control: 'boolean',
+      if: { arg: 'resizable' },
+      table: { category: 'Sizing', defaultValue: { summary: 'false' } },
+    },
+  },
   parameters: {
     docs: {
       source: { language: 'tsx', type: 'code', code: tableRecipes.split },
@@ -21,6 +36,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const Default = {
+  name: 'Playground',
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const divider = canvas.getByRole('separator', { name: 'Resize Sidebar pane' });
@@ -33,7 +49,10 @@ export const Default = {
     await expect(canvas.getByRole('region', { name: 'Sidebar' })).toBeInTheDocument();
   },
 } satisfies Story;
-export const Vertical = { args: { orientation: 'vertical' } } satisfies Story;
+export const Vertical = {
+  tags: ['!dev', '!autodocs'],
+  args: { orientation: 'vertical' },
+} satisfies Story;
 
 export const Compact = {
   decorators: [

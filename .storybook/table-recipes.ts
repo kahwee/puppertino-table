@@ -9,6 +9,7 @@ export interface TableRecipeSources {
   typedExample: string;
   outlineExample: string;
   splitExample: string;
+  sidebarExample: string;
 }
 
 export function createTableRecipes({
@@ -22,6 +23,7 @@ export function createTableRecipes({
   typedExample,
   outlineExample,
   splitExample,
+  sidebarExample,
 }: TableRecipeSources) {
   // Reuse the rendered examples so documentation cannot drift from their state wiring.
   const peopleFixture = fixtures
@@ -91,6 +93,7 @@ ${owner}  });
 }`;
   }
   return {
+    sidebar: `'use client';\n${styles}\nimport '@codedgar/puppertino/sidebars';\n${sidebarExample.replace("'../src/index.js'", "'puppertino-table'")}`,
     outline: `'use client';\n${styles}\n${outlineExample.replace("'../src/index.js'", "'puppertino-table'")}`,
     split: `'use client';\n${styles}\n${splitExample.replace("'../src/index.js'", "'puppertino-table'")}`,
     typed: `'use client';\n${styles}\n${typedExample.replace("'../src/index.js'", "'puppertino-table'")}`,

@@ -115,7 +115,7 @@ const meta = {
     },
   },
   render: function Controlled(args) {
-    const [, updateArgs] = useArgs();
+    const [, updateArgs] = useArgs<typeof args>();
     return (
       <PickerExample
         {...args}

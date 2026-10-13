@@ -6,7 +6,34 @@ import { OutlineViewExample } from '../demo/outline-view-example.js';
 const meta = {
   title: 'Puppertino/Outline view',
   component: OutlineViewExample,
-  args: { disabled: false },
+  args: {
+    disabled: false,
+    density: 'comfortable',
+    selectable: true,
+    selectionCheckboxes: true,
+    resizable: true,
+    manualSorting: false,
+  },
+  argTypes: {
+    disabled: { control: 'boolean', table: { category: 'Behavior' } },
+    selectable: { control: 'boolean', table: { category: 'Selection' } },
+    selectionCheckboxes: {
+      control: 'boolean',
+      if: { arg: 'selectable' },
+      table: { category: 'Selection' },
+    },
+    density: {
+      control: 'inline-radio',
+      options: ['native', 'compact', 'comfortable'],
+      table: { category: 'Appearance' },
+    },
+    resizable: { control: 'boolean', table: { category: 'Sizing' } },
+    manualSorting: {
+      control: 'boolean',
+      description: 'Enable for server-owned sibling order.',
+      table: { category: 'Sorting', defaultValue: { summary: 'false' } },
+    },
+  },
   parameters: {
     docs: {
       source: { language: 'tsx', type: 'code', code: tableRecipes.outline },
@@ -19,7 +46,7 @@ const meta = {
 } satisfies Meta<typeof OutlineViewExample>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-export const Default = {} satisfies Story;
+export const Default = { name: 'Playground' } satisfies Story;
 export const LoadingAndRetry = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -39,6 +66,7 @@ export const LoadingAndRetry = {
   },
 } satisfies Story;
 export const KeyboardAndSelection = {
+  tags: ['!dev', '!autodocs'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const grid = canvas.getByRole('treegrid', { name: 'Document hierarchy' });
@@ -70,9 +98,13 @@ export const KeyboardAndSelection = {
     await expect(names[4]).toContain('cell.tsx');
   },
 } satisfies Story;
-export const Disabled = { args: { disabled: true } } satisfies Story;
+export const Disabled = {
+  tags: ['!dev', '!autodocs'],
+  args: { disabled: true },
+} satisfies Story;
 
 export const CancellationAndCaching = {
+  tags: ['!dev', '!autodocs'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Expand Projects' }));

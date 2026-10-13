@@ -21,19 +21,19 @@
 }
 
 .sbdocs-wrapper {
-  padding: 40px 28px;
+  padding: 32px 24px;
 }
 .sbdocs-content {
-  max-width: 1120px;
+  max-width: 1000px;
 }
 .sbdocs-content > p {
-  line-height: 1.7;
+  line-height: 1.6;
 }
 .sbdocs-content > h1 {
   letter-spacing: -0.6px;
 }
 .sbdocs-content > h2 {
-  margin-top: 40px;
+  margin-top: 32px;
 }
 .sbdocs-content figure img {
   border-radius: 8px;

@@ -292,7 +292,7 @@ export const Selection: Story = {
   },
 };
 export const KeyboardResize: Story = {
-  tags: ['!dev'],
+  tags: ['!dev', '!autodocs'],
   parameters: { docs: { source: { code: tableRecipes.controlled } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -305,7 +305,7 @@ export const KeyboardResize: Story = {
   },
 };
 export const Narrow: Story = {
-  tags: ['!dev'],
+  tags: ['!dev', '!autodocs'],
   parameters: { docs: { source: { code: tableRecipes.controlled } } },
   decorators: [
     (Story) => (
@@ -316,12 +316,12 @@ export const Narrow: Story = {
   ],
 };
 export const Empty: Story = {
-  tags: ['!dev'],
+  tags: ['!dev', '!autodocs'],
   args: { data: [], emptyContent: 'No people match this view.' },
   parameters: { docs: { source: { code: tableRecipes.empty } } },
 };
 export const ReadOnly: Story = {
-  tags: ['!dev'],
+  tags: ['!dev', '!autodocs'],
   parameters: {
     controls: { disable: true },
     docs: {
@@ -367,7 +367,7 @@ export const ServerOwnedOrder: Story = {
   },
 };
 export const DifferentSchema: Story = {
-  tags: ['!dev'],
+  tags: ['!dev', '!autodocs'],
   parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.products } } },
   render: () => {
     const [sorting, setSorting] = useState<SortingState>([]);
@@ -465,7 +465,7 @@ function StandaloneResizeExample() {
   );
 }
 export const StandaloneResize: Story = {
-  tags: ['!dev'],
+  tags: ['!dev', '!autodocs'],
   parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.standalone } } },
   render: () => <StandaloneResizeExample />,
 };
@@ -517,7 +517,7 @@ export const CustomizedRows: Story = {
   render: () => <CustomizedRowsExample />,
 };
 export const LeadingRowsWhenEmpty: Story = {
-  tags: ['!dev'],
+  tags: ['!dev', '!autodocs'],
   parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.leading } } },
   render: () => <CustomizedRowsExample empty />,
 };
@@ -583,7 +583,7 @@ function HookLayoutExample() {
   );
 }
 export const HookLayout: Story = {
-  tags: ['!dev'],
+  tags: ['!dev', '!autodocs'],
   parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.hook } } },
   render: () => <HookLayoutExample />,
   play: async ({ canvasElement }) => {
@@ -605,7 +605,7 @@ export const HookLayout: Story = {
 };
 
 export const IndependentTables: Story = {
-  tags: ['!dev'],
+  tags: ['!dev', '!autodocs'],
   parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.independent } } },
   render: () => (
     <>
@@ -649,7 +649,7 @@ function UncontrolledStateExample() {
   );
 }
 export const UncontrolledState: Story = {
-  tags: ['!dev'],
+  tags: ['!dev', '!autodocs'],
   parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.observed } } },
   render: () => <UncontrolledStateExample />,
 };
@@ -689,13 +689,13 @@ function CheckboxPrimitiveExample() {
   );
 }
 export const CheckboxPrimitive: Story = {
-  tags: ['!dev'],
+  tags: ['!dev', '!autodocs'],
   parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.checkbox } } },
   render: () => <CheckboxPrimitiveExample />,
 };
 
 export const ControlledSizing: Story = {
-  tags: ['!dev'],
+  tags: ['!dev', '!autodocs'],
   parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.sizing } } },
   render: () => <ControlledSizingExample />,
   play: async ({ canvasElement }) => {
@@ -769,7 +769,7 @@ export const PaginatedSelection: Story = {
 };
 
 export const ResizeEvents: Story = {
-  tags: ['!dev'],
+  tags: ['!dev', '!autodocs'],
   parameters: {
     controls: { disable: true },
     docs: {
@@ -863,7 +863,7 @@ export const RequestStates: Story = {
 };
 
 export const KeyboardItems: Story = {
-  tags: ['!dev'],
+  tags: ['!dev', '!autodocs'],
   parameters: {
     controls: { disable: true },
     docs: {

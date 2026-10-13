@@ -101,7 +101,7 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   await checkOverviewInstallation(page, base);
   assert.equal(
     await page.getByRole('table', { name: 'Choose a Storybook example' }).getByRole('row').count(),
-    7,
+    9,
   );
   assert.equal(
     await page.getByRole('link', { name: 'Finder primitives', exact: true }).getAttribute('href'),
@@ -113,6 +113,7 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   await page.waitForURL((url) => url.searchParams.get('path') === '/docs/examples-finder--docs');
   await page.frameLocator('#storybook-preview-iframe').locator('#finder-walkthrough').waitFor();
   await checkTableRecipes(page, base);
+  await checkFocusedViewDocs(page, base);
   await checkThemeToolbar(page, base);
   await checkPlaygroundControls(page, base, evidence);
   console.log(
@@ -173,10 +174,16 @@ async function checkThemeToolbar(page: Page, base: string) {
 async function checkTableRecipes(page: Page, base: string) {
   console.log('Checking table docs: public API recipes and primary example');
   await page.goto(`${base}/iframe.html?id=puppertino-table--docs&viewMode=docs`);
-  await page.locator('#story--puppertino-table--default').waitFor();
+  await page.locator('#story--puppertino-table--default--primary').waitFor();
   const primary = page.locator('.sbdocs-preview').first();
   await primary.getByRole('table', { name: 'People', exact: true }).waitFor();
   assert.equal(await primary.getByRole('heading', { name: 'Anchored item selection' }).count(), 0);
+  assert.equal(
+    await page.locator('#story--puppertino-table--keyboard-resize').count(),
+    0,
+    'Regression canvases stay out of Autodocs',
+  );
+  assert.equal(await page.locator('#story--puppertino-table--empty').count(), 0);
   for (const [story, marker] of [
     ['default', 'ariaLabel="People"'],
     ['selection', 'onRowSelectionChange={setSelection}'],
@@ -187,8 +194,9 @@ async function checkTableRecipes(page: Page, base: string) {
     ['date-columns', "sortFn: 'datetime'"],
     ['request-states', 'status={status}'],
   ]) {
+    const canvasId = story === 'default' ? 'default--primary' : story;
     const preview = page
-      .locator(`#story--puppertino-table--${story}`)
+      .locator(`#story--puppertino-table--${canvasId}`)
       .locator('xpath=ancestor::div[contains(@class,"sbdocs-preview")]/..');
     await preview.getByRole('switch', { name: 'Show code' }).click();
     await page.waitForFunction((id) => {
@@ -197,7 +205,7 @@ async function checkTableRecipes(page: Page, base: string) {
         ?.closest('.sbdocs-preview')
         ?.parentElement?.querySelector<HTMLPreElement>('pre');
       return source?.innerText?.includes("from 'puppertino-table'");
-    }, story);
+    }, canvasId);
     const source = await preview.locator('pre').innerText();
     assert.ok(source.includes("from 'puppertino-table'"), `${story}: public imports`);
     assert.ok(source.includes('createPuppertinoColumnHelper<'), `${story}: typed columns`);
@@ -207,4 +215,36 @@ async function checkTableRecipes(page: Page, base: string) {
       `${story}: consumer-ready source`,
     );
   }
+}
+
+async function checkFocusedViewDocs(page: Page, base: string) {
+  for (const [component, count] of [
+    ['outline-view', 2],
+    ['split-view', 2],
+    ['sidebar', 1],
+  ] as const) {
+    await page.goto(`${base}/iframe.html?id=puppertino-${component}--docs&viewMode=docs`);
+    await page.locator(`#story--puppertino-${component}--default--primary`).waitFor();
+    assert.equal(
+      await page.locator('.sbdocs-preview').count(),
+      count,
+      `${component}: only focused examples appear in docs`,
+    );
+  }
+  const preview = page.locator('.sbdocs-preview').first().locator('..');
+  await preview.getByRole('switch', { name: 'Show code' }).click();
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('pre')].some((element) =>
+      element.textContent?.includes('export function SidebarExample'),
+    ),
+  );
+  const source = await page.locator('pre').allTextContents();
+  assert.ok(
+    source.some(
+      (text) =>
+        text.includes("from 'puppertino-table'") &&
+        text.includes('onSectionChange') &&
+        !text.includes('../src/'),
+    ),
+  );
 }

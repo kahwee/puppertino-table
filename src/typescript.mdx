@@ -36,19 +36,25 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default = {} satisfies Story;
-export const Compact = { args: { density: 'compact' } } satisfies Story;
-export const Disabled = { args: { disabled: true } } satisfies Story;
+export const Playground = {} satisfies Story;
 `} />
 
 Use Controls for serializable behavior options. Columns contain functions and dates need deliberate construction; keep those fixtures in TypeScript. Change density, selection or disabled mode in the full canvas to explore the same component props your app will use.
 
-The default Table story binds `TableView<Person>` using this same pattern. All main Table story args are checked against that public component type.
+The Table Playground binds `TableView<Person>` using this same pattern. All main Table story args are checked against that public component type.
 
 <Canvas of={TableStories.Default} />
+
+## Args and controls
+
+Use `satisfies Meta<typeof Component>` and `StoryObj<typeof meta>` to validate defaults and overrides. Keep serializable variants in args; label them with `argTypes`, categories and accurate defaults. Use conditional controls for dependent options. Keep React nodes, callbacks and column definitions in TypeScript.
+
+For controlled components, use `useArgs` from `storybook/preview-api` in the story render function to update args when the component emits a change. Supply `fn()` from `storybook/test` for callbacks you want to inspect or assert. App selection, form values and view switches should update the same args that Controls edits.
+
+Use the shared Theme global rather than a theme arg or a separate dark story. Keep regression-only stories tagged `['!dev', '!autodocs']`; they remain indexed and tested without filling the docs page. See [Args](https://storybook.js.org/docs/writing-stories/args), [ArgTypes](https://storybook.js.org/docs/api/arg-types) and [Tags](https://storybook.js.org/docs/writing-stories/tags).
 
 ## State ownership
 
 Automatic sorting is the default. React-controlled sorting uses `SortingState` with `useState<SortingState>([])`; selection uses `RowSelectionState`. Set `manualSorting` when the app supplies an already ordered server page. External atoms and controlled props cannot own the same state slice. The package checks these conflicts at compile time.
 
-<a href="./?path=/docs/puppertino-table--docs" target="_top">Explore state ownership and gesture recipes</a> · <a href="./?path=/story/puppertino-table--default" target="_top">Open the default table canvas</a>
+<a href="./?path=/docs/puppertino-table--docs" target="_top">Explore state ownership and gesture recipes</a> · <a href="./?path=/story/puppertino-table--default" target="_top">Open the Table Playground</a>

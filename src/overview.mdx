@@ -15,17 +15,21 @@ Composable Finder workspaces, semantic React tables and independently resizable 
   <table className="storybook-guide-table" aria-label="Choose a Storybook example">
     <thead><tr><th scope="col">Goal</th><th scope="col">Start here</th><th scope="col">What to try</th></tr></thead>
     <tbody>
-      <tr><td>Build a Finder-style app</td><td><a href="./?path=/docs/examples-finder--docs" target="_top">Finder walkthrough</a></td><td>All four views, real gesture videos, dark/narrow layouts and integration recipes</td></tr>
+      <tr><td>Build a Finder-style app</td><td><a href="./?path=/docs/examples-finder--docs" target="_top">Finder walkthrough</a></td><td>All four views, Four views, gestures, preview and app-owned commands</td></tr>
       <tr><td>Compose your own Finder</td><td><a href="./?path=/docs/puppertino-finder-composition--docs" target="_top">Finder primitives</a></td><td>Reusable window, toolbar, sidebar, four views, tags and content slots</td></tr>
       <tr><td>Explore table APIs</td><td><a href="./?path=/docs/puppertino-table--docs" target="_top">Table</a></td><td>Sorting, checkbox ranges, grouped headers, controlled state and external atoms</td></tr>
       <tr><td>Load a hierarchy on expansion</td><td><a href="./?path=/docs/puppertino-outline-view--docs" target="_top">Outline view</a></td><td>Nested disclosure, sibling sorting, lazy children, retry and keyboard navigation</td></tr>
       <tr><td>Arrange sidebar and detail panes</td><td><a href="./?path=/docs/puppertino-split-view--docs" target="_top">Split view</a></td><td>Horizontal/vertical resizing, compact navigation and hidden panes</td></tr>
       <tr><td>Compose a custom browser</td><td><a href="./?path=/docs/puppertino-column-view--docs" target="_top">Column view</a></td><td>Controlled panel widths, native links, richer menus and density inheritance</td></tr>
+      <tr><td>Navigate between sections</td><td><a href="./?path=/docs/puppertino-sidebar--docs" target="_top">Sidebar</a></td><td>Grouped headings, native links/buttons, app-owned selection and touch sizing</td></tr>
+      <tr><td>Assign shared tags</td><td><a href="./?path=/docs/puppertino-tag-picker--docs" target="_top">Tag picker</a></td><td>Mixed values, option data, optional creation and keyboard editing</td></tr>
     </tbody>
   </table>
 </div>
 
-Start with each group’s Playground for its full interactive canvas. Column view combines Columns/Table, width ownership, persistence and menu triggers in Controls; Tag picker combines sample data and optional creation. Finder views, density and checkboxes are playground args. Theme uses the shared toolbar. Separate stories demonstrate distinct APIs, composition recipes or complete interaction workflows. **Controls** expose the options used by that story; **Accessibility** checks the rendered example. Use the Storybook **Theme** toolbar to switch all previews between light and dark without resetting their state. In docs, **Show code** reveals source snippets and the canvas toolbar opens the story separately. Finder **View** and **Density** controls preserve the current files and selection; **Select first preview** changes preview setup without resetting files. **Table behavior** controls update it live. The app's **Reset demo** restores files, selection and geometry while keeping the current view, theme and density. Stories with dedicated in-app controls hide the unused Storybook controls.
+Each component starts with **Playground**. Use **Controls** for variants and the shared **Theme** toolbar for light/dark. Row clicks and in-app controls stay synchronized with args. **Show code** provides public imports and working state wiring.
+
+Separate stories cover distinct integration recipes or responsive workflows. Regression-only stories stay indexed for browser tests and are excluded from navigation and Autodocs. Finder **Reset demo** restores files, selection and geometry while preserving view, theme and density.
 
 The examples use [Phosphor Icons](https://phosphoricons.com/), following [Puppertino’s icon guidance](https://puppertino.com/docs/icons/). Toolbar symbols use regular weight; selected views use fill. Icon slots remain application-owned React nodes.
 
@@ -35,7 +39,7 @@ For typed rows, inferred cells and consumer Storybook files, start with the <a h
 
 <Source language="bash" code={`pnpm add puppertino-table@${packageJson.version} @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0`} />
 
-<Source language="tsx" code={`import { PuppertinoTable, createPuppertinoColumnHelper } from 'puppertino-table';
+<Source language="tsx" code={`import { TableView, createPuppertinoColumnHelper } from 'puppertino-table';
 import '@codedgar/puppertino/colors';
 import '@codedgar/puppertino/lists';
 import '@codedgar/puppertino/forms';
@@ -48,7 +52,7 @@ const columns = helper.columns([
 const files = [{ id: 'brief', name: 'Project brief.pdf' }];
 
 export function Files() {
-  return <PuppertinoTable data={files} columns={columns}
+  return <TableView data={files} columns={columns}
     getRowId={file => file.id} getRowLabel={file => file.name}
     ariaLabel="Files" density="compact" selectable />;
 }`} />

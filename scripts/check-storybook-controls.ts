@@ -152,6 +152,60 @@ export async function checkPlaygroundControls(page: Page, base: string, evidence
   assert.equal(await frame.getByRole('button', { name: 'Remove tag Review' }).isDisabled(), true);
   assert.equal(await frame.getByRole('button', { name: 'Remove tag Work' }).isDisabled(), true);
   await page.screenshot({ path: `${evidence}/tag-playground-controls.png` });
+  await page.goto(`${base}/?path=/story/puppertino-sidebar--default`);
+  await frame.getByRole('navigation', { name: 'Workspace sections' }).waitFor();
+  await page.locator('input[name="control-size"][value="touch"]').check();
+  await page.waitForFunction(() => {
+    const frame = document.querySelector<HTMLIFrameElement>('#storybook-preview-iframe');
+    return frame?.contentDocument
+      ?.querySelector('.pt-sidebar')
+      ?.classList.contains('p-sidebar-touch');
+  });
+  await page.locator('#control-section').selectOption('Downloads');
+  await frame.getByRole('button', { name: 'Downloads', exact: true }).waitFor();
+  await page.waitForFunction(() => {
+    const frame = document.querySelector<HTMLIFrameElement>('#storybook-preview-iframe');
+    return (
+      frame?.contentDocument?.querySelector('[aria-current="page"]')?.textContent === 'Downloads'
+    );
+  });
+  await frame.getByRole('button', { name: 'Archive', exact: true }).click();
+  await page.waitForFunction(
+    () => document.querySelector<HTMLSelectElement>('#control-section')?.value === 'Archive',
+  );
+  await page.screenshot({ path: `${evidence}/sidebar-playground-controls.png` });
+
+  await page.goto(`${base}/?path=/story/puppertino-outline-view--default`);
+  await frame.getByRole('treegrid').waitFor();
+  await page.locator('input[name="selectionCheckboxes"]').press('Space');
+  await frame
+    .getByRole('checkbox', { name: 'Select all visible rows' })
+    .waitFor({ state: 'hidden' });
+  await page.locator('input[name="selectionCheckboxes"]').press('Space');
+  await frame.getByRole('checkbox', { name: 'Select all visible rows' }).waitFor();
+  await page.locator('input[name="control-density"][value="compact"]').check();
+  await page.waitForFunction(() => {
+    const frame = document.querySelector<HTMLIFrameElement>('#storybook-preview-iframe');
+    return frame?.contentDocument?.querySelector('[data-pt-density="compact"]') != null;
+  });
+  await page.screenshot({ path: `${evidence}/outline-playground-controls.png` });
+
+  await page.goto(`${base}/?path=/story/puppertino-split-view--default`);
+  await frame.getByRole('separator').first().waitFor();
+  await page.locator('input[name="control-orientation"][value="vertical"]').check();
+  await page.waitForFunction(() => {
+    const frame = document.querySelector<HTMLIFrameElement>('#storybook-preview-iframe');
+    return (
+      frame?.contentDocument
+        ?.querySelector('[role="separator"]')
+        ?.getAttribute('aria-orientation') === 'horizontal'
+    );
+  });
+  await page.locator('input[name="resizable"]').press('Space');
+  await frame.getByRole('separator').first().waitFor({ state: 'hidden' });
+  assert.equal(await frame.getByRole('separator').count(), 0, 'Split resizing follows its arg');
+  await page.screenshot({ path: `${evidence}/split-playground-controls.png` });
+
   console.log(
     'Playground Controls passed: live layout, width ownership, synchronized density/narrow/resizing, preserved workspace state, mixed and disabled tags, optional creation, and Finder view/density changes that preserve file moves.',
   );

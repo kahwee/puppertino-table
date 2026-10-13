@@ -411,7 +411,7 @@ const meta = {
     onResizeDisabledChange: { control: false, table: { category: 'Events' } },
   },
   render: function Playground(args) {
-    const [, updateArgs] = useArgs();
+    const [, updateArgs] = useArgs<typeof args>();
     return (
       <ResourceBrowser
         {...args}
@@ -454,7 +454,7 @@ export const ColumnWorkspace: Story = {
     },
   },
 };
-export const CustomStyling: StoryObj = {
+export const CustomStyling: Story = {
   render: () => (
     <DensityScope
       density="comfortable"

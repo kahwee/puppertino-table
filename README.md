@@ -40,7 +40,7 @@ Import Puppertino's sidebar CSS and `puppertino-table/style.css`. Use `size="sma
 ## Install
 
 ```sh
-pnpm add puppertino-table@0.10.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
+pnpm add puppertino-table@0.11.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
 ```
 
 React 19 (`^19.3.0`), TanStack Table and Puppertino are peer dependencies. Import the Puppertino styles used by your components, followed by the library stylesheet:
@@ -196,7 +196,7 @@ Checkboxes and row gestures share a fixed range anchor. Pass `selectionAnchor` t
 
 ## Storybook playgrounds
 
-Use each group’s playground to compare variants through Controls. Column view combines table/column layouts, internal/controlled/read-only/persistent widths, density and menu triggers. Tag picker offers option datasets, mixed values, disabled tags and optional creation. Finder views and checkbox settings use args; the Theme toolbar applies across stories. Distinct API recipes and interaction workflows keep their own examples.
+Each component opens with a typed Playground. Use Controls for prop variants, the shared Theme toolbar for appearance, and Show code for public integration recipes. Regression-only canvases are excluded from navigation and Autodocs. Column view combines table/column layouts, internal/controlled/read-only/persistent widths, density and menu triggers. Tag picker offers option datasets, mixed values, disabled tags and optional creation. Finder views and checkbox settings use args; the Theme toolbar applies across stories. Distinct API recipes and interaction workflows keep their own examples.
 
 ## Develop
 

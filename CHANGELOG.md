@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.11.0 — 2026-10-13
+
+- Tighten Storybook around typed Playgrounds, grouped/conditional args controls, synchronized app state, and focused docs. Keep regression canvases indexed and tested while excluding them from navigation and Autodocs. Document the Storybook 10 TypeScript/args conventions, add public sidebar recipes and verify the real Controls panel for Sidebar, Outline and Split views.
+
+
 - Export reusable `Sidebar`, `SidebarGroup`, and native button/link `SidebarItem` components with typed sizes and trailing details. Compose Finder sidebars from these primitives and refine them with Puppertino’s attached material, standard desktop rows and headings, hover feedback, scrollable groups, truncated labels, and larger touch targets.
 
 ## 0.10.0 — 2026-10-12

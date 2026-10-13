@@ -13,6 +13,7 @@ const [
   typedExample,
   outlineExample,
   splitExample,
+  sidebarExample,
 ] = await Promise.all(
   [
     'demo/fixtures.tsx',
@@ -25,6 +26,7 @@ const [
     'demo/typed-table-example.tsx',
     'demo/outline-view-example.tsx',
     'demo/split-view-example.tsx',
+    'demo/sidebar-example.tsx',
   ].map((file) => readFile(file, 'utf8')),
 );
 const recipes = createTableRecipes({
@@ -38,6 +40,7 @@ const recipes = createTableRecipes({
   typedExample,
   outlineExample,
   splitExample,
+  sidebarExample,
 });
 const directory = process.argv[2];
 if (!directory) throw new Error('Provide the installed consumer directory.');
@@ -52,6 +55,7 @@ await writeFile(
   `declare module '@codedgar/puppertino/colors';
 declare module '@codedgar/puppertino/lists';
 declare module '@codedgar/puppertino/forms';
+declare module '@codedgar/puppertino/sidebars';
 declare module 'puppertino-table/style.css';
 `,
 );

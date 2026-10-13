@@ -3,7 +3,9 @@ import { SplitView, type SplitViewProps, type SplitViewSizes } from '../src/inde
 
 export function SplitViewExample({
   orientation = 'horizontal',
-}: Pick<SplitViewProps, 'orientation'>) {
+  resizable = true,
+  disabled = false,
+}: Pick<SplitViewProps, 'orientation' | 'resizable' | 'disabled'>) {
   const [active, setActive] = useState('sidebar');
   const [hidden, setHidden] = useState(false);
   const [committed, setCommitted] = useState<SplitViewSizes>({});
@@ -43,6 +45,8 @@ export function SplitViewExample({
         <SplitView
           ariaLabel="Three-pane workspace"
           orientation={orientation}
+          resizable={resizable}
+          disabled={disabled}
           activePaneId={active}
           onSizesCommit={setCommitted}
           panes={[

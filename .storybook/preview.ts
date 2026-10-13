@@ -3,6 +3,7 @@ import type { Preview } from '@storybook/react-vite';
 import '../demo/style.css';
 import './docs.css';
 import './theme.css';
+import { ComponentDocs } from './component-docs.js';
 
 const preview: Preview = {
   decorators: [
@@ -12,8 +13,8 @@ const preview: Preview = {
   parameters: {
     layout: 'padded',
     backgrounds: { disable: true },
-    controls: { expanded: true, sort: 'requiredFirst' },
-    docs: { toc: { headingSelector: 'h2, h3' } },
+    controls: { expanded: false, sort: 'requiredFirst' },
+    docs: { page: ComponentDocs, toc: { headingSelector: 'h2, h3' } },
     options: {
       storySort: {
         order: [
@@ -22,7 +23,15 @@ const preview: Preview = {
           'Examples',
           ['Finder'],
           'Puppertino',
-          ['Table', 'Outline view', 'Split view', 'Column view', 'Sidebar'],
+          [
+            'Table',
+            'Outline view',
+            'Split view',
+            'Column view',
+            'Sidebar',
+            'Tag picker',
+            'Finder composition',
+          ],
         ],
       },
     },
