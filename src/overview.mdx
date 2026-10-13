@@ -1,4 +1,5 @@
 import { Meta, Source } from '@storybook/addon-docs/blocks';
+import packageJson from '../package.json';
 
 <Meta title="Start here/Overview" />
 
@@ -26,7 +27,7 @@ Open a story from the sidebar for its full interactive canvas. **Controls** expo
 
 ## Install
 
-<Source language="bash" code="pnpm add puppertino-table@0.7.1 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0" />
+<Source language="bash" code={`pnpm add puppertino-table@${packageJson.version} @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0`} />
 
 <Source language="tsx" code={`import { PuppertinoTable, createPuppertinoColumnHelper } from 'puppertino-table';
 import '@codedgar/puppertino/colors';

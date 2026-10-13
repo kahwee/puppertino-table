@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import type { Page } from 'playwright';
 
 export async function checkStorybookDocs(page: Page, base: string, evidence: string) {
@@ -85,8 +86,7 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   await page.screenshot({ path: `${evidence}/finder-walkthrough.png` });
 
   console.log('Checking Storybook docs: overview and manager navigation');
-  await page.goto(`${base}/iframe.html?id=start-here-overview--docs&viewMode=docs`);
-  await page.locator('#puppertino-table').waitFor();
+  await checkOverviewInstallation(page, base);
   assert.equal(
     await page.getByRole('table', { name: 'Choose a Storybook example' }).getByRole('row').count(),
     5,
@@ -102,5 +102,17 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   await page.frameLocator('#storybook-preview-iframe').locator('#finder-walkthrough').waitFor();
   console.log(
     'Storybook docs passed: media playback, readable source, live args, reset and manager navigation.',
+  );
+}
+
+export async function checkOverviewInstallation(page: Page, base: string) {
+  await page.goto(`${base}/iframe.html?id=start-here-overview--docs&viewMode=docs`);
+  await page.locator('#puppertino-table').waitFor();
+  await page.waitForFunction(() => document.body.innerText.includes('pnpm add puppertino-table@'));
+  const { version } = JSON.parse(await readFile('package.json', 'utf8'));
+  const overviewText = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
+  assert.ok(
+    overviewText.includes(`pnpm add puppertino-table@${version} `),
+    'The public overview installation command must match the package version',
   );
 }
