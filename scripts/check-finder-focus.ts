@@ -92,7 +92,9 @@ export async function checkFinderFocus(page: Page, base: string, evidence: strin
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Actions', exact: true }).focus();
     await page.keyboard.press('Enter');
+    await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'menu');
     await page.keyboard.press('ArrowDown');
+    await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'menuitem');
     assert.equal(
       await page.evaluate(() => getComputedStyle(document.activeElement as Element).outlineStyle),
       'none',
@@ -113,6 +115,10 @@ export async function checkFinderFocus(page: Page, base: string, evidence: strin
       'Keyboard menu focus leaves exactly one highlighted command',
     );
     await page.getByRole('menuitem', { name: 'Move to Trash', exact: true }).hover();
+    await page.waitForFunction(
+      () =>
+        document.activeElement?.querySelector('.pt-menu-label')?.textContent === 'Move to Trash',
+    );
     assert.equal(
       await page
         .getByRole('menuitem', { name: 'Move to Trash', exact: true })
@@ -120,6 +126,10 @@ export async function checkFinderFocus(page: Page, base: string, evidence: strin
       true,
     );
     await page.keyboard.press('ArrowUp');
+    await page.waitForFunction(
+      () =>
+        document.activeElement?.querySelector('.pt-menu-label')?.textContent === 'Move to Archive',
+    );
     assert.equal(
       await highlights(),
       1,
