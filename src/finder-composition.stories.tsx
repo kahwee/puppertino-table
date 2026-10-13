@@ -301,7 +301,7 @@ const meta = {
 } satisfies Meta<typeof Composition>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-export const Composed: Story = {};
+export const Composed: Story = { name: 'Playground' };
 
 export const TagAndTrashWorkflow: Story = {
   parameters: {
@@ -359,39 +359,5 @@ export const CustomArtwork: Story = {
     const bounds = image?.getBoundingClientRect();
     await expect(bounds?.width).toBeLessThanOrEqual(68);
     await expect(bounds?.height).toBeLessThanOrEqual(80);
-  },
-};
-
-export const NoResults: Story = {
-  args: { query: 'missing' },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'An empty search result, using FinderEmptyState. Clear the search to recover your documents.',
-      },
-    },
-  },
-};
-
-export const SearchAndViewWorkflow: Story = {
-  args: { query: 'brief' },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Toolbar and search changes update Storybook args and emit callbacks in Actions.',
-      },
-    },
-  },
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.getByLabelText('Document count')).toHaveTextContent('1 item');
-    await userEvent.click(canvas.getByRole('button', { name: /^Gallery$/ }));
-    await expect(args.onViewChange).toHaveBeenLastCalledWith('gallery');
-    await expect(canvas.getByRole('button', { name: 'Brief.pdf' })).toBeVisible();
-    await userEvent.clear(canvas.getByRole('searchbox'));
-    await expect(args.onQueryChange).toHaveBeenLastCalledWith('');
-    await expect(canvas.getByLabelText('Document count')).toHaveTextContent('2 items');
-    await expect(canvas.getByRole('button', { name: 'Notes.md' })).toBeVisible();
   },
 };

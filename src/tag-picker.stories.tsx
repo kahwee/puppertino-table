@@ -1,28 +1,97 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { useState } from 'react';
 import { useArgs } from 'storybook/preview-api';
 import { expect, fn, userEvent, within } from 'storybook/test';
-import { TagPicker } from './index.js';
+import { type TagOption, TagPicker, type TagPickerProps } from './index.js';
 
+const standardOptions: TagOption[] = [
+  { id: 'review', label: 'Review' },
+  { id: 'work', label: 'Work' },
+  { id: 'alpine', label: 'Project Alpine' },
+];
+interface PickerExampleProps extends TagPickerProps {
+  optionSet: 'standard' | 'longLabels' | 'disabledTags' | 'custom';
+  allowCreation: boolean;
+}
+function PickerExample({
+  optionSet,
+  allowCreation,
+  options,
+  onCreate,
+  ...props
+}: PickerExampleProps) {
+  const [created, setCreated] = useState<TagOption[]>([]);
+  const base =
+    optionSet === 'custom'
+      ? options
+      : optionSet === 'longLabels'
+        ? standardOptions.map((option) =>
+            option.id === 'review'
+              ? {
+                  ...option,
+                  label: 'A very long project name that wraps without widening the popover',
+                }
+              : option,
+          )
+        : optionSet === 'disabledTags'
+          ? standardOptions.map((option) => ({ ...option, disabled: option.id !== 'alpine' }))
+          : standardOptions;
+  return (
+    <TagPicker
+      {...props}
+      options={[
+        ...base,
+        ...created.filter((option) => !base.some((item) => item.id === option.id)),
+      ]}
+      onCreate={
+        allowCreation && onCreate
+          ? (label) => {
+              setCreated((previous) => [...previous, { id: label, label }]);
+              onCreate(label);
+            }
+          : undefined
+      }
+    />
+  );
+}
 const meta = {
   title: 'Puppertino/Tag picker',
-  component: TagPicker,
+  component: PickerExample,
   parameters: { layout: 'centered' },
   args: {
+    optionSet: 'standard',
+    allowCreation: true,
     onValueChange: fn(),
     onCreate: fn(),
-    options: [
-      { id: 'review', label: 'Review' },
-      { id: 'work', label: 'Work' },
-      { id: 'alpine', label: 'Project Alpine' },
-    ],
+    options: standardOptions,
     value: ['review'],
     mixedValue: [],
     disabled: false,
     title: 'Assign tags',
   },
   argTypes: {
+    optionSet: {
+      control: {
+        type: 'select',
+        labels: {
+          standard: 'Standard',
+          longLabels: 'Long labels',
+          disabledTags: 'Disabled tags',
+          custom: 'Custom',
+        },
+      },
+      options: ['standard', 'longLabels', 'disabledTags', 'custom'],
+      description: 'Compare option data in one playground. Stable IDs preserve current selections.',
+      table: { category: 'Example data' },
+    },
+    allowCreation: {
+      control: 'boolean',
+      description: 'Offer new-tag creation or existing tags only.',
+      table: { category: 'Behavior' },
+    },
     options: {
       control: 'object',
+      if: { arg: 'optionSet', eq: 'custom' },
       description: 'Stable IDs and display labels; disabled options cannot be changed.',
     },
     value: { control: 'object', description: 'Controlled IDs assigned to every selected item.' },
@@ -48,7 +117,7 @@ const meta = {
   render: function Controlled(args) {
     const [, updateArgs] = useArgs();
     return (
-      <TagPicker
+      <PickerExample
         {...args}
         onValueChange={(value) => {
           args.onValueChange(value);
@@ -59,7 +128,7 @@ const meta = {
             ? (label) => {
                 args.onCreate?.(label);
                 updateArgs({
-                  options: [...args.options, { id: label, label }],
+                  options: [...(args.options ?? standardOptions), { id: label, label }],
                   value: [...args.value, label],
                 });
               }
@@ -68,10 +137,11 @@ const meta = {
       />
     );
   },
-} satisfies Meta<typeof TagPicker>;
+} satisfies Meta<typeof PickerExample>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-export const Assigned: Story = {
+export const Assigned: Story = { name: 'Playground' };
+export const KeyboardWorkflow: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.queryByRole('dialog')).toBeNull();
@@ -92,51 +162,9 @@ export const Assigned: Story = {
     await expect(canvas.getByRole('button', { name: 'Tags' })).toHaveFocus();
   },
 };
-export const MixedSelection: Story = {
-  args: { value: [], mixedValue: ['work'] },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Tags' }));
-    await userEvent.click(canvas.getByRole('option', { name: 'Work Some items' }));
-    await expect(canvas.getByRole('button', { name: 'Remove tag Work' })).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: 'Remove tag Work' }));
-    await expect(canvas.getByRole('option', { name: /^Work$/ })).toBeVisible();
-    await expect(canvas.queryByText('Some items')).toBeNull();
-    await userEvent.keyboard('{Escape}');
-  },
-};
-export const Disabled: Story = { args: { disabled: true } };
-export const LongLabels: Story = {
-  args: {
-    options: [
-      { id: 'long', label: 'A very long project name that wraps without widening the popover' },
-      ...meta.args.options,
-    ],
-    value: ['long'],
-  },
-};
-
-export const DisabledTags: Story = {
-  args: {
-    options: [
-      { id: 'locked', label: 'Locked', disabled: true },
-      { id: 'unavailable', label: 'Unavailable', disabled: true },
-      { id: 'work', label: 'Work' },
-    ],
-    value: ['locked'],
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Tags' }));
-    await expect(canvas.getByRole('button', { name: 'Remove tag Locked' })).toBeDisabled();
-    await expect(canvas.getByRole('option', { name: 'Unavailable' })).toBeDisabled();
-    await userEvent.keyboard('{ArrowDown}{Enter}');
-    await expect(canvas.getByRole('button', { name: 'Remove tag Work' })).toBeVisible();
-  },
-};
-
 export const ClippedContainer: Story = {
   args: {
+    optionSet: 'custom',
     options: Array.from({ length: 30 }, (_, index) => ({
       id: String(index),
       label: `Project ${index + 1}`,
@@ -173,27 +201,6 @@ export const ClippedContainer: Story = {
   },
 };
 
-export const ExistingTagsOnly: Story = {
-  args: { value: [], onCreate: undefined },
-  parameters: {
-    docs: {
-      description: { story: 'Omit onCreate to offer only your application’s existing tags.' },
-    },
-  },
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Tags' }));
-    const input = canvas.getByRole('combobox', { name: 'Tag name' });
-    await userEvent.type(input, 'Client');
-    await expect(canvas.queryByRole('option', { name: /Create tag/ })).toBeNull();
-    await expect(canvas.getByText('No matching tags')).toBeVisible();
-    await userEvent.clear(input);
-    await userEvent.click(canvas.getByRole('option', { name: 'Work' }));
-    await expect(args.onValueChange).toHaveBeenLastCalledWith(['work']);
-    await userEvent.keyboard('{Escape}');
-  },
-};
-
 export const CreateTag: Story = {
   args: { value: [] },
   parameters: {
@@ -210,7 +217,7 @@ export const CreateTag: Story = {
     await userEvent.type(canvas.getByRole('combobox', { name: 'Tag name' }), 'Client');
     await userEvent.click(canvas.getByRole('option', { name: 'Create tag “Client”' }));
     await expect(args.onCreate).toHaveBeenLastCalledWith('Client');
-    await expect(canvas.getByRole('button', { name: 'Remove tag Client' })).toBeVisible();
+    await expect(await canvas.findByRole('button', { name: 'Remove tag Client' })).toBeVisible();
     await userEvent.keyboard('{Escape}');
   },
 };

@@ -93,7 +93,7 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
   assert.equal(await padding('Inherited table'), nativePadding);
   await page.screenshot({ path: `${evidence}/density-inheritance.png` });
   await page.goto(
-    `${base}/iframe.html?id=puppertino-resource-browser--persistent-panels&viewMode=story`,
+    `${base}/iframe.html?id=puppertino-resource-browser--column-workspace&viewMode=story&args=widthMode:persistent`,
   );
   await page.getByRole('region', { name: 'Project folders' }).waitFor();
   await page.evaluate(() =>
@@ -156,19 +156,38 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
     'delegated-menus',
     'delegated-table-menus',
   ]) {
-    await page.goto(`${base}/iframe.html?id=puppertino-resource-browser--${story}&viewMode=story`);
+    const presets: Record<string, string> = {
+      'column-workspace': '',
+      'density-table': 'view:table',
+      'controlled-panels': 'widthMode:controlled',
+      'read-only-panels': 'widthMode:readOnly',
+      'delegated-menus': 'menuMode:delegated',
+      'delegated-table-menus': 'view:table;menuMode:delegated',
+    };
+    await page.goto(
+      `${base}/iframe.html?id=puppertino-resource-browser--column-workspace&viewMode=story&args=${encodeURIComponent(presets[story])}`,
+    );
     const tableView = story === 'density-table' || story === 'delegated-table-menus';
     const target = tableView
       ? page.getByRole('row').filter({ hasText: 'Project brief.pdf' })
       : page.getByRole('button', { name: 'Project brief.pdf', exact: true });
     await target.waitFor();
     const density = page.getByRole('combobox', { name: 'Density', exact: true });
+    const selectDensity = async (mode: string) => {
+      await density.selectOption(mode);
+      await page.waitForFunction(
+        (expected) =>
+          document.querySelector('.demo-browser-workspace')?.getAttribute('data-pt-density') ===
+          expected,
+        mode,
+      );
+    };
     for (const [mode, iconSize] of [
       ['native', 14],
       ['compact', 16],
       ['comfortable', 20],
     ] as const) {
-      await density.selectOption(mode);
+      await selectDensity(mode);
       assert.equal(
         await target
           .locator('.pt-icon')
@@ -182,7 +201,7 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
             (mode === 'comfortable' ? 36 : mode === 'compact' ? 24 : 20),
         );
     }
-    await density.selectOption('compact');
+    await selectDensity('compact');
     await page.screenshot({ path: `${evidence}/${story}-wide.png` });
     if (!tableView) {
       if (story === 'read-only-panels')
@@ -355,6 +374,11 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
     await page.waitForFunction(() => document.hasFocus());
     await menu.waitFor({ state: 'detached' });
     await page.getByRole('button', { name: 'Toggle narrow layout' }).click();
+    await page.waitForFunction(
+      () =>
+        document.querySelector<HTMLElement>('[aria-label="Resource workspace"]')?.style.maxWidth ===
+        '520px',
+    );
     if (!tableView)
       await page.waitForFunction(
         () => {

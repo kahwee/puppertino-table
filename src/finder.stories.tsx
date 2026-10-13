@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { RowSelectionState, SortingState } from '@tanstack/react-table';
 import type { DragEvent, KeyboardEvent, MouseEvent } from 'react';
-import { useEffect, useId, useReducer, useRef, useState } from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import { useEffect, useEffectEvent, useId, useReducer, useRef, useState } from 'react';
+import { useArgs } from 'storybook/preview-api';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import { formatDateTime } from '../demo/date-format.js';
 import { FileArtwork, FilePreview, Glyph, ViewGlyph } from '../demo/finder-artwork.js';
 import { DemoToolbar } from '../demo/finder-chrome.js';
@@ -75,6 +76,8 @@ function FinderDemo({
   resizable = true,
   disabled = false,
   manualSorting = false,
+  onViewChange,
+  onDensityChange,
 }: {
   initialView?: FinderView;
   initialDensity?: 'compact' | 'comfortable';
@@ -84,6 +87,8 @@ function FinderDemo({
   resizable?: boolean;
   disabled?: boolean;
   manualSorting?: boolean;
+  onViewChange?(view: FinderView): void;
+  onDensityChange?(density: TableDensity): void;
 }) {
   const [fileState, dispatchFiles] = useReducer(finderFilesReducer, initialFinderFiles);
   const { files, trash, lastDeletedIds } = fileState;
@@ -93,8 +98,18 @@ function FinderDemo({
   const selectionSummary = useRef<HTMLOutputElement>(null);
   const [tagNames, setTagNames] = useState(['Project Alpine', 'Work', 'Review']);
   const [folder, setFolder] = useState('Projects');
-  const [view, setView] = useState(initialView);
-  const [density, setDensity] = useState<TableDensity>(initialDensity);
+  const [view, setLocalView] = useState(initialView);
+  const [density, setLocalDensity] = useState<TableDensity>(initialDensity);
+  useEffect(() => setLocalView(initialView), [initialView]);
+  useEffect(() => setLocalDensity(initialDensity), [initialDensity]);
+  const setView = (next: FinderView) => {
+    setLocalView(next);
+    onViewChange?.(next);
+  };
+  const setDensity = (next: TableDensity) => {
+    setLocalDensity(next);
+    onDensityChange?.(next);
+  };
   const [revision, setRevision] = useState(0);
   const [detail, setDetail] = useState<string | null>(
     initialPreview && (initialView === 'columns' || initialView === 'gallery') ? 'brief' : null,
@@ -130,6 +145,11 @@ function FinderDemo({
     file.name.toLowerCase().includes(query.toLowerCase()),
   );
   const selectedFiles = visible.filter((file) => selection[file.id]);
+  const applyPreviewSetup = useEffectEvent((show: boolean, next: FinderView) => {
+    if (next === 'columns')
+      setDetail(selectedFiles[0]?.id ?? (show ? (visible[0]?.id ?? null) : null));
+  });
+  useEffect(() => applyPreviewSetup(initialPreview, initialView), [initialPreview, initialView]);
   const canAct = selectable && !disabled;
   const active = visible.find((file) => file.id === detail);
   useEffect(() => {
@@ -1050,6 +1070,35 @@ function FinderDemo({
   );
 }
 
+const finderViewRecipes = {
+  columns: `import { ColumnBrowser, ColumnBrowserItem, DensityScope } from 'puppertino-table';
+
+export function Workspace() {
+  return <DensityScope density="compact" style={{ height: 390 }}>
+    <ColumnBrowser ariaLabel="Workspace" panels={[
+      { id: 'folders', label: 'Folders', content: <ColumnBrowserItem href="#projects" pathSelected>Projects</ColumnBrowserItem> },
+      { id: 'files', label: 'Files', content: <ColumnBrowserItem href="#brief">Project brief.pdf</ColumnBrowserItem> },
+      { id: 'preview', label: 'Preview', content: <p>Your app-owned preview</p> },
+    ]} />
+  </DensityScope>;
+}`,
+  icons: `// Your app owns the icon grid and selected item.
+const menu = useContextMenu<string>();
+<div className="my-icon-grid">{files.map(file => <button key={file.id}
+  type="button" aria-pressed={selectedId === file.id}
+  onClick={() => setSelectedId(file.id)} {...menu.getTriggerProps(file.id)}>
+  <FileArtwork file={file} /><span>{file.name}</span>
+</button>)}</div>;`,
+  gallery: `// Your app renders the preview and filmstrip.
+<>
+<Preview file={files.find(file => file.id === selectedId)} />
+<section aria-label="Gallery files">{files.map(file => <button key={file.id}
+  type="button" aria-label={file.name} aria-pressed={selectedId === file.id}
+  onClick={() => setSelectedId(file.id)} {...menu.getTriggerProps(file.id)}>
+  <FileArtwork file={file} />
+</button>)}</section>
+</>;`,
+};
 const meta = {
   title: 'Examples/Finder',
   component: FinderDemo,
@@ -1063,14 +1112,28 @@ const meta = {
     resizable: true,
     disabled: false,
     manualSorting: false,
+    onViewChange: fn(),
+    onDensityChange: fn(),
   },
-  render: (args) => (
-    <FinderDemo
-      key={`${args.initialView}-${args.initialDensity}-${args.initialPreview}`}
-      {...args}
-    />
-  ),
+  render: function Playground(args) {
+    const [, updateArgs] = useArgs();
+    return (
+      <FinderDemo
+        {...args}
+        onViewChange={(initialView) => {
+          args.onViewChange?.(initialView);
+          updateArgs({ initialView });
+        }}
+        onDensityChange={(initialDensity) => {
+          args.onDensityChange?.(initialDensity);
+          updateArgs({ initialDensity });
+        }}
+      />
+    );
+  },
   argTypes: {
+    onViewChange: { control: false, table: { category: 'Events' } },
+    onDensityChange: { control: false, table: { category: 'Events' } },
     selectionCheckboxes: {
       control: 'boolean',
       description:
@@ -1079,33 +1142,32 @@ const meta = {
       if: { arg: 'initialView', eq: 'list' },
     },
     initialView: {
-      name: 'Starting view',
-      table: { category: 'Workspace setup' },
+      name: 'View',
+      table: { category: 'Workspace' },
       control: 'inline-radio',
       options: ['icons', 'list', 'columns', 'gallery'],
-      description: 'Starting view. Changing a starting control restarts the fictional workspace.',
+      description:
+        'Live view, synchronized with the toolbar. Preserves files, folder history and selection.',
     },
     initialPreview: {
       name: 'Select first preview',
-      table: { category: 'Workspace setup' },
-      if: { arg: 'initialView', eq: 'columns' },
+      table: { category: 'Workspace' },
       control: 'boolean',
       description:
-        'Start column view with the first file preview selected. Gallery always shows a preview.',
+        'Choose the first column preview without resetting files. Gallery always shows a preview.',
     },
     initialDensity: {
-      name: 'Starting density',
-      table: { category: 'Workspace setup' },
+      name: 'Density',
+      table: { category: 'Workspace' },
       control: 'inline-radio',
       options: ['compact', 'comfortable'],
       description:
-        'Starting CSS density. The in-app selector changes density without resetting files.',
+        'Live spacing, synchronized with the in-app selector. Preserves files and selection.',
     },
     selectable: {
       control: 'boolean',
       description: 'Enable file selection and commands. Updates without resetting the workspace.',
-      if: { arg: 'initialView', eq: 'list' },
-      table: { category: 'Table behavior' },
+      table: { category: 'Workspace' },
     },
     resizable: {
       control: 'boolean',
@@ -1115,9 +1177,8 @@ const meta = {
     },
     disabled: {
       control: 'boolean',
-      description: 'Disable table sorting, selection and resizing.',
-      if: { arg: 'initialView', eq: 'list' },
-      table: { category: 'Table behavior' },
+      description: 'Disable workspace selection, commands, sorting and resizing.',
+      table: { category: 'Workspace' },
     },
     manualSorting: {
       control: 'boolean',
@@ -1130,6 +1191,10 @@ const meta = {
     layout: 'fullscreen',
     docs: {
       source: {
+        transform: (code: string, context: { args: { initialView?: FinderView } }) => {
+          const view = context.args.initialView;
+          return view && view !== 'list' ? finderViewRecipes[view] : code;
+        },
         language: 'tsx',
         type: 'code',
         code: `import { PuppertinoTable, createPuppertinoColumnHelper } from 'puppertino-table';
@@ -1158,6 +1223,7 @@ export function FileTable() {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const FileTable: Story = {
+  name: 'Playground',
   parameters: {
     docs: {
       description: {
@@ -1167,116 +1233,18 @@ export const FileTable: Story = {
     },
   },
 };
-export const CheckboxSelection: Story = {
-  args: { selectionCheckboxes: true },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'Optional library checkbox controls, including visible-row select-all. Native Finder-style stories use row selection.',
-      },
-    },
-  },
-};
-export const ColumnWorkspace: Story = {
-  args: { initialView: 'columns' },
-  parameters: {
-    docs: {
-      source: {
-        language: 'tsx',
-        type: 'code',
-        code: `import { ColumnBrowser, ColumnBrowserItem, DensityScope } from 'puppertino-table';
-
-export function Workspace() {
-  return <DensityScope density="compact" style={{ height: 390 }}>
-    <ColumnBrowser ariaLabel="Workspace" panels={[
-      { id: 'folders', label: 'Folders', content: <ColumnBrowserItem href="#projects" pathSelected>Projects</ColumnBrowserItem> },
-      { id: 'files', label: 'Files', content: <ColumnBrowserItem href="#brief">Project brief.pdf</ColumnBrowserItem> },
-      { id: 'preview', label: 'Preview', content: <p>Your app-owned preview</p> },
-    ]} />
-  </DensityScope>;
-}`,
-      },
-      description: {
-        story:
-          'Click a file for the app-owned preview. Resize either ancestor divider; each panel keeps its own width. Right-click items for the same menu as the table.',
-      },
-    },
-  },
-};
-export const ComfortableTable: Story = {
-  args: { initialDensity: 'comfortable' },
-  parameters: {
-    docs: {
-      source: {
-        code: meta.parameters.docs.source.code.replace(
-          'density="compact"',
-          'density="comfortable"',
-        ),
-      },
-    },
-  },
-};
-
-export const IconWorkspace: Story = {
-  args: { initialView: 'icons' },
-  parameters: {
-    docs: {
-      source: {
-        language: 'tsx',
-        type: 'code',
-        code: `// Your app owns the icon grid and selected item.
-const menu = useContextMenu<string>();
-<div className="my-icon-grid">{files.map(file => <button key={file.id}
-  type="button" aria-pressed={selectedId === file.id}
-  onClick={() => setSelectedId(file.id)} {...menu.getTriggerProps(file.id)}>
-  <FileArtwork file={file} /><span>{file.name}</span>
-</button>)}</div>;`,
-      },
-      description: {
-        story:
-          'App-owned icon layout using the same items, commands, search and drag/drop. File previews and layout belong to the application.',
-      },
-    },
-  },
-};
-export const GalleryWorkspace: Story = {
-  args: { initialView: 'gallery' },
-  parameters: {
-    docs: {
-      source: {
-        language: 'tsx',
-        type: 'code',
-        code: `// Your app renders the preview and filmstrip.
-<>
-<Preview file={files.find(file => file.id === selectedId)} />
-<section aria-label="Gallery files">{files.map(file => <button key={file.id}
-  type="button" aria-label={file.name} aria-pressed={selectedId === file.id}
-  onClick={() => setSelectedId(file.id)} {...menu.getTriggerProps(file.id)}>
-  <FileArtwork file={file} />
-</button>)}</section>
-</>;`,
-      },
-      description: {
-        story:
-          'A large app-owned preview and keyboard-focusable filmstrip. Select a thumbnail or right-click it for shared commands.',
-      },
-    },
-  },
-};
 export const NarrowColumns: Story = {
   args: { initialView: 'columns', initialPreview: false },
-  render: (args) => (
-    <div className="finder-demo-frame">
-      <FinderDemo
-        key={`${args.initialView}-${args.initialDensity}-${args.initialPreview}`}
-        {...args}
-      />
-    </div>
-  ),
+  decorators: [
+    (Story) => (
+      <div className="finder-demo-frame">
+        <Story />
+      </div>
+    ),
+  ],
   parameters: {
     docs: {
-      source: ColumnWorkspace.parameters?.docs?.source,
+      source: { language: 'tsx', code: finderViewRecipes.columns },
       description: {
         story:
           'Start with the file column; click a file to reveal its preview. Narrow windows keep ancestor columns accessible by horizontal scrolling. Use the canvas resize control to compare smaller widths.',

@@ -72,11 +72,12 @@ const meta = {
       source: { language: 'tsx', type: 'code' },
       description: {
         component:
-          'Default is the typed public PuppertinoTable<Person> component with internally managed state. Selection shows React-controlled sorting and selection; External Atoms shares app-owned state. Automatic sorting is the default. Set manualSorting for server pages or app-owned ordering. The visible stories cover the main integration paths; advanced interaction and state cases remain tested by direct story URL. Each Show code panel includes public imports, typed columns and sample data.',
+          'Playground is the typed public PuppertinoTable<Person> component with internally managed state. Selection shows React-controlled sorting and selection; External Atoms shares app-owned state. Automatic sorting is the default. Set manualSorting for server pages or app-owned ordering. The visible stories cover the main integration paths; advanced interaction and state cases remain tested by direct story URL. Each Show code panel includes public imports, typed columns and sample data.',
       },
     },
   },
   args: {
+    gestureOwnership: 'controlled',
     ...tableDefaults,
     data: people.slice(0, 12),
     columns: personColumns,
@@ -124,11 +125,14 @@ const meta = {
     data: { control: false },
     columns: { control: false },
   },
-} satisfies Meta<typeof PeopleTable>;
+} satisfies Meta<
+  PuppertinoTableProps<Person> & { gestureOwnership?: 'controlled' | 'local' | 'atom' }
+>;
 export default meta;
 export type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  name: 'Playground',
   parameters: { docs: { source: { code: tableRecipes.uncontrolled } } },
   render: (args) => <PeopleTable {...args} />,
 };
@@ -243,28 +247,35 @@ function ItemGestureExample({ ownership }: { ownership: 'controlled' | 'local' |
 }
 
 export const ItemSelectionGestures: Story = {
-  tags: ['!dev'],
-  parameters: {
-    controls: { disable: true },
-    docs: { source: { code: tableRecipes.controlledGestures } },
+  args: { gestureOwnership: 'controlled' },
+  argTypes: {
+    gestureOwnership: {
+      control: 'inline-radio',
+      options: ['controlled', 'local', 'atom'],
+      description:
+        'Changing the state owner restarts this selection example; layout changes preserve its anchor.',
+    },
   },
-  render: () => <ItemGestureExample ownership="controlled" />,
-};
-export const UncontrolledItemGestures: Story = {
-  tags: ['!dev'],
   parameters: {
-    controls: { disable: true },
-    docs: { source: { code: tableRecipes.localGestures } },
+    controls: { include: ['gestureOwnership'] },
+    docs: {
+      source: {
+        code: tableRecipes.controlledGestures,
+        transform: (_code: string, context: { args: { gestureOwnership?: string } }) =>
+          context.args.gestureOwnership === 'local'
+            ? tableRecipes.localGestures
+            : context.args.gestureOwnership === 'atom'
+              ? tableRecipes.atomGestures
+              : tableRecipes.controlledGestures,
+      },
+    },
   },
-  render: () => <ItemGestureExample ownership="local" />,
-};
-export const AtomItemGestures: Story = {
-  tags: ['!dev'],
-  parameters: {
-    controls: { disable: true },
-    docs: { source: { code: tableRecipes.atomGestures } },
-  },
-  render: () => <ItemGestureExample ownership="atom" />,
+  render: (args) => (
+    <ItemGestureExample
+      key={args.gestureOwnership}
+      ownership={args.gestureOwnership ?? 'controlled'}
+    />
+  ),
 };
 export const Selection: Story = {
   parameters: { docs: { source: { code: tableRecipes.controlled } } },
@@ -307,11 +318,6 @@ export const Empty: Story = {
   tags: ['!dev'],
   args: { data: [], emptyContent: 'No people match this view.' },
   parameters: { docs: { source: { code: tableRecipes.empty } } },
-};
-export const Disabled: Story = {
-  tags: ['!dev'],
-  args: { disabled: true },
-  parameters: { docs: { source: { code: tableRecipes.disabled } } },
 };
 export const ReadOnly: Story = {
   tags: ['!dev'],

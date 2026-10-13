@@ -10,6 +10,7 @@ import { checkResizeEvents } from './check-resize-events.js';
 import { checkResourceWorkspaces } from './check-resource-workspaces.js';
 import { checkStorybookDocs } from './check-storybook-docs.js';
 import { checkStorybookInteractions } from './check-storybook-interactions.js';
+import { storyQuery } from './story-presets.mjs';
 import { setStorybookTheme } from './storybook-theme.mjs';
 
 async function serve(directory: string, mount = '/') {
@@ -248,7 +249,7 @@ try {
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto(`${stories.base}/?path=/story/puppertino-table--default`);
   await page.frameLocator('#storybook-preview-iframe').getByRole('table').waitFor();
-  await page.getByRole('link', { name: 'Default', exact: true }).waitFor();
+  await page.getByRole('link', { name: 'Playground', exact: true }).waitFor();
   for (const name of ['Selection', 'External Atoms', 'Date Columns']) {
     assert.equal(await page.getByRole('link', { name, exact: true }).count(), 1);
   }
@@ -294,7 +295,7 @@ try {
           remove(type, listener, options);
         }) as typeof window.removeEventListener;
       });
-    await page.goto(`${stories.base}/iframe.html?id=puppertino-table--${story}&viewMode=story`);
+    await page.goto(`${stories.base}/iframe.html?${storyQuery(`puppertino-table--${story}`)}`);
     await page.getByRole('table').first().waitFor();
     assert.equal(
       await page.locator('#storybook-root').getByRole('table').count(),
@@ -652,7 +653,7 @@ try {
     'uncontrolled-item-gestures',
     'atom-item-gestures',
   ]) {
-    await page.goto(`${stories.base}/iframe.html?id=puppertino-table--${story}&viewMode=story`);
+    await page.goto(`${stories.base}/iframe.html?${storyQuery(`puppertino-table--${story}`)}`);
     const items = page.getByRole('list', { name: 'Selectable items' }).getByRole('button');
     const count = page.getByLabel('Gesture selection count');
     await items.first().waitFor();

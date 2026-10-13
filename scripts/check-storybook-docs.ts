@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import type { Page } from 'playwright';
+import { checkPlaygroundControls } from './check-storybook-controls.js';
 
 export async function checkStorybookDocs(page: Page, base: string, evidence: string) {
   page.setDefaultTimeout(15000);
@@ -115,6 +116,7 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   await page.frameLocator('#storybook-preview-iframe').locator('#finder-walkthrough').waitFor();
   await checkTableRecipes(page, base);
   await checkThemeToolbar(page, base);
+  await checkPlaygroundControls(page, base, evidence);
   console.log(
     'Storybook docs passed: media playback, readable source, live args, reset and manager navigation.',
   );
@@ -165,6 +167,9 @@ async function checkThemeToolbar(page: Page, base: string) {
     'rgb(36, 36, 38)',
     'Docs previews use a dark surface, keeping Puppertino text readable',
   );
+  await page.goto(`${base}/?path=/story/examples-finder--file-table&globals=theme:dark`);
+  await frame.locator('html.p-dark-mode').waitFor();
+  assert.equal(await page.getByRole('button', { name: 'Theme', exact: true }).isEnabled(), true);
 }
 
 async function checkTableRecipes(page: Page, base: string) {
@@ -188,6 +193,13 @@ async function checkTableRecipes(page: Page, base: string) {
       .locator(`#story--puppertino-table--${story}`)
       .locator('xpath=ancestor::div[contains(@class,"sbdocs-preview")]/..');
     await preview.getByRole('switch', { name: 'Show code' }).click();
+    await page.waitForFunction((id) => {
+      const canvas = document.getElementById(`story--puppertino-table--${id}`);
+      const source = canvas
+        ?.closest('.sbdocs-preview')
+        ?.parentElement?.querySelector<HTMLPreElement>('pre');
+      return source?.innerText?.includes("from 'puppertino-table'");
+    }, story);
     const source = await preview.locator('pre').innerText();
     assert.ok(source.includes("from 'puppertino-table'"), `${story}: public imports`);
     assert.ok(source.includes('createPuppertinoColumnHelper<'), `${story}: typed columns`);

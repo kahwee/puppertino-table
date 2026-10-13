@@ -2,11 +2,15 @@
 
 ## Unreleased
 
-- Make the main Table stories bind the public generic component directly and typecheck their real props. Remove the redundant Typed table section and point the TypeScript guide at Table Default.
+- Consolidate Storybook variants into args-driven playgrounds while retaining the focused Table sidebar. Replace flag-only Resource browser variants with one playground and keep separate styling and density-inheritance recipes.
+- Synchronize playground args with in-app view, density, narrow-layout and resize controls. Preserve Finder file operations, selection and inspector state while changing views or spacing; offer mutually exclusive width ownership and menu-trigger modes.
+- Combine item-selection ownership and tag option datasets into controls. Keep distinct API recipes, responsive examples and keyboard/creation workflows, update documentation and capture presets, and verify real manager Controls with browser regressions.
+
+- Make the main Table stories bind the public generic component directly and typecheck their real props. Remove the redundant Typed table section and point the TypeScript guide at the Table playground.
 
 - Remove dedicated dark-mode stories and use the existing Storybook Theme toolbar for every example; retain dark-theme browser and modal coverage through shared globals.
 
-- Focus the Table Storybook sidebar on nine primary examples; keep specialized stories available to browser checks by direct URL. Open Default without an automatic sort, and verify sorting in browser checks instead.
+- Focus the Table Storybook sidebar on nine primary examples; keep specialized stories available to browser checks by direct URL. Open the playground without an automatic sort, and verify sorting in browser checks instead.
 - Add a direct generic typed table Storybook example and TypeScript integration guide, checked numeric/Date cells and props, compile-time story contracts, and packed-consumer coverage for the new recipe.
 
 - Center the shared table selection column, use Puppertino's checkbox appearance in headers and rows, preserve a direct input hit area, and tighten the checkbox composition story.

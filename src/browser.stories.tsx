@@ -2,6 +2,8 @@ import { FileTextIcon, FolderIcon } from '@phosphor-icons/react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { type CSSProperties, useState } from 'react';
+import { useArgs } from 'storybook/preview-api';
+import { fn } from 'storybook/test';
 import {
   ColumnBrowser,
   ColumnBrowserItem,
@@ -51,27 +53,38 @@ const columns = helper.columns([
   helper.accessor('owner', { header: 'Owner', size: 160 }),
 ]);
 
+interface ResourceBrowserProps {
+  view: 'columns' | 'table';
+  widthMode: 'internal' | 'controlled' | 'readOnly' | 'persistent';
+  menuMode: 'item' | 'delegated';
+  density: TableDensity;
+  narrow: boolean;
+  resizeDisabled: boolean;
+  onDensityChange(value: TableDensity): void;
+  onNarrowChange(value: boolean): void;
+  onResizeDisabledChange(value: boolean): void;
+}
 function ResourceBrowser({
-  tableView = false,
-  controlled = false,
-  readOnly = false,
-  persistent = false,
-  delegated = false,
-}: {
-  tableView?: boolean;
-  controlled?: boolean;
-  readOnly?: boolean;
-  persistent?: boolean;
-  delegated?: boolean;
-}) {
-  const [density, setDensity] = useState<TableDensity>('compact');
-  const [narrow, setNarrow] = useState(false);
+  view,
+  widthMode,
+  menuMode,
+  density,
+  narrow,
+  resizeDisabled,
+  onDensityChange,
+  onNarrowChange,
+  onResizeDisabledChange,
+}: ResourceBrowserProps) {
+  const tableView = view === 'table';
+  const controlled = widthMode === 'controlled' || widthMode === 'readOnly';
+  const readOnly = widthMode === 'readOnly';
+  const persistent = widthMode === 'persistent';
+  const delegated = menuMode === 'delegated';
   const [inspect, setInspect] = useState<string | null>(null);
   const [selection, setSelection] = useState<RowSelectionState>({ 'resource-0': true });
   const [widths, setWidths] = useState<ColumnBrowserWidths>({ workspace: 224, projects: 224 });
   const [commits, setCommits] = useState(0);
   const [committedWidths, setCommittedWidths] = useState<ColumnBrowserWidths>({});
-  const [resizeDisabled, setResizeDisabled] = useState(false);
   const [project, setProject] = useState('Alpine');
   const [rootOnly, setRootOnly] = useState(false);
   const menu = useContextMenu<string>();
@@ -173,14 +186,14 @@ function ResourceBrowser({
               className="demo-density-select"
               aria-label="Density"
               value={density}
-              onChange={(event) => setDensity(event.target.value as TableDensity)}
+              onChange={(event) => onDensityChange(event.target.value as TableDensity)}
             >
               <option value="native">Native</option>
               <option value="compact">Compact</option>
               <option value="comfortable">Comfortable</option>
             </select>
           </label>
-          <button type="button" className="p-button" onClick={() => setNarrow(!narrow)}>
+          <button type="button" className="p-button" onClick={() => onNarrowChange(!narrow)}>
             Toggle narrow layout
           </button>
           <button type="button" className="p-button" onClick={() => setRootOnly(!rootOnly)}>
@@ -190,7 +203,7 @@ function ResourceBrowser({
             <input
               type="checkbox"
               checked={resizeDisabled}
-              onChange={(event) => setResizeDisabled(event.target.checked)}
+              onChange={(event) => onResizeDisabledChange(event.target.checked)}
             />
             Disable resizing
           </label>
@@ -338,33 +351,84 @@ const meta = {
   title: 'Puppertino/Resource browser',
   component: ResourceBrowser,
   args: {
-    tableView: false,
-    controlled: false,
-    readOnly: false,
-    persistent: false,
-    delegated: false,
+    view: 'columns',
+    widthMode: 'internal',
+    menuMode: 'item',
+    density: 'compact',
+    narrow: false,
+    resizeDisabled: false,
+    onDensityChange: fn(),
+    onNarrowChange: fn(),
+    onResizeDisabledChange: fn(),
   },
   argTypes: {
-    tableView: {
-      control: 'boolean',
-      description: 'Display resources as a table instead of columns.',
+    view: {
+      control: 'inline-radio',
+      options: ['columns', 'table'],
+      description: 'Change the resource layout while keeping selection and inspector state.',
+      table: { category: 'Layout' },
     },
-    controlled: {
-      control: 'boolean',
-      description: 'Let the example own panel widths.',
-      if: { arg: 'tableView', truthy: false },
+    density: {
+      control: 'inline-radio',
+      options: ['native', 'compact', 'comfortable'],
+      description: 'Live spacing, synchronized with the in-app density selector.',
+      table: { category: 'Layout' },
     },
-    readOnly: {
+    narrow: {
       control: 'boolean',
-      description: 'Keep controlled widths fixed by omitting the change callback.',
-      if: { arg: 'controlled', truthy: true },
+      description: 'Constrain the workspace to 520px.',
+      table: { category: 'Layout' },
     },
-    persistent: {
+    widthMode: {
+      control: {
+        type: 'select',
+        labels: {
+          internal: 'Internal',
+          controlled: 'Controlled',
+          readOnly: 'Read only',
+          persistent: 'Persisted',
+        },
+      },
+      options: ['internal', 'controlled', 'readOnly', 'persistent'],
+      if: { arg: 'view', eq: 'columns' },
+      table: { category: 'Sizing' },
+      description:
+        'Choose one width owner. Persistent saves completed internal widths; readOnly supplies controlled snapshots without a callback.',
+    },
+    resizeDisabled: {
       control: 'boolean',
-      description: 'Persist completed panel widths in story-specific localStorage.',
-      if: { arg: 'tableView', truthy: false },
+      table: { category: 'Sizing' },
+      description: 'Disable resizing without disabling selection or commands.',
     },
-    delegated: { control: 'boolean', description: 'Use one workspace context-menu trigger.' },
+    menuMode: {
+      control: 'inline-radio',
+      options: ['item', 'delegated'],
+      table: { category: 'Menus' },
+      description: 'Use per-item triggers or one delegated workspace trigger in either layout.',
+    },
+    onDensityChange: { control: false, table: { category: 'Events' } },
+    onNarrowChange: { control: false, table: { category: 'Events' } },
+    onResizeDisabledChange: { control: false, table: { category: 'Events' } },
+  },
+  render: function Playground(args) {
+    const [, updateArgs] = useArgs();
+    return (
+      <ResourceBrowser
+        {...args}
+        onDensityChange={(density) => {
+          args.onDensityChange(density);
+          updateArgs({ density });
+        }}
+        onNarrowChange={(narrow) => {
+          args.onNarrowChange(narrow);
+          updateArgs({ narrow });
+        }}
+        onResizeDisabledChange={(resizeDisabled) => {
+          args.onResizeDisabledChange(resizeDisabled);
+          updateArgs({ resizeDisabled });
+        }}
+      />
+    );
   },
   parameters: {
     layout: 'fullscreen',
@@ -378,34 +442,19 @@ const meta = {
 } satisfies Meta<typeof ResourceBrowser>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-export const ColumnWorkspace: Story = {};
-export const DensityTable: Story = { args: { tableView: true } };
-export const ControlledPanels: Story = { args: { controlled: true } };
-export const ReadOnlyPanels: Story = { args: { controlled: true, readOnly: true } };
-export const PersistentPanels: Story = {
-  args: { persistent: true },
+// Keep the established playground URL; layout and behavior variants are now args.
+export const ColumnWorkspace: Story = {
+  name: 'Playground',
   parameters: {
     docs: {
       description: {
         story:
-          'Keyboard or pointer resize, navigate to the root, return, then reload. Only completed widths persist; hidden panel preferences survive navigation. Uses a story-specific localStorage key.',
+          'Use Controls for layout, density, sizing ownership and menu triggers. The in-app controls update the same args. Theme is shared through the Storybook toolbar.',
       },
     },
   },
 };
-export const DelegatedMenus: Story = {
-  args: { delegated: true },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'One workspace trigger handles nested resource artwork and labels, right-click and Shift+F10. Items without a resolved context retain their native context menu.',
-      },
-    },
-  },
-};
-export const DelegatedTableMenus: Story = { args: { delegated: true, tableView: true } };
-export const CustomStyling: Story = {
+export const CustomStyling: StoryObj = {
   render: () => (
     <DensityScope
       density="comfortable"

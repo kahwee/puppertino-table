@@ -6,6 +6,7 @@ import { createServer } from 'node:http';
 import path from 'node:path';
 import axe from 'axe-core';
 import { chromium } from 'playwright';
+import { storyQuery } from './story-presets.mjs';
 import { setStorybookTheme } from './storybook-theme.mjs';
 
 // Capture real Storybook interactions; ffmpeg supplies README GIFs and MP4 downloads.
@@ -65,7 +66,7 @@ async function open(story, recording = false, closeup = false) {
   const createdAt = performance.now();
   const page = await context.newPage();
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto(`${base}/iframe.html?id=examples-finder--${story}&viewMode=story`);
+  await page.goto(`${base}/iframe.html?${storyQuery(`examples-finder--${story}`)}`);
   await page.getByRole('region', { name: 'Finder-style demo' }).waitFor();
   await page.evaluate(() => document.fonts.ready);
   if (recording)

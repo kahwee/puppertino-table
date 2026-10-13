@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import type { Page } from 'playwright';
+import { storyQuery } from './story-presets.mjs';
 
 export async function checkFinderFocus(page: Page, base: string, evidence: string) {
   await page.setViewportSize({ width: 1080, height: 720 });
   for (const theme of ['light', 'dark']) {
     await page.goto(
-      `${base}/iframe.html?id=examples-finder--comfortable-table&viewMode=story&globals=theme:${theme}`,
+      `${base}/iframe.html?${storyQuery(`examples-finder--comfortable-table`)}&globals=theme:${theme}`,
     );
     await page.waitForFunction(
       (dark) => document.documentElement.classList.contains('p-dark-mode') === dark,

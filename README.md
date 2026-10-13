@@ -74,7 +74,7 @@ Command/Ctrl-click toggles an item; Shift-click extends a range from a fixed anc
 | --- | --- |
 | ![Compact table with two selected files](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/table-selection.png) | ![Dark table with readable selected-file icons](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/table-dark.png) |
 
-[Compare comfortable spacing](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--comfortable-table) · [Dark columns](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--column-workspace&globals=theme:dark) · [Narrow columns](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--narrow-columns)
+[Compare comfortable spacing](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--file-table&args=initialDensity:comfortable) · [Dark columns](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--file-table&args=initialView:columns&globals=theme:dark) · [Narrow columns](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--narrow-columns)
 
 ## Watch the interactions
 
@@ -172,6 +172,10 @@ Icon slots accept any React node. Label the enclosing control; decorative icons 
 Checkboxes and row gestures share a fixed range anchor. Pass `selectionAnchor` to share selection across layouts. Each state slice has one owner: internal state, a controlled value/callback, or an external atom. Standalone change callbacks observe internal state; atom owners subscribe to their atom.
 
 `PuppertinoTable.onColumnSizingCommit` and `ColumnBrowser.onWidthsCommit` receive completed resize snapshots. Cancelled gestures do not persist widths. [State and persistence guide](https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md) · [Migrating to 0.8](https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md#migrating-to-08)
+
+## Storybook playgrounds
+
+Use each group’s playground to compare variants through Controls. Resource browser combines table/column layouts, internal/controlled/read-only/persistent widths, density and menu triggers. Tag picker offers option datasets, mixed values, disabled tags and optional creation. Finder views and checkbox settings use args; the Theme toolbar applies across stories. Distinct API recipes and interaction workflows keep their own examples.
 
 ## Develop
 

@@ -13,19 +13,19 @@ preview containers, tags and bottom bars are public exports. Start with the
 your own Finder without importing demo modules. File data and operations stay in
 your application.
 
-## File table
+## Playground
 
-Click a sortable header, select rows (Shift-click extends a range), and switch density or theme. Drag a divider, then double-click it to reset. Right-click a row for commands. **Reset demo** restores files, selection and widths while preserving your current view, theme and density.
+Use **View**, **Density** and **Selection checkboxes** in Controls instead of opening separate appearance stories. Change the shared **Theme** toolbar to compare light and dark. Click a sortable header, select rows (Shift-click extends a range), and switch density or theme. Drag a divider, then double-click it to reset. Right-click a row for commands. **Reset demo** restores files, selection and widths while preserving your current view, theme and density.
 
 <Canvas of={Finder.FileTable} sourceState="shown" />
 
 <Controls of={Finder.FileTable} />
 
-**Workspace setup** controls restart the workspace when changed. **Table behavior** controls update selection, resizing, disabled state and sorting without resetting search or moved files. Table controls appear when the starting view is List; the first-preview control applies to Columns. Gallery always renders a preview. The in-app controls let you compare views and density while keeping your file moves. In a narrow docs canvas, the table scrolls horizontally; open the story in its own canvas to see the full desktop layout.
+**View** and **Density** are synchronized with the in-app controls and preserve workspace state. **Select first preview** changes column preview setup without resetting files. **Table behavior** controls update selection, resizing, disabled state and sorting without resetting search or moved files. Table controls appear when the view is List; the first-preview control applies to Columns. Gallery always renders a preview. The in-app controls let you compare views and density while keeping your file moves. In a narrow docs canvas, the table scrolls horizontally; open the story in its own canvas to see the full desktop layout.
 
 ## Select, organize and delete in bulk
 
-Selection follows you between List, Icons, Columns and Gallery. Click a file to select it, Command/Ctrl-click to add or remove it, or Shift-click for a range. Choose **Select All** in the ellipsis menu or press Command/Ctrl+A. The separate Checkbox Selection story demonstrates optional row and header checkboxes; native Finder examples hide them.
+Selection follows you between List, Icons, Columns and Gallery. Click a file to select it, Command/Ctrl-click to add or remove it, or Shift-click for a range. Choose **Select All** in the ellipsis menu or press Command/Ctrl+A. Enable the Selection checkboxes control in the playground to try optional row and header checkboxes; Finder examples hide them by default.
 
 The bottom status bar shows the selection count. Open the toolbar’s ellipsis menu to move files to Archive or **Move to Trash**. Deletion is a menu command, never a standalone toolbar button. Right-click a selected file to apply a command to the selection; right-click an unselected file to act on just that file. Dragging a selected file moves the selected group to the destination folder or Trash.
 
@@ -45,9 +45,9 @@ The chrome follows [Apple’s Finder toolbar reference](https://support.apple.co
 
 Switch between **Icons**, **List**, **Columns**, and **Gallery** using the toolbar. Search filters the current folder in every view. Back and Forward follow folder history. The path bar keeps your location visible; the controls below the window change density, and Storybook’s **Theme** toolbar switches light/dark mode without resetting the workspace.
 
-<Canvas of={Finder.IconWorkspace} />
+<a href="./?path=/story/examples-finder--file-table&args=initialView:icons" target="_top">Open the playground in Icons view</a>.
 
-<Canvas of={Finder.GalleryWorkspace} />
+<a href="./?path=/story/examples-finder--file-table&args=initialView:gallery" target="_top">Open the playground in Gallery view</a>.
 
 Icon grids, gallery filmstrips, file artwork, search, history and previews are app-owned examples. The library supplies table/browser geometry, items, density and menus. These examples show how to compose them without a provider or filesystem dependencies.
 
@@ -66,7 +66,7 @@ The recording drags the Name divider, double-clicks to reset it, then switches t
   widths={widths} onWidthsChange={setWidths}
   onWidthsCommit={committed => savePreferences(committed)} />;`} />
 
-Custom table headers expose the matching `resizeOptions.onCommit`; individual resize handles use `options.onCommit`. The complete table exposes `onColumnSizingCommit` and saves internal widths with `storageKey`. Change callbacks observe previews (including cancellation); commit callbacks receive only completed snapshots. Supplying controlled widths without a change callback makes them read-only. <a href="./?path=/story/puppertino-resource-browser--controlled-panels" target="_top">Try controlled panels</a>.
+Custom table headers expose the matching `resizeOptions.onCommit`; individual resize handles use `options.onCommit`. The complete table exposes `onColumnSizingCommit` and saves internal widths with `storageKey`. Change callbacks observe previews (including cancellation); commit callbacks receive only completed snapshots. Supplying controlled widths without a change callback makes them read-only. <a href="./?path=/story/puppertino-resource-browser--column-workspace&args=widthMode:controlled" target="_top">Try controlled panels</a>.
 
 <Source language="tsx" code={`<PuppertinoTable data={files} columns={columns} getRowId={file => file.id}
   ariaLabel="Files"
@@ -79,7 +79,7 @@ Change observers work with internal state. Controlled state uses the same callba
 
 Click a file to preview it. The two ancestor dividers resize independently; the current panel fills the remaining space. Panels have their own vertical scroll areas and the surface reveals the current panel horizontally.
 
-<Canvas of={Finder.ColumnWorkspace} />
+<a href="./?path=/story/examples-finder--file-table&args=initialView:columns" target="_top">Open the playground in Columns view</a>.
 
 <Source language="tsx" code={`<DensityScope density="compact">
   <ColumnBrowser ariaLabel="Workspace" panels={[
@@ -137,7 +137,7 @@ The narrow example constrains the same workspace to 620px. Its toolbar wraps and
   <figure style={{ margin: 0 }}><img src="./media/columns-preview.png" alt="Columns with a document preview" style={{ width: '100%' }} /><figcaption>Columns with app-owned preview</figcaption></figure>
 </div>
 
-<Canvas of={Finder.ComfortableTable} />
+<p>Change Row density in the playground or its Controls to compare compact and comfortable spacing.</p>
 
 Set density once on the parent scope; table rows, browser items and `.pt-icon` artwork inherit it. Metrics change geometry, not sorting or saved widths. <a href="./?path=/story/puppertino-resource-browser--density-inheritance" target="_top">Explore nested density overrides</a>.
 
@@ -148,7 +148,7 @@ For app-owned browser widths, keep `widths`, `onWidthsChange` and `onWidthsCommi
 <Source language="tsx" code={`<ColumnBrowser panels={panels} ariaLabel="Projects"
   storageKey="my-app.browser.widths.v1" />;`} />
 
-Restoration waits until hydration; only completed gestures save. Hidden ancestors keep their preferences, and storage failures preserve browsing. Controlled widths ignore automatic persistence. <a href="./?path=/story/puppertino-resource-browser--persistent-panels" target="_top">Try persistent panels</a>.
+Restoration waits until hydration; only completed gestures save. Hidden ancestors keep their preferences, and storage failures preserve browsing. Controlled widths ignore automatic persistence. <a href="./?path=/story/puppertino-resource-browser--column-workspace&args=widthMode:persistent" target="_top">Try persistent panels</a>.
 
 A workspace can resolve menu contexts once rather than attaching handlers to every row:
 
@@ -162,7 +162,7 @@ A workspace can resolve menu contexts once rather than attaching handlers to eve
 })}>{items.map(item => <ColumnBrowserItem key={item.id}
   data-item-id={item.id} aria-haspopup="menu">{item.name}</ColumnBrowserItem>)}</div>;`} />
 
-Return no context for unknown items or editable fields to keep their native menus. The app still owns commands, selection and current-item validation. <a href="./?path=/story/puppertino-resource-browser--delegated-menus" target="_top">Try delegated browser menus</a> · <a href="./?path=/story/puppertino-resource-browser--delegated-table-menus" target="_top">Try delegated table menus</a>.
+Return no context for unknown items or editable fields to keep their native menus. The app still owns commands, selection and current-item validation. <a href="./?path=/story/puppertino-resource-browser--column-workspace&args=menuMode:delegated" target="_top">Try delegated browser menus</a> · <a href="./?path=/story/puppertino-resource-browser--column-workspace&args=view:table;menuMode:delegated" target="_top">Try delegated table menus</a>.
 
 Use shared item slots and scoped CSS variables to customize presentation:
 

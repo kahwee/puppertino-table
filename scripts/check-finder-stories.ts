@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import axe from 'axe-core';
 import type { Page } from 'playwright';
 import { checkFinderFocus } from './check-finder-focus.js';
+import { storyQuery } from './story-presets.mjs';
 import { setStorybookTheme } from './storybook-theme.mjs';
 
 declare global {
@@ -33,7 +34,7 @@ export async function checkFinderStories(page: Page, base: string, evidence: str
     'gallery-workspace',
     'narrow-columns',
   ]) {
-    await page.goto(`${base}/iframe.html?id=examples-finder--${story}&viewMode=story`);
+    await page.goto(`${base}/iframe.html?${storyQuery(`examples-finder--${story}`)}`);
     const app = page.getByRole('region', { name: 'Finder-style demo' });
     await app.waitFor();
     assert.deepEqual(await finderViolations(page), [], story);
@@ -53,7 +54,7 @@ export async function checkFinderStories(page: Page, base: string, evidence: str
   }
   await page.keyboard.press('Escape');
   // Mix native checkboxes, row keyboard gestures and view changes through one anchor.
-  await page.goto(`${base}/iframe.html?id=examples-finder--checkbox-selection&viewMode=story`);
+  await page.goto(`${base}/iframe.html?${storyQuery(`examples-finder--checkbox-selection`)}`);
   const rows = page.getByRole('table', { name: 'Project files', exact: true }).locator('tbody tr');
   await page.getByRole('checkbox', { name: 'Select Project brief.pdf', exact: true }).check();
   await rows.nth(2).press('Shift+Enter');
@@ -71,6 +72,7 @@ export async function checkFinderStories(page: Page, base: string, evidence: str
     .getByRole('button', { name: 'Cover artwork.png PNG image', exact: true })
     .click({ modifiers: ['Shift'] });
   await page.getByRole('button', { name: 'List', exact: true }).click();
+  await page.getByRole('checkbox', { name: 'Select Project brief.pdf', exact: true }).waitFor();
   assert.equal(
     await page.locator('tbody input:checked').count(),
     4,
@@ -82,7 +84,7 @@ export async function checkFinderStories(page: Page, base: string, evidence: str
     .getByRole('checkbox', { name: 'Select Cover artwork.png', exact: true })
     .click({ modifiers: ['Shift'] });
   assert.equal(await page.locator('tbody input:checked').count(), 3, 'row anchors checkbox ranges');
-  await page.goto(`${base}/iframe.html?id=examples-finder--file-table&viewMode=story`);
+  await page.goto(`${base}/iframe.html?${storyQuery(`examples-finder--file-table`)}`);
   const favorites = page.getByRole('navigation', { name: 'Favorites' });
   assert.equal(await page.getByRole('button', { name: 'Back', exact: true }).isDisabled(), true);
   await favorites.getByRole('button', { name: 'Archive', exact: true }).click();
@@ -195,7 +197,7 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
     ['column-workspace', 'columns'],
     ['gallery-workspace', 'gallery'],
   ]) {
-    await page.goto(`${base}/iframe.html?id=examples-finder--${story}&viewMode=story`);
+    await page.goto(`${base}/iframe.html?${storyQuery(`examples-finder--${story}`)}`);
     await page.getByRole('heading', { name: 'Projects', exact: true }).waitFor();
     assert.equal(await commandDisabled(page, 'Move to Trash'), true);
     if (view === 'list') {
@@ -339,7 +341,7 @@ async function commandDisabled(page: Page, name: string) {
 }
 
 async function checkFinderTags(page: Page, base: string, evidence: string) {
-  await page.goto(`${base}/iframe.html?id=examples-finder--file-table&viewMode=story`);
+  await page.goto(`${base}/iframe.html?${storyQuery(`examples-finder--file-table`)}`);
   const rows = page.getByRole('table', { name: 'Project files', exact: true }).locator('tbody tr');
   assert.equal(
     await page.getByRole('button', { name: 'Move to Trash', exact: true }).count(),
