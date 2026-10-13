@@ -45,6 +45,7 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   await app.getByRole('button', { name: 'Reset demo', exact: true }).click();
   await app.getByRole('row').filter({ hasText: 'Project brief.pdf' }).waitFor();
   // Live behavior controls must preserve the app's current search.
+  await app.getByRole('button', { name: 'Search', exact: true }).click();
   await app.getByRole('searchbox', { name: 'Search files' }).fill('brief');
   const toggleControl = async (name: string) => {
     const control = page.locator(`input[name="${name}"]`);

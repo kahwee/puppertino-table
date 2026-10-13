@@ -6,8 +6,10 @@ import path from 'node:path';
 import axe from 'axe-core';
 import { chromium } from 'playwright';
 import { checkFinderStories } from './check-finder-stories.js';
+import { checkResizeEvents } from './check-resize-events.js';
 import { checkResourceWorkspaces } from './check-resource-workspaces.js';
 import { checkStorybookDocs } from './check-storybook-docs.js';
+import { checkStorybookInteractions } from './check-storybook-interactions.js';
 
 async function serve(directory: string, mount = '/') {
   const root = path.resolve(directory);
@@ -60,6 +62,7 @@ const evidence = 'test-results/browser';
 await mkdir(evidence, { recursive: true });
 const errors: string[] = [];
 try {
+  await checkStorybookInteractions(browser, stories.base);
   for (const theme of process.env.PUPPERTINO_STORIES_ONLY ? [] : ['light', 'dark']) {
     const page = await browser.newPage({
       viewport: { width: 1440, height: 1000 },
@@ -100,10 +103,10 @@ try {
     await checks.nth(4).click({ modifiers: ['Shift'] });
     assert.equal(await page.getByLabel('Selection count').textContent(), '4 selected');
     await checks.nth(2).click({ modifiers: ['Shift'] });
-    assert.equal(await page.getByLabel('Selection count').textContent(), '1 selected');
+    assert.equal(await page.getByLabel('Selection count').textContent(), '2 selected');
     await checks.nth(6).focus();
     await checks.nth(6).press('Space');
-    assert.equal(await page.getByLabel('Selection count').textContent(), '2 selected');
+    assert.equal(await page.getByLabel('Selection count').textContent(), '3 selected');
     await checks.nth(6).evaluate((el) => {
       (window as any).__checkbox = el;
       (window as any).__cell = document.querySelector('tbody td');
@@ -169,7 +172,7 @@ try {
             document.querySelector('tbody td') === (window as any).__cell,
         ),
     );
-    assert.equal(await page.getByLabel('Selection count').textContent(), '2 selected');
+    assert.equal(await page.getByLabel('Selection count').textContent(), '3 selected');
     const name = page.getByRole('separator', { name: 'Resize Name column' });
     await page.reload();
     await name.waitFor();
@@ -250,8 +253,9 @@ try {
     'default',
     'selection',
     'paginated-selection',
-    'atom-selection',
+    'external-atoms',
     'keyboard-resize',
+    'controlled-sizing',
     'dark',
     'narrow',
     'empty',
@@ -290,7 +294,12 @@ try {
       await page.locator('#storybook-root').getByRole('table').count(),
       story === 'independent-tables' ? 2 : 1,
     );
-    if (story === 'atom-selection') {
+    if (story === 'external-atoms') {
+      await page.waitForFunction(
+        () => document.querySelector('[aria-label="Atom name width"]')?.textContent === '200',
+      );
+      await page.locator('th[aria-sort="descending"]').waitFor();
+      await page.getByRole('checkbox', { name: 'Select all visible rows', exact: true }).uncheck();
       await page.getByRole('checkbox', { name: 'Select person-0', exact: true }).check();
       const all = page.getByRole('checkbox', { name: 'Select all visible rows', exact: true });
       assert.equal(await all.getAttribute('aria-checked'), 'mixed');
@@ -680,6 +689,7 @@ try {
     );
     await page.screenshot({ path: `${evidence}/${story}.png` });
   }
+  await checkResizeEvents(page, stories.base);
   await checkResourceWorkspaces(page, stories.base, evidence);
   await checkFinderStories(page, stories.base, evidence);
   await checkStorybookDocs(page, stories.base, evidence);

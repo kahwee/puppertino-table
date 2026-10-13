@@ -9,7 +9,7 @@ Compare all four Finder-style views, watch a gesture, then try it and copy the i
 
 ## File table
 
-Click a sortable header, select checkboxes (Shift-click extends a range), and switch density or theme. Drag a divider, then double-click it to reset. Right-click a row for commands. **Reset demo** restores files, selection and widths while preserving your current view, theme and density.
+Click a sortable header, select rows (Shift-click extends a range), and switch density or theme. Drag a divider, then double-click it to reset. Right-click a row for commands. **Reset demo** restores files, selection and widths while preserving your current view, theme and density.
 
 <Canvas of={Finder.FileTable} sourceState="shown" />
 
@@ -19,11 +19,21 @@ Click a sortable header, select checkboxes (Shift-click extends a range), and sw
 
 ## Select, organize and delete in bulk
 
-Selection follows you between List, Icons, Columns and Gallery. Click a file to select it, Command/Ctrl-click to add or remove it, or Shift-click for a range. List view also has row checkboxes and a select-all header; other views have **Select all** in the action bar.
+Selection follows you between List, Icons, Columns and Gallery. Click a file to select it, Command/Ctrl-click to add or remove it, or Shift-click for a range. Choose **Select All** in the ellipsis menu or press Command/Ctrl+A. The separate Checkbox Selection story demonstrates optional row and header checkboxes; native Finder examples hide them.
 
-The action bar shows the selection count and lets you move the selection to Archive or **Move to Trash**. Right-click a selected file to apply a command to the selection; right-click an unselected file to act on just that file. Dragging a selected file moves the selected group to the destination folder or Trash.
+The bottom status bar shows the selection count. Open the toolbar’s ellipsis menu to move files to Archive or **Move to Trash**. Deletion is a menu command, never a standalone toolbar button. Right-click a selected file to apply a command to the selection; right-click an unselected file to act on just that file. Dragging a selected file moves the selected group to the destination folder or Trash.
 
-**Undo delete** restores the latest deleted batch. Open **Trash**, select files, and choose **Restore selected** to return them to their original folders. Files remain fictional and in memory; reloading or **Reset demo** restores the starting workspace. Folder and search changes clear selection, so bulk actions never include hidden files.
+**Undo Move to Trash** in the ellipsis menu restores the latest deleted batch. Open **Trash**, select files, and choose **Put Back** to return them to their original folders. Files remain fictional and in memory; reloading or **Reset demo** restores the starting workspace. Folder and search changes clear selection, so bulk actions never include hidden files.
+
+## Tags
+
+Select files and click the tag-shaped toolbar icon. The anchored Puppertino popover shows assigned tags as gray tokens in the input and unassigned tags underneath. Click a suggestion to assign it to the entire selection, or type a new name and press Enter. Click a token (or press Backspace in an empty input) to remove it. Escape closes the popover and restores focus to the toolbar button.
+
+Sidebar tags filter files across Projects and Archive. Tags survive moves, Trash and Put Back; Reset demo clears them. Tags are app-owned state in `demo/finder-files.ts`, not part of the table API.
+
+The chrome follows [Apple’s Finder toolbar reference](https://support.apple.com/guide/mac-help/customize-the-finder-toolbar-and-sidebar-mchlp3011/mac) and the supplied macOS screenshots: grouped icon controls, monochrome sidebar symbols, menu commands and a quiet bottom status bar. Puppertino supplies window, toolbar, sidebar and popover styles; Phosphor regular icons use 20px toolbar and 18px sidebar slots.
+
+<Canvas of={Finder.Tags} />
 
 ## Icon and Gallery views
 
@@ -50,7 +60,14 @@ The recording drags the Name divider, double-clicks to reset it, then switches t
   widths={widths} onWidthsChange={setWidths}
   onWidthsCommit={committed => savePreferences(committed)} />;`} />
 
-Custom table headers expose the matching `resizeOptions.onCommit`; individual resize handles use `options.onCommit`. The complete table saves internal widths with `storageKey` and does not expose a commit callback. Supplying controlled widths without a change callback makes them read-only. <a href="./?path=/story/puppertino-resource-browser--controlled-panels" target="_top">Try controlled panels</a>.
+Custom table headers expose the matching `resizeOptions.onCommit`; individual resize handles use `options.onCommit`. The complete table exposes `onColumnSizingCommit` and saves internal widths with `storageKey`. Change callbacks observe previews (including cancellation); commit callbacks receive only completed snapshots. Supplying controlled widths without a change callback makes them read-only. <a href="./?path=/story/puppertino-resource-browser--controlled-panels" target="_top">Try controlled panels</a>.
+
+<Source language="tsx" code={`<PuppertinoTable data={files} columns={columns} getRowId={file => file.id}
+  ariaLabel="Files"
+  onColumnSizingChange={observePreview}
+  onColumnSizingCommit={savePreferences} />;`} />
+
+Change observers work with internal state. Controlled state uses the same callback to apply updates; atom owners subscribe to their atom. <a href="./?path=/story/puppertino-table--resize-events" target="_top">Try resize events</a>.
 
 ## Column browser
 

@@ -1,14 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useCreateAtom, useSelector } from '@tanstack/react-store';
-import type { ColumnSizingState, RowSelectionState, SortingState } from '@tanstack/react-table';
+import { useCreateAtom } from '@tanstack/react-store';
+import type { RowSelectionState, SortingState } from '@tanstack/react-table';
 import { useRef, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 import { type Person, people, personColumns, productColumns, products } from '../demo/fixtures.js';
 import {
+  AtomOwnershipExample,
+  ControlledSizingExample,
+  ResizeEventsExample,
+} from '../demo/table-state-examples.js';
+import {
   ColumnResizeHandle,
   type PuppertinoColumnDef,
   PuppertinoTable,
-  type PuppertinoTableAtoms,
   type PuppertinoTableProps,
   RowSelectionCheckbox,
   TableBody,
@@ -17,7 +21,7 @@ import {
   useRowSelectionGestures,
 } from './index.js';
 
-function Example(args: Partial<PuppertinoTableProps<Person>>) {
+function Example(args: Partial<Omit<PuppertinoTableProps<Person>, 'atoms'>>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [selection, setSelection] = useState<RowSelectionState>({});
   return (
@@ -100,8 +104,9 @@ function ItemGestureExample({ ownership }: { ownership: 'controlled' | 'local' |
     disabled,
     ...(ownership === 'controlled'
       ? { rowSelection: selection, onRowSelectionChange: readOnly ? undefined : setSelection }
-      : {}),
-    ...(ownership === 'atom' ? { atoms: { rowSelection: selectionAtom } } : {}),
+      : ownership === 'atom'
+        ? { atoms: { rowSelection: selectionAtom } }
+        : {}),
   });
   const items = [{ id: 'folder', name: 'Example folder' }, ...data];
   const { select, clearSelection } = useRowSelectionGestures(table, {
@@ -325,18 +330,22 @@ function StandaloneResizeExample() {
               <thead>
                 {table.getHeaderGroups().map((group) => (
                   <tr key={group.id}>
-                    {group.headers.map((header) => (
-                      <th key={header.id} colSpan={header.colSpan}>
-                        {!header.isPlaceholder && <table.FlexRender header={header} />}
-                        {controls && (nameHandle || header.column.id !== 'name') && (
-                          <ColumnResizeHandle
-                            table={table}
-                            header={header}
-                            label={header.column.id}
-                          />
-                        )}
-                      </th>
-                    ))}
+                    {group.headers.map((header) =>
+                      header.isPlaceholder ? (
+                        <td key={header.id} colSpan={header.colSpan} />
+                      ) : (
+                        <th key={header.id} colSpan={header.colSpan}>
+                          <table.FlexRender header={header} />
+                          {controls && (nameHandle || header.column.id !== 'name') && (
+                            <ColumnResizeHandle
+                              table={table}
+                              header={header}
+                              label={header.column.id}
+                            />
+                          )}
+                        </th>
+                      ),
+                    )}
                   </tr>
                 ))}
               </thead>
@@ -514,7 +523,7 @@ function CheckboxPrimitiveExample() {
     selectable: true,
   });
   return (
-    <table className="p-table" aria-label="Custom checkbox layout">
+    <table className="p-table pt-table" aria-label="Custom checkbox layout">
       <thead>
         <tr>
           <th scope="col">Person</th>
@@ -539,25 +548,6 @@ export const CheckboxPrimitive: Story = {
   render: () => <CheckboxPrimitiveExample />,
 };
 
-function ControlledSizingExample() {
-  const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({ name: 280 });
-  return (
-    <>
-      <button type="button" onClick={() => setColumnSizing({ name: 200 })}>
-        Set name width to 200
-      </button>
-      <PuppertinoTable
-        data={people.slice(0, 5)}
-        columns={personColumns}
-        getRowId={(row) => row.id}
-        ariaLabel="Controlled widths"
-        columnSizing={columnSizing}
-        onColumnSizingChange={setColumnSizing}
-      />
-      <output aria-label="Name width">{columnSizing.name}</output>
-    </>
-  );
-}
 export const ControlledSizing: Story = {
   parameters: { controls: { disable: true } },
   render: () => <ControlledSizingExample />,
@@ -572,32 +562,6 @@ export const ControlledSizing: Story = {
   },
 };
 
-function AtomWidthOutput({ atom }: { atom: NonNullable<PuppertinoTableAtoms['columnSizing']> }) {
-  const widths = useSelector(atom);
-  return <output aria-label="Atom name width">{widths.name}</output>;
-}
-function AtomOwnershipExample() {
-  const columnSizing = useCreateAtom<ColumnSizingState>({ name: 280 });
-  const sorting = useCreateAtom<SortingState>([]);
-  const rowSelection = useCreateAtom<RowSelectionState>({});
-  return (
-    <>
-      <button type="button" onClick={() => columnSizing.set({ name: 200 })}>
-        Set atom width to 200
-      </button>
-      <PuppertinoTable
-        data={people.slice(0, 5)}
-        columns={personColumns}
-        getRowId={(row) => row.id}
-        ariaLabel="Atom-owned table"
-        selectable
-        manualSorting={false}
-        atoms={{ columnSizing, sorting, rowSelection }}
-      />
-      <AtomWidthOutput atom={columnSizing} />
-    </>
-  );
-}
 export const ExternalAtoms: Story = {
   parameters: { controls: { disable: true } },
   render: () => <AtomOwnershipExample />,
@@ -615,7 +579,7 @@ export const ExternalAtoms: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Sort by Score' }));
     await expect(canvas.getByRole('columnheader', { name: /Score/ })).toHaveAttribute(
       'aria-sort',
-      'ascending',
+      'descending',
     );
   },
 };
@@ -655,7 +619,24 @@ export const PaginatedSelection: Story = {
   render: () => <PaginatedSelectionExample />,
 };
 
-export const AtomSelection: Story = {
-  parameters: { controls: { disable: true } },
-  render: () => <AtomOwnershipExample />,
+export const ResizeEvents: Story = {
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          'Internal widths with an observer: change callbacks include previews and cancellation; onColumnSizingCommit receives completed pointer, keyboard and reset snapshots. Escape cancels a preview without committing.',
+      },
+    },
+  },
+  render: () => <ResizeEventsExample />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const edge = canvas.getByRole('separator', { name: 'Resize Name column' });
+    edge.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(canvas.getByLabelText('Preview name width')).toHaveTextContent('256');
+    await expect(canvas.getByLabelText('Committed name width')).toHaveTextContent('256');
+    await expect(canvas.getByLabelText('Resize commits')).toHaveTextContent('1');
+  },
 };

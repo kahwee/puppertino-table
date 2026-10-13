@@ -1,14 +1,31 @@
 # Changelog
 
-## Unreleased
+## 0.8.0 — 2026-10-13
 
-- Add shared Finder selection across four views, bulk move/delete, a Trash view with restore and undo, folder counts and a responsive action bar.
+### API changes
 
-- Add a select-all header checkbox with mixed state and keyboard support; selecting or clearing visible rows preserves other-page selections.
+- Share one selection anchor across table checkboxes and `useRowSelectionGestures`; add `selectionAnchor` to complete-table/hook options for cross-view selection. Checkbox Shift ranges now extend and shrink from the fixed anchor; plain clicks toggle, and Command/Ctrl+Shift adds a range. Header select-all resets the anchor and preserves other-page selections.
+- Reject atom/value/change-callback ownership conflicts in the public TypeScript contracts for sorting, selection and sizing, while retaining runtime validation for JavaScript callers. Different slices may still have different owners.
+- Notify standalone `onColumnSizingChange` observers for internally owned widths, matching sorting/selection observers. Change callbacks retain TanStack value-or-updater semantics.
+- Add `PuppertinoTable.onColumnSizingCommit` for completed pointer, keyboard and reset snapshots in internal, controlled and atom-owned modes. Previews and cancelled gestures do not commit; browser `onWidthsCommit` and primitive `onCommit` remain supported.
+- Export `ContextMenuState` and reject invalid separator/command/link prop combinations. Preserve property-presence narrowing for menu labels. Remove redundant internal type re-exports; package-root imports remain supported.
 
-- Clarify Storybook setup versus live controls, state ownership, defaults and resize completion callbacks.
-- Export `ContextMenuState` and reject separator/command/link prop combinations that cannot be rendered meaningfully.
-- Remove redundant type re-exports from internal implementation modules; package-root type imports remain available.
+### Components and examples
+
+- Add a visible-row select-all checkbox with mixed state, keyboard support and disabled empty/read-only behavior; preserve selection on other pages when selecting or clearing the current page.
+- Add shared Finder selection across four views, bulk move/delete, Trash restore and undo, selected-group dragging and menu-only move/delete commands. Replace the bulk action bar with a bottom selection status; use Puppertino window, toolbar, sidebar and popover styles with consistent Phosphor icons. Keep all file operations in memory.
+- Add Finder tag assignment/removal, gray input tokens, new-tag creation, sidebar filters and bulk tagging. Preserve tags through move/delete/restore; reset clears them. Keep toolbar and tag components in separate demo modules.
+- Add `selectionCheckboxes` (default `true`) to hide the complete table’s selection column independently of selection capability. Finder examples default to row selection; a separate checkbox story retains the optional controls.
+- Register resize members and committed options before paint so first keyboard/pointer interactions work immediately; preserve cancellation on disable, unmount and responsive transitions.
+- Render grouped-header placeholders as non-header cells, and apply shared table contrast styles to the standalone checkbox example.
+
+### Storybook, documentation and verification
+
+- Improve Storybook 10 args/argTypes, setup versus live controls, defaults and component recipes; consolidate browser/menu documentation and add a 0.8 migration guide.
+- Add an interactive resize-events story and commit outputs for controlled/atom examples. Extract stateful sizing examples into a dedicated demo module and remove the duplicate atom-selection workaround story.
+- Run every indexed story and require successful play-function and accessibility reports; fix the External Atoms numeric-sort expectation.
+- Refresh eleven documentation screenshots and three interaction screencasts for the current Finder workspace.
+- Add mixed checkbox/row/cross-view range regressions, internal callback tests, complete-table commit/cancellation checks and installed-package ownership type contracts.
 
 ## 0.7.1 — 2026-10-12
 

@@ -1,6 +1,7 @@
 'use client';
 import { type RowData, Subscribe } from '@tanstack/react-table';
 import type { RowSelectionCheckboxProps } from './table-types.js';
+import { useRowSelectionGestures } from './use-row-selection-gestures.js';
 
 /** Shared click/keyboard semantics, including Shift selection and row-event isolation. */
 export function RowSelectionCheckbox<T extends RowData>({
@@ -8,6 +9,7 @@ export function RowSelectionCheckbox<T extends RowData>({
   label,
   disabled = false,
 }: RowSelectionCheckboxProps<T>) {
+  const { select } = useRowSelectionGestures(row.table, { disabled });
   return (
     <Subscribe source={row.table.atoms.rowSelection} selector={(selection) => !!selection[row.id]}>
       {(selected) => (
@@ -18,7 +20,10 @@ export function RowSelectionCheckbox<T extends RowData>({
           disabled={disabled || !row.getCanSelect()}
           onClick={(event) => {
             event.stopPropagation();
-            row.getToggleSelectedHandler()(event);
+            select(row.id, {
+              shift: event.shiftKey,
+              toggle: !event.shiftKey || event.metaKey || event.ctrlKey,
+            });
           }}
           onChange={() => {}}
         />

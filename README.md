@@ -16,7 +16,7 @@ Finder-style React tables and column browsers, built on [Puppertino](https://pup
 ## Install and use
 
 ```sh
-pnpm add puppertino-table@0.7.1 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
+pnpm add puppertino-table@0.8.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
 ```
 
 ```tsx
@@ -90,6 +90,10 @@ React 19 (`^19.3.0`), TanStack Table and Puppertino are peer dependencies. Sorti
 [Watch MP4](https://kahwee.github.io/puppertino-table/media/drag-drop.mp4). This demo composes native HTML drag/drop with the table and browser items. Moves are in-memory and app-owned; the package does not implement file operations or a drag/drop engine. The Move menu command provides a keyboard alternative.
 
 [Watch and try each feature in Storybook](https://kahwee.github.io/puppertino-table/?path=/docs/examples-finder--docs). All media records the working apps with fictional data in Chromium. The pointer and captions are recording overlays. [Demo source](https://github.com/kahwee/puppertino-table/blob/main/src/finder.stories.tsx).
+
+## 0.8 API consistency
+
+Checkboxes and row gestures share a fixed range anchor. Supply `selectionAnchor` when sharing selection across layouts. Each state slice has one typed owner: internal state, controlled value/callback, or an external atom. Standalone change callbacks observe internal state; atom owners subscribe to their atom. `PuppertinoTable.onColumnSizingCommit` and `ColumnBrowser.onWidthsCommit` receive completed resize snapshots only. See the [migration notes](https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md#migrating-to-08).
 
 ## Develop
 

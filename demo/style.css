@@ -2,6 +2,10 @@
 @import "@codedgar/puppertino/typography";
 @import "@codedgar/puppertino/buttons";
 @import "@codedgar/puppertino/forms";
+@import "@codedgar/puppertino/windows";
+@import "@codedgar/puppertino/toolbars";
+@import "@codedgar/puppertino/sidebars";
+@import "@codedgar/puppertino/popovers";
 @import "@codedgar/puppertino/lists";
 @import "@codedgar/puppertino/dark-mode";
 @import "../src/style.css";

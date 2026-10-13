@@ -1,6 +1,6 @@
 {
   "name": "puppertino-table",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "private": false,
   "publishConfig": {
     "access": "public",
@@ -55,6 +55,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
     "@codedgar/puppertino": "2.0.0",
+    "@phosphor-icons/react": "2.1.10",
     "@storybook/addon-a11y": "10.6.1",
     "@storybook/addon-docs": "10.6.1",
     "@storybook/react-vite": "10.6.1",

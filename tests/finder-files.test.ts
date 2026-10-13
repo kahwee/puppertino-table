@@ -39,3 +39,17 @@ test('Finder undo only restores the latest deletion; restored files cannot be du
   assert.deepEqual(reduce(restored, { type: 'undo' }), restored);
   assert.deepEqual(reduce(restored, { type: 'reset' }), initial);
 });
+
+test('Finder tags survive moves, Trash and undo without mutating fixtures', () => {
+  const tagged = reduce(initial, { type: 'tag', ids: ['brief', 'budget'], tag: 'Review' });
+  const repeated = reduce(tagged, { type: 'tag', ids: ['brief'], tag: 'Review' });
+  assert.deepEqual(repeated.files[0].tags, ['Review']);
+  const moved = reduce(repeated, { type: 'move', ids: ['brief'], folder: 'Archive' });
+  const deleted = reduce(moved, { type: 'delete', ids: ['brief'] });
+  assert.deepEqual(deleted.trash[0].tags, ['Review']);
+  assert.deepEqual(reduce(deleted, { type: 'undo' }).files, moved.files);
+  const removed = reduce(tagged, { type: 'tag', ids: ['brief'], tag: 'Review', remove: true });
+  assert.deepEqual(removed.files[0].tags, []);
+  assert.deepEqual(removed.files[2].tags, ['Review']);
+  assert.equal(initial.files[0].tags, undefined);
+});

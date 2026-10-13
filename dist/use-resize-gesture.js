@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { createResizeController, } from './resize-controller.js';
 import { resizeEnvironment } from './resize-dom.js';
 import { persistResize } from './resize-persistence.js';
@@ -13,13 +13,13 @@ export function useResizeGesture(key, adapter, options = {}) {
     }
     const member = useRef({ adapter, options });
     // Update committed configuration before lifecycle registration or cancellation.
-    useEffect(() => {
+    useLayoutEffect(() => {
         member.current.adapter = adapter;
         member.current.options = options;
     });
-    useEffect(() => controller.retain(member.current), [controller]);
+    useLayoutEffect(() => controller.retain(member.current), [controller]);
     // biome-ignore lint/correctness/useExhaustiveDependencies: Changing storage, responsive or cursor settings must cancel the active gesture.
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (options.enabled === false)
             controller.cancelMember(member.current);
         return () => controller.cancelMember(member.current);

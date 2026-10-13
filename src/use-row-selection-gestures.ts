@@ -1,26 +1,26 @@
 'use client';
 import type { RowData } from '@tanstack/react-table';
-import { type RefObject, useCallback, useRef } from 'react';
+import { type RefObject, useCallback } from 'react';
 import type { PuppertinoTableInstance } from './model.js';
+import { selectionAnchorFor } from './selection-anchor.js';
 import { applySelectionGesture, type SelectionModifiers } from './selection-gestures.js';
 
 export interface RowSelectionGestureOptions {
   /** Visible item order, including caller-owned leading items. Defaults to rendered table rows. */
   orderedIds?: readonly string[];
-  /** Share an anchor across layouts. Without this, the anchor belongs to this mounted hook. */
+  /** Share an anchor across layouts. Defaults to the table’s shared anchor. */
   anchor?: RefObject<string | null>;
   disabled?: boolean;
 }
 
-/** Opt-in item gestures; leaves the existing checkbox range policy untouched.
+/** Anchored selection shared by row gestures and selection checkboxes.
  * The caller owns DOM semantics, focus, modifier adaptation and any open/navigation actions.
  */
 export function useRowSelectionGestures<T extends RowData>(
-  table: PuppertinoTableInstance<T>,
+  table: Pick<PuppertinoTableInstance<T>, 'getRowModel' | 'options' | 'setRowSelection' | 'atoms'>,
   { orderedIds, anchor: externalAnchor, disabled = false }: RowSelectionGestureOptions = {},
 ) {
-  const localAnchor = useRef<string | null>(null);
-  const anchor = externalAnchor ?? localAnchor;
+  selectionAnchorFor(table.atoms.rowSelection, externalAnchor);
   const select = useCallback(
     (id: string, modifiers: SelectionModifiers = {}) => {
       if (disabled || table.options.enableRowSelection === false) return;
@@ -32,21 +32,22 @@ export function useRowSelectionGestures<T extends RowData>(
         return row ? row.getCanSelect() : typeof table.options.enableRowSelection !== 'function';
       });
       if (!ids.includes(id)) return;
+      const anchor = selectionAnchorFor(table.atoms.rowSelection);
       const previousAnchor = anchor.current;
       anchor.current = applySelectionGesture(ids, {}, previousAnchor, id, modifiers).anchor;
       table.setRowSelection(
         (previous) => applySelectionGesture(ids, previous, previousAnchor, id, modifiers).selection,
       );
     },
-    [table, orderedIds, anchor, disabled],
+    [table, orderedIds, disabled],
   );
   const clearSelection = useCallback(() => {
     if (disabled || table.options.enableRowSelection === false) return;
-    anchor.current = null;
+    selectionAnchorFor(table.atoms.rowSelection).current = null;
     table.setRowSelection({});
-  }, [table, anchor, disabled]);
+  }, [table, disabled]);
   const resetAnchor = useCallback(() => {
-    anchor.current = null;
-  }, [anchor]);
+    selectionAnchorFor(table.atoms.rowSelection).current = null;
+  }, [table]);
   return { select, clearSelection, resetAnchor };
 }

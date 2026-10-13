@@ -1,6 +1,7 @@
 'use client';
 import { type RowData, Subscribe } from '@tanstack/react-table';
 import { ColumnResizeHandle } from './resize-handle.js';
+import { selectionAnchorFor } from './selection-anchor.js';
 import type { TableHeaderProps } from './table-types.js';
 
 export function TableHeader<T extends RowData>({
@@ -39,8 +40,10 @@ export function TableHeader<T extends RowData>({
                       }}
                       onClick={(event) => event.stopPropagation()}
                       onChange={(event) => {
-                        if (!disabled && rows.length > 0)
+                        if (!disabled && rows.length > 0) {
+                          selectionAnchorFor(table.atoms.rowSelection).current = null;
                           table.toggleAllPageRowsSelected(event.target.checked);
+                        }
                       }}
                     />
                   );
@@ -49,6 +52,7 @@ export function TableHeader<T extends RowData>({
             </th>
           )}
           {group.headers.map((header) => {
+            if (header.isPlaceholder) return <td key={header.id} colSpan={header.colSpan} />;
             const column = header.column;
             const label =
               typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id;
@@ -60,27 +64,26 @@ export function TableHeader<T extends RowData>({
                 scope={column.columns.length === 0 ? 'col' : 'colgroup'}
                 aria-sort={sorted ? (sorted === 'asc' ? 'ascending' : 'descending') : undefined}
               >
-                {!header.isPlaceholder &&
-                  (column.getCanSort() ? (
-                    <button
-                      type="button"
-                      className="pt-sort"
-                      aria-label={`Sort by ${label}`}
-                      disabled={disabled}
-                      onClick={() => column.toggleSorting()}
-                    >
-                      <table.FlexRender header={header} />
-                      <span
-                        className="pt-sort-arrow"
-                        aria-hidden="true"
-                        data-direction={sorted || 'none'}
-                      >
-                        ⌄
-                      </span>
-                    </button>
-                  ) : (
+                {column.getCanSort() ? (
+                  <button
+                    type="button"
+                    className="pt-sort"
+                    aria-label={`Sort by ${label}`}
+                    disabled={disabled}
+                    onClick={() => column.toggleSorting()}
+                  >
                     <table.FlexRender header={header} />
-                  ))}
+                    <span
+                      className="pt-sort-arrow"
+                      aria-hidden="true"
+                      data-direction={sorted || 'none'}
+                    >
+                      ⌄
+                    </span>
+                  </button>
+                ) : (
+                  <table.FlexRender header={header} />
+                )}
                 {options.enabled && (
                   <ColumnResizeHandle
                     table={table}

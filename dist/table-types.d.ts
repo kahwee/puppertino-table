@@ -30,7 +30,11 @@ export interface PuppertinoBodyOptions<T extends RowData> {
     /** Semantic <tr> elements before data rows, including when data is empty. */
     leadingRows?: ReactNode | ((table: PuppertinoTableInstance<T>, context: PuppertinoBodyContext<T>) => ReactNode);
 }
-export interface PuppertinoTableProps<T extends RowData> extends PuppertinoTableOptions<T>, PuppertinoBodyOptions<T> {
+export type PuppertinoTableProps<T extends RowData> = PuppertinoTableOptions<T> & PuppertinoBodyOptions<T> & {
+    /** Render the selection column when selectable. Default: true; hide for row-only layouts. */
+    selectionCheckboxes?: boolean;
+    /** Completed resize/reset snapshot; previews and cancelled gestures never commit. */
+    onColumnSizingCommit?: ColumnResizeOptions['onCommit'];
     /** Show pointer and keyboard resize handles. Default: true. */
     resizable?: boolean;
     /** Cancel an unfinished drag when this media query matches. */
@@ -42,7 +46,7 @@ export interface PuppertinoTableProps<T extends RowData> extends PuppertinoTable
     /** Inherits the enclosing DensityScope when omitted. */
     density?: TableDensity;
     densityMetrics?: DensityMetrics;
-}
+};
 export interface TableHeaderProps<T extends RowData> {
     table: PuppertinoTableInstance<T>;
     selectable?: boolean;

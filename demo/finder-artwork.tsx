@@ -1,3 +1,22 @@
+import {
+  ArchiveIcon,
+  ArrowUUpLeftIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
+  CircleIcon,
+  ColumnsIcon,
+  DesktopIcon,
+  DotsThreeIcon,
+  EyeIcon,
+  FolderIcon,
+  InfoIcon,
+  ListBulletsIcon,
+  MagnifyingGlassIcon,
+  SlideshowIcon,
+  SquaresFourIcon,
+  TrashIcon,
+} from '@phosphor-icons/react';
+
 interface FinderFile {
   name: string;
   kind: string;
@@ -6,36 +25,27 @@ interface FinderFile {
   folder: string;
 }
 export type FinderView = 'icons' | 'list' | 'columns' | 'gallery';
-export function ViewGlyph({
-  view,
-}: {
-  view: FinderView | 'search' | 'back' | 'forward' | 'info' | 'trash' | 'restore';
-}) {
-  const paths = {
-    icons: 'M3 3h6v6H3ZM15 3h6v6h-6ZM3 15h6v6H3ZM15 15h6v6h-6Z',
-    list: 'M8 5h13M8 12h13M8 19h13M3 5h1M3 12h1M3 19h1',
-    columns: 'M3 4h18v16H3ZM9 4v16M15 4v16',
-    gallery: 'M3 3h18v13H3ZM3 21h3M10 21h4M18 21h3',
-    search: 'M10 3a7 7 0 1 0 0 14a7 7 0 0 0 0-14M15 15l6 6',
-    back: 'M15 4l-8 8 8 8',
-    forward: 'M9 4l8 8-8 8',
-    trash: 'M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7',
-    restore: 'M4 4v6h6M4 10a8 8 0 1 1 0 5',
-    info: 'M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18M12 11v6M12 7h.01',
-  };
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d={paths[view]} />
-    </svg>
-  );
+const viewIcons = {
+  icons: SquaresFourIcon,
+  list: ListBulletsIcon,
+  columns: ColumnsIcon,
+  gallery: SlideshowIcon,
+  search: MagnifyingGlassIcon,
+  back: CaretLeftIcon,
+  forward: CaretRightIcon,
+  info: InfoIcon,
+  trash: TrashIcon,
+  restore: ArrowUUpLeftIcon,
+  actions: DotsThreeIcon,
+  preview: EyeIcon,
+  folder: FolderIcon,
+  archive: ArchiveIcon,
+  desktop: DesktopIcon,
+  tag: CircleIcon,
+};
+export function ViewGlyph({ view }: { view: keyof typeof viewIcons }) {
+  const Icon = viewIcons[view];
+  return <Icon size={20} weight="regular" aria-hidden="true" />;
 }
 export function Glyph({
   folder = false,

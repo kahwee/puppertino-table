@@ -29,7 +29,7 @@
   color: #f4f4f7;
 }
 .finder-demo-window {
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid #80809055;
   border-radius: 12px;
   background: var(--p-window-bg);
@@ -40,12 +40,16 @@
   margin: 0 auto;
 }
 .finder-demo-toolbar {
+  position: relative;
+  z-index: 5;
+  border-radius: 12px 12px 0 0;
   height: 58px;
   display: flex;
   background: var(--finder-toolbar);
   border-bottom: 1px solid var(--finder-line);
 }
 .finder-demo-titlebar {
+  border-radius: 12px 0 0 0;
   width: var(--finder-sidebar-width);
   flex-shrink: 0;
   display: flex;
@@ -53,23 +57,6 @@
   padding: 0 20px;
   background: var(--finder-sidebar);
   border-right: 1px solid var(--finder-line);
-}
-.finder-demo-lights {
-  display: flex;
-  gap: 8px;
-}
-.finder-demo-lights i {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #ff6057;
-  box-shadow: inset 0 0 0 1px #00000012;
-}
-.finder-demo-lights i:nth-child(2) {
-  background: #febc2e;
-}
-.finder-demo-lights i:nth-child(3) {
-  background: #28c840;
 }
 .finder-demo-toolbar-content {
   display: flex;
@@ -79,54 +66,24 @@
   min-width: 0;
   flex: 1;
 }
-.finder-demo-history,
 .finder-demo-views {
-  display: flex;
-  align-items: center;
-  padding: 3px;
-  gap: 2px;
-  border: 1px solid var(--finder-line);
-  border-radius: 8px;
-  margin: 0;
-}
-.finder-demo-toolbar button {
-  display: grid;
-  place-items: center;
   border: 0;
-  background: transparent;
-  color: inherit;
-  border-radius: 5px;
-  padding: 5px;
-  width: 29px;
-  height: 27px;
-  cursor: pointer;
-}
-.finder-demo-toolbar button:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-.finder-demo-toolbar button:not(:disabled):hover {
-  background: #80809018;
-}
-.finder-demo-toolbar button[aria-pressed="true"] {
-  background: #80809028;
-  box-shadow: 0 1px 2px #00000010;
+  margin: 0;
+  min-width: 0;
 }
 .finder-demo-toolbar svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 .finder-demo-title {
   flex: 1;
   min-width: 60px;
-}
-.finder-demo-title h1 {
   margin: 0;
   font-size: 15px;
-  font-weight: 650;
+  font-weight: 600;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .finder-demo-search {
   display: flex;
@@ -184,42 +141,27 @@
   color: var(--p-text-secondary);
   margin: 16px 10px 7px;
 }
-.finder-demo-sidebar .pt-browser-item {
-  --pt-item-gap: 8px;
-  min-height: 29px;
+.finder-demo-folder,
+.finder-demo-sidebar button {
+  width: 100%;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
 }
-.finder-demo-sidebar .pt-path-selected {
-  background: #80809025;
-  font-weight: 600;
+.finder-demo-folder:not(.p-selected),
+.finder-demo-sidebar button:not(.p-selected) {
+  background: transparent;
 }
-.finder-demo-sidebar .pt-item-trailing {
-  color: var(--p-text-secondary);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
+.finder-demo-sidebar .p-sidebar-icon {
+  color: #0085ff;
 }
-.finder-demo-sidebar p {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 10px;
+.finder-demo-sidebar :where(.p-sidebar-icon) svg {
+  width: 18px;
+  height: 18px;
 }
-.finder-demo-sidebar :where(p) svg {
-  width: 16px;
-  height: 16px;
-  color: var(--p-text-secondary);
-}
-.finder-demo-tag {
-  width: 10px;
-  height: 10px;
-  margin: 3px;
-  border-radius: 50%;
-  background: #e08b33;
-}
-.finder-demo-sidebar-note {
-  position: absolute;
-  left: 18px;
-  bottom: 14px;
-  font-size: 10px;
+.finder-demo-sidebar .finder-demo-tag {
   color: var(--p-text-secondary);
 }
 .finder-demo-content {
@@ -653,104 +595,126 @@
   }
 }
 
-.finder-demo-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  margin: 0;
-  min-width: 0;
-  padding: 12px 18px;
-  border: 0;
-  border-bottom: 1px solid var(--finder-line);
-  background: var(--finder-toolbar);
-}
-.finder-demo-actions output {
-  display: grid;
-  gap: 3px;
-}
-.finder-demo-actions output strong {
-  font-size: 13px;
-  font-weight: 600;
-}
-.finder-demo-actions output :where(span) {
-  color: var(--p-text-secondary);
+.finder-demo-status {
+  border-radius: 0 0 12px 12px;
+  justify-content: center;
   font-size: 11px;
 }
-.finder-demo-action-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  margin-left: auto;
-}
-.finder-demo-action-buttons button,
-.finder-demo-status button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  color: inherit;
-  font: inherit;
-  border: 1px solid var(--finder-line);
-  border-radius: 6px;
-  background: var(--p-window-bg);
-  padding: 6px 9px;
-  cursor: pointer;
+.finder-demo-announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
   white-space: nowrap;
-}
-.finder-demo-action-buttons button:not(:disabled):hover,
-.finder-demo-status button:not(:disabled):hover {
-  background: #80809018;
-}
-.finder-demo-action-buttons button:disabled,
-.finder-demo-status button:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-.finder-demo-action-buttons svg {
-  width: 15px;
-  height: 15px;
-}
-.finder-demo-action-buttons .finder-demo-delete:not(:disabled) {
-  color: #b42318;
-  border-color: #b4231840;
-}
-.p-dark-mode .finder-demo-action-buttons .finder-demo-delete:not(:disabled) {
-  color: #ffb4ab;
-  border-color: #ffb4ab55;
-}
-.finder-demo-status {
-  min-height: 38px;
-  height: auto;
-  padding-top: 6px;
-  padding-bottom: 6px;
-  flex-wrap: wrap;
-}
-.finder-demo-status [role="status"] {
-  flex: 1;
-  min-width: 100px;
-}
-.finder-demo-status button {
-  color: var(--p-control-accent);
-  font-weight: 600;
-}
-.finder-demo-selection-hint {
-  font-size: 10px;
 }
 .finder-demo-no-results {
   padding: 18px;
   line-height: 1.6;
 }
-@container (max-width: 700px) {
-  .finder-demo-actions {
-    padding: 10px 12px;
-    gap: 8px;
-  }
-  .finder-demo-action-buttons {
-    margin-left: 0;
-  }
-  .finder-demo-selection-hint {
-    display: none;
-  }
+.finder-demo-tag-anchor {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  position: relative;
+  display: flex;
+}
+.finder-demo-tags {
+  background: var(--p-popover-bg-opaque);
+  position: absolute;
+  z-index: 100;
+  top: 43px;
+  right: -30px;
+  width: 280px;
+  max-width: calc(100vw - 40px);
+  padding: 8px;
+  --p-popover-arrow-x: calc(100% - 46px);
+}
+.finder-demo-tags-title {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  padding: 0 6px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.finder-demo-tag-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  padding: 5px;
+  border: 1px solid var(--finder-line);
+  border-radius: 8px;
+  background: var(--p-window-bg);
+  min-height: 32px;
+}
+.finder-demo-tag-input input {
+  width: 60px;
+  flex: 1;
+  min-width: 40px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  box-shadow: none;
+  outline: none;
+}
+.finder-demo-tag-input:focus-within {
+  box-shadow: 0 0 0 2px #0085ff55;
+}
+.finder-demo-tag-token {
+  border: 0;
+  border-radius: 3px;
+  background: #8883;
+  color: inherit;
+  font: inherit;
+  padding: 1px 4px;
+}
+.finder-demo-tag-options {
+  margin-top: 14px;
+  max-height: 200px;
+  overflow: auto;
+}
+.finder-demo-tag-options button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+.finder-demo-tag-options button:hover,
+.finder-demo-tag-options button:focus-visible {
+  background: #0085ff;
+  color: white;
+}
+.finder-demo-tag-options svg {
+  width: 13px;
+  height: 13px;
+}
+.finder-demo-window:has(.finder-demo-tags) .finder-demo-icon-item[aria-pressed="true"] span {
+  background: #8883;
+  color: inherit;
+}
+.finder-demo-window:has(.finder-demo-tags) .pt-table tbody tr.p-selected td {
+  background: #8883;
+  color: inherit;
+}
+
+.finder-demo-sidebar .p-sidebar-header {
+  min-height: 18px;
+  padding: 0;
+  margin: 14px 10px 6px;
+}
+.finder-demo-folder .p-sidebar-icon {
+  color: var(--p-control-accent);
 }

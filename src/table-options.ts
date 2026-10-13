@@ -6,12 +6,13 @@ import type {
   RowSelectionState,
   SortingState,
 } from '@tanstack/react-table';
+import type { RefObject } from 'react';
 import type { PuppertinoColumnDef, puppertinoTableFeatures } from './model.js';
 /** App-owned writable atoms for the registered table state slices. */
 export type PuppertinoTableAtoms = ExternalAtoms<typeof puppertinoTableFeatures>;
 
 /** Shared state contract for complete tables and custom layouts. */
-export interface PuppertinoTableOptions<T extends RowData> {
+interface TableOptions<T extends RowData> {
   /** Supplied rows only; pagination and fetching remain app-owned. */
   data: readonly T[];
   /** Atom ownership replaces value/callback ownership for that slice. */
@@ -34,14 +35,30 @@ export interface PuppertinoTableOptions<T extends RowData> {
   onRowSelectionChange?: OnChangeFn<RowSelectionState>;
   /** Enable row selection. Default: false. Selection never authorizes an action. */
   selectable?: boolean;
+  /** Shared range anchor for checkboxes, row gestures and other layouts. */
+  selectionAnchor?: RefObject<string | null>;
   /** Disable selection in the hook; the complete component also disables its UI. */
   disabled?: boolean;
   /** App-owned widths; saved preferences are ignored in controlled mode. */
   columnSizing?: ColumnSizingState;
-  /** Receives a value or functional updater. Controlled widths without this are read-only. */
+  /** Receives a value or updater; observes internal changes when widths are omitted.
+   * Controlled widths without this are read-only. Atom owners subscribe to their atom instead. */
   onColumnSizingChange?: OnChangeFn<ColumnSizingState>;
   /** Restore internal widths after hydration; complete-table resizing saves on completion. */
   storageKey?: string;
   /** Defaults to browser localStorage. Unavailable storage is handled safely. */
   storage?: Pick<Storage, 'getItem' | 'setItem'>;
 }
+
+/** One owner per slice; other slices may use a different ownership mode. */
+type SliceOwnership<
+  K extends 'sorting' | 'rowSelection' | 'columnSizing',
+  C extends keyof TableOptions<RowData>,
+> =
+  | ({ atoms?: { [P in K]?: never } } & Pick<TableOptions<RowData>, K | C>)
+  | ({ atoms?: Pick<PuppertinoTableAtoms, K> } & { [P in K | C]?: never });
+
+export type PuppertinoTableOptions<T extends RowData> = TableOptions<T> &
+  SliceOwnership<'sorting', 'onSortingChange'> &
+  SliceOwnership<'rowSelection', 'onRowSelectionChange'> &
+  SliceOwnership<'columnSizing', 'onColumnSizingChange'>;

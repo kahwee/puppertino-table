@@ -7,6 +7,7 @@ import {
   type PuppertinoTableInstance,
   puppertinoTableFeatures,
 } from './model.js';
+import { selectionAnchorFor } from './selection-anchor.js';
 import { columnSizeBounds, readColumnSizing } from './sizing.js';
 
 import { validateAtomIdentity, validateAtomOwnership } from './state-ownership.js';
@@ -27,6 +28,7 @@ export function usePuppertinoTable<T extends RowData>({
   rowSelection: controlledSelection,
   onRowSelectionChange,
   selectable = false,
+  selectionAnchor,
   disabled = false,
   columnSizing,
   onColumnSizingChange,
@@ -89,8 +91,8 @@ export function usePuppertinoTable<T extends RowData>({
         ...(columnSizing !== undefined ? { columnSizing } : {}),
       },
       onColumnSizingChange: (update) => {
-        if (columnSizing !== undefined) onColumnSizingChange?.(update);
-        else makeStateUpdater('columnSizing', table)(update);
+        if (columnSizing === undefined) makeStateUpdater('columnSizing', table)(update);
+        onColumnSizingChange?.(update);
       },
       onSortingChange: (update) => {
         if (controlledSorting === undefined) makeStateUpdater('sorting', table)(update);
@@ -103,6 +105,7 @@ export function usePuppertinoTable<T extends RowData>({
     },
     (state) => ({ sorting: state.sorting, rowSelection: state.rowSelection }),
   );
+  selectionAnchorFor(table.atoms.rowSelection, selectionAnchor);
   useColumnSizingPersistence({ table, bounds, appOwned: appOwnedSizing, storageKey, storage });
   return table;
 }

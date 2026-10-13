@@ -40,21 +40,24 @@ export interface PuppertinoBodyOptions<T extends RowData> {
     | ReactNode
     | ((table: PuppertinoTableInstance<T>, context: PuppertinoBodyContext<T>) => ReactNode);
 }
-export interface PuppertinoTableProps<T extends RowData>
-  extends PuppertinoTableOptions<T>,
-    PuppertinoBodyOptions<T> {
-  /** Show pointer and keyboard resize handles. Default: true. */
-  resizable?: boolean;
-  /** Cancel an unfinished drag when this media query matches. */
-  cancelMediaQuery?: string;
-  /** Accessible name for the table and its horizontal scroll region. */
-  ariaLabel: string;
-  caption?: ReactNode;
-  className?: string;
-  /** Inherits the enclosing DensityScope when omitted. */
-  density?: TableDensity;
-  densityMetrics?: DensityMetrics;
-}
+export type PuppertinoTableProps<T extends RowData> = PuppertinoTableOptions<T> &
+  PuppertinoBodyOptions<T> & {
+    /** Render the selection column when selectable. Default: true; hide for row-only layouts. */
+    selectionCheckboxes?: boolean;
+    /** Completed resize/reset snapshot; previews and cancelled gestures never commit. */
+    onColumnSizingCommit?: ColumnResizeOptions['onCommit'];
+    /** Show pointer and keyboard resize handles. Default: true. */
+    resizable?: boolean;
+    /** Cancel an unfinished drag when this media query matches. */
+    cancelMediaQuery?: string;
+    /** Accessible name for the table and its horizontal scroll region. */
+    ariaLabel: string;
+    caption?: ReactNode;
+    className?: string;
+    /** Inherits the enclosing DensityScope when omitted. */
+    density?: TableDensity;
+    densityMetrics?: DensityMetrics;
+  };
 export interface TableHeaderProps<T extends RowData> {
   table: PuppertinoTableInstance<T>;
   selectable?: boolean;

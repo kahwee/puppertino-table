@@ -43,6 +43,36 @@ export async function checkFinderStories(page: Page, base: string, evidence: str
       await page.screenshot({ path: `${evidence}/finder-${story}-dark.png` });
     }
   }
+  // Mix native checkboxes, row keyboard gestures and view changes through one anchor.
+  await page.goto(`${base}/iframe.html?id=examples-finder--checkbox-selection&viewMode=story`);
+  const rows = page.getByRole('table', { name: 'Project files', exact: true }).locator('tbody tr');
+  await page.getByRole('checkbox', { name: 'Select Project brief.pdf', exact: true }).check();
+  await rows.nth(2).press('Shift+Enter');
+  assert.equal(await page.locator('tbody input:checked').count(), 3, 'checkbox anchors row ranges');
+  await page
+    .getByRole('checkbox', { name: 'Select Research notes.txt', exact: true })
+    .click({ modifiers: ['Shift'] });
+  assert.equal(
+    await page.locator('tbody input:checked').count(),
+    2,
+    'checkbox range shrinks from shared anchor',
+  );
+  await page.getByRole('button', { name: 'Icons', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Cover artwork.png PNG image', exact: true })
+    .click({ modifiers: ['Shift'] });
+  await page.getByRole('button', { name: 'List', exact: true }).click();
+  assert.equal(
+    await page.locator('tbody input:checked').count(),
+    4,
+    'range anchor survives a view change',
+  );
+  await finderCommand(page, 'Deselect All');
+  await rows.nth(1).click();
+  await page
+    .getByRole('checkbox', { name: 'Select Cover artwork.png', exact: true })
+    .click({ modifiers: ['Shift'] });
+  assert.equal(await page.locator('tbody input:checked').count(), 3, 'row anchors checkbox ranges');
   await page.goto(`${base}/iframe.html?id=examples-finder--file-table&viewMode=story`);
   const favorites = page.getByRole('navigation', { name: 'Favorites' });
   assert.equal(await page.getByRole('button', { name: 'Back', exact: true }).isDisabled(), true);
@@ -53,6 +83,7 @@ export async function checkFinderStories(page: Page, base: string, evidence: str
   await page.getByRole('button', { name: 'Forward', exact: true }).click();
   await page.getByRole('heading', { name: 'Archive', exact: true }).waitFor();
   await page.getByRole('button', { name: 'Reset demo' }).click();
+  await page.getByRole('button', { name: 'Search', exact: true }).click();
   await page.getByRole('searchbox', { name: 'Search files' }).fill('budget');
   assert.equal(await page.getByRole('row').count(), 2);
   await page.getByRole('row').filter({ hasText: 'Budget.xlsx' }).waitFor();
@@ -97,6 +128,7 @@ export async function checkFinderStories(page: Page, base: string, evidence: str
   await page.screenshot({ path: `${evidence}/finder-narrow-viewport.png` });
   await page.setViewportSize({ width: 1080, height: 640 });
   await checkFinderBulkActions(page, base, evidence);
+  await checkFinderTags(page, base, evidence);
   console.log(
     'Finder stories passed: four views, light/dark/narrow, axe, search, history, shared keyboard menus and reset.',
   );
@@ -105,12 +137,8 @@ export async function checkFinderStories(page: Page, base: string, evidence: str
 async function checkFinderBulkActions(page: Page, base: string, evidence: string) {
   const favorites = page.getByRole('navigation', { name: 'Favorites' });
   const summary = page.getByLabel('Selection summary');
-  const remove = page.getByRole('button', { name: 'Move to Trash', exact: true });
-  const selectAll = async (view: string) => {
-    if (view === 'list')
-      await page.getByRole('checkbox', { name: 'Select all visible rows', exact: true }).check();
-    else await page.getByRole('button', { name: 'Select all', exact: true }).click();
-  };
+  const remove = () => finderCommand(page, 'Move to Trash');
+  const selectAll = async (_view: string) => finderCommand(page, 'Select All');
   for (const [story, view] of [
     ['file-table', 'list'],
     ['icon-workspace', 'icons'],
@@ -119,10 +147,13 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
   ]) {
     await page.goto(`${base}/iframe.html?id=examples-finder--${story}&viewMode=story`);
     await page.getByRole('heading', { name: 'Projects', exact: true }).waitFor();
-    assert.equal(await remove.isDisabled(), true);
+    assert.equal(await commandDisabled(page, 'Move to Trash'), true);
     if (view === 'list') {
-      await page.getByRole('checkbox', { name: 'Select Project brief.pdf', exact: true }).check();
-      await page.getByRole('checkbox', { name: 'Select Budget.xlsx', exact: true }).check();
+      await page.getByRole('row').filter({ hasText: 'Project brief.pdf' }).click();
+      await page
+        .getByRole('row')
+        .filter({ hasText: 'Budget.xlsx' })
+        .click({ modifiers: ['Control'] });
     } else {
       const suffix = view === 'icons' ? ' PDF document' : '';
       await page.getByRole('button', { name: `Project brief.pdf${suffix}`, exact: true }).click();
@@ -133,21 +164,21 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
         })
         .click({ modifiers: ['Control'] });
     }
-    assert.match(await summary.innerText(), /2 selected/);
+    assert.match(await summary.innerText(), /2 of 6 selected/);
     if (view === 'list') await page.screenshot({ path: `${evidence}/finder-bulk-selection.png` });
-    await remove.click();
+    await remove();
     assert.match(await summary.innerText(), /4 items/);
-    await page.getByRole('button', { name: 'Undo delete', exact: true }).click();
+    await finderCommand(page, 'Undo Move to Trash');
     assert.match(await summary.innerText(), /6 items/);
     await selectAll(view);
-    await remove.click();
+    await remove();
     assert.match(await summary.innerText(), /0 items/);
     await favorites.getByRole('button', { name: 'Trash', exact: true }).click();
     assert.match(await summary.innerText(), /6 items/);
     await selectAll(view);
-    await page.getByRole('button', { name: 'Restore selected', exact: true }).click();
+    await finderCommand(page, 'Put Back');
     assert.match(await summary.innerText(), /0 items/);
-    assert.equal(await page.getByRole('button', { name: 'Undo delete', exact: true }).count(), 0);
+    assert.equal(await commandDisabled(page, 'Undo Move to Trash'), true);
     await favorites.getByRole('button', { name: 'Projects', exact: true }).click();
     assert.match(await summary.innerText(), /6 items/);
   }
@@ -156,23 +187,35 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
   await page
     .getByRole('button', { name: 'Budget.xlsx Spreadsheet', exact: true })
     .click({ modifiers: ['Shift'] });
-  assert.match(await summary.innerText(), /3 selected/, 'Shift extends a visible file range');
-  await page.getByRole('button', { name: 'Clear selection', exact: true }).click();
+  assert.match(await summary.innerText(), /3 of 6 selected/, 'Shift extends a visible file range');
+  await finderCommand(page, 'Deselect All');
   await page.getByRole('button', { name: 'List', exact: true }).click();
-  await page.getByRole('checkbox', { name: 'Select Project brief.pdf', exact: true }).check();
-  await page.getByRole('checkbox', { name: 'Select Budget.xlsx', exact: true }).check();
+  await page.getByRole('row').filter({ hasText: 'Project brief.pdf' }).click();
+  await page
+    .getByRole('row')
+    .filter({ hasText: 'Budget.xlsx' })
+    .click({ modifiers: ['Control'] });
   for (const view of ['Icons', 'Columns', 'Gallery', 'List']) {
     await page.getByRole('button', { name: view, exact: true }).click();
-    assert.match(await summary.innerText(), /2 selected/, 'selection survives changing views');
+    assert.match(await summary.innerText(), /2 of 6 selected/, 'selection survives changing views');
   }
+  await page.getByRole('button', { name: 'Search', exact: true }).click();
   await page.getByRole('searchbox', { name: 'Search files' }).fill('brief');
-  assert.equal(await remove.isDisabled(), true, 'search clears selection before a bulk action');
+  assert.equal(
+    await commandDisabled(page, 'Move to Trash'),
+    true,
+    'search clears selection before a bulk action',
+  );
   await selectAll('list');
-  await remove.click();
+  await remove();
   await page.getByRole('searchbox', { name: 'Search files' }).fill('');
+  await page.getByRole('row').filter({ hasText: 'Budget.xlsx' }).waitFor();
   assert.match(await summary.innerText(), /5 items/, 'hidden search results were not deleted');
-  await page.getByRole('button', { name: 'Undo delete', exact: true }).click();
-  await page.getByRole('checkbox', { name: 'Select Budget.xlsx', exact: true }).check();
+  await finderCommand(page, 'Undo Move to Trash');
+  await page
+    .getByRole('row')
+    .filter({ hasText: 'Budget.xlsx' })
+    .click({ modifiers: ['Control'] });
   await page.getByRole('row').filter({ hasText: 'Project brief.pdf' }).click({ button: 'right' });
   await page.getByRole('menuitem', { name: 'Move to Trash', exact: true }).click();
   assert.equal(
@@ -184,7 +227,7 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
   await selectAll('list');
   await page.getByRole('row').filter({ hasText: 'Project brief.pdf' }).focus();
   await page.keyboard.press('Shift+F10');
-  await page.getByRole('menuitem', { name: 'Move 6 files to Trash', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Move to Trash', exact: true }).click();
   assert.match(await summary.innerText(), /0 items/);
   await favorites.getByRole('button', { name: 'Trash', exact: true }).click();
   await selectAll('list');
@@ -194,8 +237,11 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
   await favorites.getByRole('button', { name: 'Trash', exact: true }).click();
   assert.match(await summary.innerText(), /0 items/, 'reset empties Trash');
   await page.getByRole('button', { name: 'Reset demo' }).click();
-  await page.getByRole('checkbox', { name: 'Select Project brief.pdf', exact: true }).check();
-  await page.getByRole('checkbox', { name: 'Select Budget.xlsx', exact: true }).check();
+  await page.getByRole('row').filter({ hasText: 'Project brief.pdf' }).click();
+  await page
+    .getByRole('row')
+    .filter({ hasText: 'Budget.xlsx' })
+    .click({ modifiers: ['Control'] });
   await page
     .getByRole('row')
     .filter({ hasText: 'Project brief.pdf' })
@@ -204,10 +250,10 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
   await favorites.getByRole('button', { name: 'Archive', exact: true }).click();
   assert.match(await summary.innerText(), /2 items/);
   await selectAll('list');
-  await remove.click();
+  await remove();
   await favorites.getByRole('button', { name: 'Trash', exact: true }).click();
   await selectAll('list');
-  await page.getByRole('button', { name: 'Restore selected', exact: true }).click();
+  await finderCommand(page, 'Put Back');
   await favorites.getByRole('button', { name: 'Archive', exact: true }).click();
   assert.match(await summary.innerText(), /2 items/, 'restore returns archived files to Archive');
   await page.getByRole('button', { name: 'Reset demo' }).click();
@@ -222,5 +268,87 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
   await page.setViewportSize({ width: 1080, height: 640 });
   console.log(
     'Finder bulk actions passed: shared selection, four-view delete/undo/restore, hidden-result safety, keyboard context commands, Trash and narrow accessibility.',
+  );
+}
+
+async function finderCommand(page: Page, name: string) {
+  await page.getByRole('button', { name: 'Actions', exact: true }).click();
+  await page
+    .getByRole('menu', { name: 'Finder actions' })
+    .getByRole('menuitem', { name, exact: true })
+    .click();
+}
+async function commandDisabled(page: Page, name: string) {
+  await page.getByRole('button', { name: 'Actions', exact: true }).click();
+  const disabled = await page
+    .getByRole('menu', { name: 'Finder actions' })
+    .getByRole('menuitem', { name, exact: true })
+    .isDisabled();
+  await page.keyboard.press('Escape');
+  return disabled;
+}
+
+async function checkFinderTags(page: Page, base: string, evidence: string) {
+  await page.goto(`${base}/iframe.html?id=examples-finder--file-table&viewMode=story`);
+  const rows = page.getByRole('table', { name: 'Project files', exact: true }).locator('tbody tr');
+  assert.equal(
+    await page.getByRole('button', { name: 'Move to Trash', exact: true }).count(),
+    0,
+    'delete is only exposed in menus',
+  );
+  assert.equal(await page.getByRole('checkbox').count(), 0, 'native Finder uses row selection');
+  await rows.nth(0).click();
+  await rows.nth(2).click({ modifiers: ['Control'] });
+  await page.getByRole('button', { name: 'Tags', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Assign tags' });
+  await dialog.getByRole('button', { name: 'Review', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Remove tag Review', exact: true }).waitFor();
+  assert.equal(
+    await dialog.getByRole('button', { name: 'Review', exact: true }).count(),
+    0,
+    'assigned tag becomes a token, not a suggestion',
+  );
+  await dialog.getByRole('textbox', { name: 'Tag name' }).fill('Client');
+  await page.keyboard.press('Enter');
+  await dialog.getByRole('button', { name: 'Remove tag Client', exact: true }).waitFor();
+  assert.deepEqual(await finderViolations(page), [], 'tag popover accessibility');
+  await page.screenshot({ path: `${evidence}/finder-tags.png` });
+  await page.keyboard.press('Escape');
+  assert.equal(
+    await page
+      .getByRole('button', { name: 'Tags', exact: true })
+      .evaluate((el) => el === document.activeElement),
+    true,
+  );
+  const sidebar = page.getByRole('navigation', { name: 'Favorites' });
+  await sidebar.getByRole('button', { name: 'Client', exact: true }).click();
+  await page.getByRole('heading', { name: 'Client', exact: true }).waitFor();
+  assert.equal(await rows.count(), 2, 'sidebar tag finds assigned files');
+  await rows.nth(0).click();
+  await page.getByRole('button', { name: 'Tags', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Remove tag Review', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await sidebar.getByRole('button', { name: 'Review', exact: true }).click();
+  assert.equal(await rows.count(), 1, 'removing a token updates tag filtering');
+  await page.getByRole('button', { name: 'Reset demo' }).click();
+  assert.equal(
+    await sidebar.getByRole('button', { name: 'Client', exact: true }).count(),
+    0,
+    'reset clears custom tags',
+  );
+  await rows.nth(0).click();
+  await page.getByLabel('Toggle dark theme').click();
+  await page.setViewportSize({ width: 390, height: 760 });
+  await page.getByRole('button', { name: 'Tags', exact: true }).click();
+  const bounds = await dialog.boundingBox();
+  assert.ok(
+    bounds && bounds.x >= 0 && bounds.x + bounds.width <= 390,
+    'tag popover stays within a narrow viewport',
+  );
+  assert.deepEqual(await finderViolations(page), [], 'dark tag popover accessibility');
+  await page.screenshot({ path: `${evidence}/finder-tags-dark-narrow.png` });
+  await page.setViewportSize({ width: 1080, height: 640 });
+  console.log(
+    'Finder tags passed: bulk assignment, tokens, creation, removal, sidebar filters, Escape focus and accessibility.',
   );
 }

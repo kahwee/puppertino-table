@@ -1,3 +1,3 @@
 import type { RowData } from '@tanstack/react-table';
 import type { PuppertinoTableProps } from './table-types.js';
-export declare function PuppertinoTable<T extends RowData>({ data, columns, atoms, getRowId, sorting, onSortingChange, initialSorting, initialRowSelection, manualSorting, rowSelection, onRowSelectionChange, getRowLabel, selectable, disabled, resizable, columnSizing, onColumnSizingChange, storageKey, storage, cancelMediaQuery, ariaLabel, caption, emptyContent, className, density, densityMetrics, getRowProps, getCellProps, leadingRows, }: PuppertinoTableProps<T>): import("react").JSX.Element;
+export declare function PuppertinoTable<T extends RowData>(props: PuppertinoTableProps<T>): import("react").JSX.Element;

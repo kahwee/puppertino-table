@@ -7,56 +7,32 @@ import { TableHeader } from './table-header.js';
 import type { PuppertinoTableProps } from './table-types.js';
 import { usePuppertinoTable } from './use-puppertino-table.js';
 
-export function PuppertinoTable<T extends RowData>({
-  data,
-  columns,
-  atoms,
-  getRowId,
-  sorting,
-  onSortingChange,
-  initialSorting,
-  initialRowSelection,
-  manualSorting = true,
-  rowSelection,
-  onRowSelectionChange,
-  getRowLabel,
-  selectable = false,
-  disabled = false,
-  resizable = true,
-  columnSizing,
-  onColumnSizingChange,
-  storageKey,
-  storage,
-  cancelMediaQuery,
-  ariaLabel,
-  caption,
-  emptyContent = 'No rows',
-  className = '',
-  density,
-  densityMetrics,
-  getRowProps,
-  getCellProps,
-  leadingRows,
-}: PuppertinoTableProps<T>) {
-  const table = usePuppertinoTable({
-    data,
-    columns,
+export function PuppertinoTable<T extends RowData>(props: PuppertinoTableProps<T>) {
+  const {
     atoms,
-    getRowId,
-    sorting,
-    onSortingChange,
-    initialSorting,
-    initialRowSelection,
-    manualSorting,
-    rowSelection,
-    onRowSelectionChange,
-    selectable,
-    disabled,
+    getRowLabel,
+    selectable = false,
+    selectionCheckboxes = true,
+    disabled = false,
+    resizable = true,
     columnSizing,
     onColumnSizingChange,
+    onColumnSizingCommit,
     storageKey,
     storage,
-  });
+    cancelMediaQuery,
+    ariaLabel,
+    caption,
+    emptyContent = 'No rows',
+    className = '',
+    density,
+    densityMetrics,
+    getRowProps,
+    getCellProps,
+    leadingRows,
+  } = props;
+  const table = usePuppertinoTable(props);
+  const showSelection = selectable && selectionCheckboxes;
   return (
     <DensityScope
       density={density}
@@ -71,18 +47,18 @@ export function PuppertinoTable<T extends RowData>({
           <table
             className="p-table pt-table"
             aria-label={ariaLabel}
-            style={{ width: table.getTotalSize() + (selectable ? 36 : 0) }}
+            style={{ width: table.getTotalSize() + (showSelection ? 36 : 0) }}
           >
             {caption && <caption>{caption}</caption>}
             <colgroup>
-              {selectable && <col style={{ width: 36 }} />}
+              {showSelection && <col style={{ width: 36 }} />}
               {table.getAllLeafColumns().map((column) => (
                 <col key={column.id} style={{ width: column.getSize() }} />
               ))}
             </colgroup>
             <TableHeader
               table={table}
-              selectable={selectable}
+              selectable={showSelection}
               disabled={disabled}
               resizable={resizable && (columnSizing === undefined || !!onColumnSizingChange)}
               resizeOptions={{
@@ -90,11 +66,12 @@ export function PuppertinoTable<T extends RowData>({
                   columnSizing === undefined && !atoms?.columnSizing ? storageKey : undefined,
                 storage,
                 cancelMediaQuery,
+                onCommit: onColumnSizingCommit,
               }}
             />
             <TableBody
               table={table}
-              selectable={selectable}
+              selectable={showSelection}
               disabled={disabled}
               getRowLabel={getRowLabel}
               emptyContent={emptyContent}

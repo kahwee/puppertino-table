@@ -73,16 +73,17 @@ function Fixture({ initialMode = 'local' }: { initialMode?: string }) {
             rowSelection: selectionAtom,
           },
         }
-      : {}),
-    ...(mode === 'controlled' || mode === 'readonly' ? { columnSizing: widths } : {}),
-    ...(mode === 'controlled'
-      ? {
-          onColumnSizingChange: (update) => {
-            updates++;
-            changeWidths(update);
-          },
-        }
-      : {}),
+      : mode === 'controlled'
+        ? {
+            columnSizing: widths,
+            onColumnSizingChange: (update) => {
+              updates++;
+              changeWidths(update);
+            },
+          }
+        : mode === 'readonly'
+          ? { columnSizing: widths }
+          : {}),
   });
   const [primitiveTable] = useState(() => table);
   return (

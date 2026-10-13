@@ -48,7 +48,7 @@ export const initialFiles = [
     folder: 'Projects',
   },
 ];
-export type FileItem = (typeof initialFiles)[number];
+export type FileItem = (typeof initialFiles)[number] & { tags?: string[] };
 
 export interface FinderFilesState {
   files: FileItem[];
@@ -64,6 +64,7 @@ export type FinderFilesAction =
   | { type: 'delete'; ids: readonly string[] }
   | { type: 'restore'; ids: readonly string[] }
   | { type: 'move'; ids: readonly string[]; folder: 'Projects' | 'Archive' }
+  | { type: 'tag'; ids: readonly string[]; tag: string; remove?: boolean }
   | { type: 'undo' }
   | { type: 'reset' };
 
@@ -74,6 +75,18 @@ export function finderFilesReducer(
 ): FinderFilesState {
   if (action.type === 'reset') return initialFinderFiles;
   const ids = new Set(action.type === 'undo' ? state.lastDeletedIds : action.ids);
+  if (action.type === 'tag') {
+    const update = (file: FileItem): FileItem =>
+      ids.has(file.id)
+        ? {
+            ...file,
+            tags: action.remove
+              ? (file.tags ?? []).filter((tag) => tag !== action.tag)
+              : [...new Set([...(file.tags ?? []), action.tag])],
+          }
+        : file;
+    return { ...state, files: state.files.map(update), trash: state.trash.map(update) };
+  }
   if (action.type === 'move') {
     return {
       ...state,

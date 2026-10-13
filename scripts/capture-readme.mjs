@@ -41,9 +41,12 @@ const browser = await chromium.launch({
 const errors = [];
 const pause = (page) => page.waitForTimeout(1000);
 async function accessibility(page) {
-  await page.addScriptTag({ content: axe.source });
+  await page.addScriptTag({
+    content: `{ const previousAxe = window.axe; ${axe.source}
+window.captureAxe = window.axe; window.axe = previousAxe; }`,
+  });
   const violations = await page.evaluate(async () =>
-    (await window.axe.run(document)).violations.map((item) => ({
+    (await window.captureAxe.run(document)).violations.map((item) => ({
       id: item.id,
       targets: item.nodes.map((node) => node.target),
     })),
@@ -166,9 +169,20 @@ try {
   const { context, page } = await open('file-table');
   await accessibility(page);
   await page.screenshot({ path: path.join(media, 'table-light.png') });
-  await page.getByRole('checkbox', { name: 'Select Project brief.pdf', exact: true }).check();
-  await page.getByRole('checkbox', { name: 'Select Budget.xlsx', exact: true }).check();
+  await page.getByRole('row').filter({ hasText: 'Project brief.pdf' }).click();
+  await page
+    .getByRole('row')
+    .filter({ hasText: 'Budget.xlsx' })
+    .click({ modifiers: ['Control'] });
   await page.screenshot({ path: path.join(media, 'table-selection.png') });
+  await page.getByRole('button', { name: 'Tags', exact: true }).click();
+  await page
+    .getByRole('dialog', { name: 'Assign tags' })
+    .getByRole('button', { name: 'Review', exact: true })
+    .click();
+  await accessibility(page);
+  await page.screenshot({ path: path.join(media, 'tags.png') });
+  await page.keyboard.press('Escape');
   await page.getByLabel('Row density').selectOption('comfortable');
   await accessibility(page);
   await page.screenshot({ path: path.join(media, 'table-comfortable.png') });
@@ -275,7 +289,9 @@ try {
   await pause(drop.page);
   await finish(drop.context, drop.page, 'drag-drop');
   assert.deepEqual(errors, []);
-  console.log('README media captured: ten screenshots, three asserted interaction GIFs and MP4s.');
+  console.log(
+    'README media captured: eleven screenshots, three asserted interaction GIFs and MP4s.',
+  );
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));

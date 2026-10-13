@@ -1,12 +1,12 @@
 'use client';
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
+import { selectionAnchorFor } from './selection-anchor.js';
 import { applySelectionGesture } from './selection-gestures.js';
-/** Opt-in item gestures; leaves the existing checkbox range policy untouched.
+/** Anchored selection shared by row gestures and selection checkboxes.
  * The caller owns DOM semantics, focus, modifier adaptation and any open/navigation actions.
  */
 export function useRowSelectionGestures(table, { orderedIds, anchor: externalAnchor, disabled = false } = {}) {
-    const localAnchor = useRef(null);
-    const anchor = externalAnchor ?? localAnchor;
+    selectionAnchorFor(table.atoms.rowSelection, externalAnchor);
     const select = useCallback((id, modifiers = {}) => {
         if (disabled || table.options.enableRowSelection === false)
             return;
@@ -19,18 +19,19 @@ export function useRowSelectionGestures(table, { orderedIds, anchor: externalAnc
         });
         if (!ids.includes(id))
             return;
+        const anchor = selectionAnchorFor(table.atoms.rowSelection);
         const previousAnchor = anchor.current;
         anchor.current = applySelectionGesture(ids, {}, previousAnchor, id, modifiers).anchor;
         table.setRowSelection((previous) => applySelectionGesture(ids, previous, previousAnchor, id, modifiers).selection);
-    }, [table, orderedIds, anchor, disabled]);
+    }, [table, orderedIds, disabled]);
     const clearSelection = useCallback(() => {
         if (disabled || table.options.enableRowSelection === false)
             return;
-        anchor.current = null;
+        selectionAnchorFor(table.atoms.rowSelection).current = null;
         table.setRowSelection({});
-    }, [table, anchor, disabled]);
+    }, [table, disabled]);
     const resetAnchor = useCallback(() => {
-        anchor.current = null;
-    }, [anchor]);
+        selectionAnchorFor(table.atoms.rowSelection).current = null;
+    }, [table]);
     return { select, clearSelection, resetAnchor };
 }

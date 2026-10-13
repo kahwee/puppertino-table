@@ -62,3 +62,81 @@ const labeledSeparator: ContextMenuItem = {
   label: 'Divider',
 };
 void labeledSeparator;
+
+// Each state slice can have exactly one owner; different slices can mix modes.
+import { createAtom } from '@tanstack/react-store';
+import type { ColumnSizingState, RowSelectionState, SortingState } from '@tanstack/react-table';
+import type { PuppertinoTableOptions, PuppertinoTableProps } from '../src/index.js';
+
+const sortingAtom = createAtom<SortingState>([]);
+const selectionAtom = createAtom<RowSelectionState>({});
+const sizingAtom = createAtom<ColumnSizingState>({});
+const stateBase = { data: [{ id: 'a' }], columns: [], getRowId: (row: { id: string }) => row.id };
+const mixedOwners: PuppertinoTableOptions<{ id: string }> = {
+  ...stateBase,
+  atoms: { sorting: sortingAtom },
+  rowSelection: {},
+  onRowSelectionChange: () => {},
+  onColumnSizingChange: () => {},
+};
+const allAtoms: PuppertinoTableOptions<{ id: string }> = {
+  ...stateBase,
+  atoms: { sorting: sortingAtom, rowSelection: selectionAtom, columnSizing: sizingAtom },
+};
+// @ts-expect-error Sorting cannot be atom-owned and controlled.
+const conflictingSort: PuppertinoTableOptions<{ id: string }> = {
+  ...stateBase,
+  atoms: { sorting: sortingAtom },
+  sorting: [],
+};
+// @ts-expect-error Atom owners subscribe to the atom instead of receiving a change callback.
+const conflictingSortCallback: PuppertinoTableOptions<{ id: string }> = {
+  ...stateBase,
+  atoms: { sorting: sortingAtom },
+  onSortingChange: () => {},
+};
+// @ts-expect-error Selection cannot be atom-owned and controlled.
+const conflictingSelection: PuppertinoTableOptions<{ id: string }> = {
+  ...stateBase,
+  atoms: { rowSelection: selectionAtom },
+  rowSelection: {},
+};
+// @ts-expect-error Selection callback conflicts with atom ownership.
+const conflictingSelectionCallback: PuppertinoTableOptions<{ id: string }> = {
+  ...stateBase,
+  atoms: { rowSelection: selectionAtom },
+  onRowSelectionChange: () => {},
+};
+// @ts-expect-error Widths cannot be atom-owned and controlled.
+const conflictingSizing: PuppertinoTableOptions<{ id: string }> = {
+  ...stateBase,
+  atoms: { columnSizing: sizingAtom },
+  columnSizing: {},
+};
+// @ts-expect-error Sizing callback conflicts with atom ownership.
+const conflictingSizingCallback: PuppertinoTableProps<{ id: string }> = {
+  ...stateBase,
+  ariaLabel: 'Items',
+  atoms: { columnSizing: sizingAtom },
+  onColumnSizingChange: () => {},
+};
+const committedAtoms: PuppertinoTableProps<{ id: string }> = {
+  ...allAtoms,
+  ariaLabel: 'Items',
+  selectionAnchor: { current: null },
+  selectionCheckboxes: false,
+  onColumnSizingCommit: (widths) => {
+    const width: number | undefined = widths.name;
+    void width;
+  },
+};
+void [
+  mixedOwners,
+  conflictingSort,
+  conflictingSortCallback,
+  conflictingSelection,
+  conflictingSelectionCallback,
+  conflictingSizing,
+  conflictingSizingCallback,
+  committedAtoms,
+];

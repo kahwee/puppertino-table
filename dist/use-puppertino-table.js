@@ -2,11 +2,12 @@
 import { makeStateUpdater, useTable } from '@tanstack/react-table';
 import { useMemo, useRef } from 'react';
 import { puppertinoTableFeatures, } from './model.js';
+import { selectionAnchorFor } from './selection-anchor.js';
 import { columnSizeBounds, readColumnSizing } from './sizing.js';
 import { validateAtomIdentity, validateAtomOwnership } from './state-ownership.js';
 import { useColumnSizingPersistence } from './use-column-sizing-persistence.js';
 /** Shared state wiring for complete tables and custom semantic layouts. */
-export function usePuppertinoTable({ data, columns, atoms, getRowId, sorting: controlledSorting, onSortingChange, initialSorting = [], initialRowSelection = {}, manualSorting = true, rowSelection: controlledSelection, onRowSelectionChange, selectable = false, disabled = false, columnSizing, onColumnSizingChange, storageKey, storage, }) {
+export function usePuppertinoTable({ data, columns, atoms, getRowId, sorting: controlledSorting, onSortingChange, initialSorting = [], initialRowSelection = {}, manualSorting = true, rowSelection: controlledSelection, onRowSelectionChange, selectable = false, selectionAnchor, disabled = false, columnSizing, onColumnSizingChange, storageKey, storage, }) {
     const mountedAtoms = useRef(atoms ? { ...atoms } : undefined);
     validateAtomIdentity(mountedAtoms.current, atoms);
     validateAtomOwnership({
@@ -60,10 +61,9 @@ export function usePuppertinoTable({ data, columns, atoms, getRowId, sorting: co
             ...(columnSizing !== undefined ? { columnSizing } : {}),
         },
         onColumnSizingChange: (update) => {
-            if (columnSizing !== undefined)
-                onColumnSizingChange?.(update);
-            else
+            if (columnSizing === undefined)
                 makeStateUpdater('columnSizing', table)(update);
+            onColumnSizingChange?.(update);
         },
         onSortingChange: (update) => {
             if (controlledSorting === undefined)
@@ -76,6 +76,7 @@ export function usePuppertinoTable({ data, columns, atoms, getRowId, sorting: co
             onRowSelectionChange?.(update);
         },
     }, (state) => ({ sorting: state.sorting, rowSelection: state.rowSelection }));
+    selectionAnchorFor(table.atoms.rowSelection, selectionAnchor);
     useColumnSizingPersistence({ table, bounds, appOwned: appOwnedSizing, storageKey, storage });
     return table;
 }

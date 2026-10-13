@@ -149,11 +149,19 @@ if (fitColumnBrowser({ availableWidth: 724, ancestorWidth: 224, ancestorCount: 3
 console.log('React ${react}: typed imports and server rendering passed');
 `,
     );
+    await writeFile(
+      path.join(directory, 'public-contracts.ts'),
+      (await readFile('tests/public-type-contracts.ts', 'utf8')).replaceAll(
+        '../src/index.js',
+        'puppertino-table',
+      ),
+    );
     // Consumers should not require the repository's development dependencies.
     execFileSync(
       path.join(directory, 'node_modules/.bin/tsc'),
       [
         'consumer.tsx',
+        'public-contracts.ts',
         '--outDir',
         'compiled',
         '--module',
