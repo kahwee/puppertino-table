@@ -20,6 +20,9 @@ export function PuppertinoTable<T extends RowData>(props: PuppertinoTableProps<T
     ariaLabel,
     caption,
     emptyContent = 'No rows',
+    status = 'ready',
+    loadingContent,
+    errorContent,
     className = '',
     density,
     densityMetrics,
@@ -44,6 +47,7 @@ export function PuppertinoTable<T extends RowData>(props: PuppertinoTableProps<T
           <table
             className="p-table pt-table"
             aria-label={ariaLabel}
+            aria-busy={status === 'loading' || undefined}
             style={{ width: table.getTotalSize() + (showSelection ? 36 : 0) }}
           >
             {caption && <caption>{caption}</caption>}
@@ -67,6 +71,9 @@ export function PuppertinoTable<T extends RowData>(props: PuppertinoTableProps<T
               table={table}
               getRowLabel={getRowLabel}
               emptyContent={emptyContent}
+              status={status}
+              loadingContent={loadingContent}
+              errorContent={errorContent}
               getRowProps={getRowProps}
               getCellProps={getCellProps}
               leadingRows={leadingRows}

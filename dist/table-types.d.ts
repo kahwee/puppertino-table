@@ -18,7 +18,13 @@ export interface PuppertinoBodyContext<T extends RowData> {
 }
 export type PuppertinoRowProps = PuppertinoDataAttributes & Omit<ComponentPropsWithoutRef<'tr'>, 'children' | 'dangerouslySetInnerHTML'>;
 export type PuppertinoCellProps = PuppertinoDataAttributes & Omit<ComponentPropsWithoutRef<'td'>, 'children' | 'dangerouslySetInnerHTML'>;
+export type TableStatus = 'ready' | 'loading' | 'error';
 export interface PuppertinoBodyOptions<T extends RowData> {
+    /** Request state is app-owned. Existing rows remain visible during refresh/errors. */
+    status?: TableStatus;
+    loadingContent?: ReactNode;
+    /** May include the app's retry button; defaults to a readable error message. */
+    errorContent?: ReactNode;
     /** Omit to inherit selection-column visibility from the hook. */
     selectable?: boolean;
     /** Omit to inherit the hook policy; true additionally disables body controls. */

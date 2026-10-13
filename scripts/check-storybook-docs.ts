@@ -172,10 +172,11 @@ async function checkTableRecipes(page: Page, base: string) {
     ['customized-rows', 'getRowProps='],
     ['leading-rows-when-empty', 'EmptyTableWithLeadingRows'],
     ['paginated-selection', 'manualSorting\n'],
-    ['item-selection-gestures', 'ownership="controlled"'],
-    ['uncontrolled-item-gestures', 'ownership="local"'],
-    ['atom-item-gestures', 'ownership="atom"'],
+    ['item-selection-gestures', 'rowSelection: selection, onRowSelectionChange: setSelection'],
+    ['uncontrolled-item-gestures', 'useRowSelectionGestures(table)'],
+    ['atom-item-gestures', 'atoms: { rowSelection: selection }'],
     ['date-columns', "sortFn: 'datetime'"],
+    ['request-states', 'status={status}'],
   ]) {
     const preview = page
       .locator(`#story--puppertino-table--${story}`)

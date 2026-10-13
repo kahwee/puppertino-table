@@ -71,6 +71,11 @@ export {
   type FinderWindowControlsProps,
 } from './finder-toolbar.js';
 export {
+  type ItemNavigationOptions,
+  type ItemNavigationOrientation,
+  nextItemId,
+} from './item-navigation.js';
+export {
   createPuppertinoColumnHelper,
   type PuppertinoColumnDef,
   type PuppertinoTableInstance,
@@ -101,9 +106,11 @@ export type {
   RowSelectionCheckboxProps,
   TableBodyProps,
   TableHeaderProps,
+  TableStatus,
 } from './table-types.js';
 export { type TagOption, TagPicker, type TagPickerProps } from './tag-picker.js';
 export { useColumnResize } from './use-column-resize.js';
+export { type ItemNavigationHookOptions, useItemNavigation } from './use-item-navigation.js';
 export { usePuppertinoTable } from './use-puppertino-table.js';
 export {
   type RowSelectionGestureOptions,

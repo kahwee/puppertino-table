@@ -4,6 +4,8 @@ export interface TableRecipeSources {
   stories: string;
   dateExample: string;
   dateFormat: string;
+  statusExample: string;
+  navigationExample: string;
 }
 
 export function createTableRecipes({
@@ -12,6 +14,8 @@ export function createTableRecipes({
   stories,
   dateExample,
   dateFormat,
+  statusExample,
+  navigationExample,
 }: TableRecipeSources) {
   // Reuse the rendered examples so documentation cannot drift from their state wiring.
   const peopleFixture = fixtures
@@ -35,14 +39,50 @@ import 'puppertino-table/style.css';`;
     .replace("'atoms'>>)", "'atoms'>> = {})");
 
   function gestureRecipe(ownership: 'controlled' | 'local' | 'atom') {
-    return recipe(
-      `import { useRef, useState } from 'react';
-import { useCreateAtom } from '@tanstack/react-store';
-import type { RowSelectionState } from '@tanstack/react-table';
-import { usePuppertinoTable, useRowSelectionGestures } from 'puppertino-table';`,
-      section(stories, 'function ItemGestureExample(', 'export const ItemSelectionGestures:') +
-        `\nexport function GestureItems() { return <ItemGestureExample ownership="${ownership}" />; }`,
-    );
+    const importState =
+      ownership === 'controlled'
+        ? "import { useState } from 'react';\nimport type { RowSelectionState } from '@tanstack/react-table';\n"
+        : ownership === 'atom'
+          ? "import { useCreateAtom } from '@tanstack/react-store';\nimport type { RowSelectionState } from '@tanstack/react-table';\n"
+          : '';
+    const state =
+      ownership === 'controlled'
+        ? '  const [selection, setSelection] = useState<RowSelectionState>({});\n'
+        : ownership === 'atom'
+          ? '  const selection = useCreateAtom<RowSelectionState>({});\n'
+          : '';
+    const owner =
+      ownership === 'controlled'
+        ? '    rowSelection: selection, onRowSelectionChange: setSelection,\n'
+        : ownership === 'atom'
+          ? '    atoms: { rowSelection: selection },\n'
+          : '';
+    return `'use client';
+${importState}import { createPuppertinoColumnHelper, usePuppertinoTable, useRowSelectionGestures } from 'puppertino-table';
+${styles}
+
+type Item = { id: string; name: string };
+const items = [{ id: 'brief', name: 'Project brief.pdf' }, { id: 'notes', name: 'Research notes.txt' }];
+const helper = createPuppertinoColumnHelper<Item>();
+const columns = helper.columns([helper.accessor('name', { header: 'Name' })]);
+
+export function GestureItems() {
+${state}  const table = usePuppertinoTable({
+    data: items, columns, getRowId: item => item.id, selectable: true,
+${owner}  });
+  const { select } = useRowSelectionGestures(table);
+  return <table.Subscribe source={table.atoms.rowSelection}>{selected => (
+    <ul className="p-list" aria-label="Files">
+      {items.map(item => <li key={item.id}>
+        <button type="button" className={selected[item.id] ? 'p-list-row p-selected' : 'p-list-row'}
+          aria-pressed={!!selected[item.id]}
+          onClick={event => select(item.id, { shift: event.shiftKey, toggle: event.metaKey || event.ctrlKey })}>
+          {item.name}
+        </button>
+      </li>)}
+    </ul>
+  )}</table.Subscribe>;
+}`;
   }
   return {
     controlled: recipe(
@@ -203,6 +243,12 @@ import { PuppertinoTable, type PuppertinoTableProps } from 'puppertino-table';`,
         '\nexport function GroupedTable() { return <PeopleTable columns={[{ id: "identity", header: "Identity", columns: personColumns.slice(0, 2) }, ...personColumns.slice(2)]} />; }',
     ),
     products: `'use client';\nimport { PuppertinoTable } from 'puppertino-table';\n${styles}\n${fixtures.replace("'../src/index.js'", "'puppertino-table'")}\nexport function Inventory() { return <PuppertinoTable data={products} columns={productColumns} getRowId={(row) => row.id} ariaLabel="Inventory" />; }`,
+    status: recipe(
+      `import { useState } from 'react';
+import { PuppertinoTable, type TableStatus } from 'puppertino-table';`,
+      section(statusExample, 'export function TableStatusExample()'),
+    ),
+    keyboard: `'use client';\n${styles}\n${navigationExample.replace("'../src/index.js'", "'puppertino-table'")}`,
     dates: `'use client';\n${styles}\n${dateExample.replace("'../src/index.js'", "'puppertino-table'").replace("import { formatDateTime } from './date-format.js';", dateFormat)}`,
   };
 }

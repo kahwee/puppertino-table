@@ -53,3 +53,13 @@ test('Finder tags survive moves, Trash and undo without mutating fixtures', () =
   assert.deepEqual(removed.files[2].tags, ['Review']);
   assert.equal(initial.files[0].tags, undefined);
 });
+
+test('Finder rename preserves identity and rejects duplicate or invalid filenames', () => {
+  const renamed = reduce(initial, { type: 'rename', id: 'brief', name: '  Updated brief.pdf  ' });
+  assert.equal(renamed.files[0].name, 'Updated brief.pdf');
+  assert.equal(renamed.files[0].id, 'brief');
+  assert.equal(initial.files[0].name, 'Project brief.pdf');
+  for (const name of ['', '/', '.', '..', 'Budget.xlsx', 'budget.xlsx'])
+    assert.equal(reduce(initial, { type: 'rename', id: 'brief', name }), initial);
+  assert.equal(reduce(initial, { type: 'rename', id: 'unknown', name: 'new.txt' }), initial);
+});

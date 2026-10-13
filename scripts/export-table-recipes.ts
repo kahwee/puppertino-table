@@ -2,16 +2,34 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createTableRecipes } from '../.storybook/table-recipes.js';
 
-const [fixtures, stateExamples, stories, dateExample, dateFormat] = await Promise.all(
+const [
+  fixtures,
+  stateExamples,
+  stories,
+  dateExample,
+  dateFormat,
+  statusExample,
+  navigationExample,
+] = await Promise.all(
   [
     'demo/fixtures.tsx',
     'demo/table-state-examples.tsx',
     'src/table.stories.tsx',
     'demo/date-table-example.tsx',
     'demo/date-format.ts',
+    'demo/table-status-example.tsx',
+    'demo/keyboard-navigation-example.tsx',
   ].map((file) => readFile(file, 'utf8')),
 );
-const recipes = createTableRecipes({ fixtures, stateExamples, stories, dateExample, dateFormat });
+const recipes = createTableRecipes({
+  fixtures,
+  stateExamples,
+  stories,
+  dateExample,
+  dateFormat,
+  statusExample,
+  navigationExample,
+});
 const directory = process.argv[2];
 if (!directory) throw new Error('Provide the installed consumer directory.');
 const files = Object.entries(recipes).map(([name, source]) => ({

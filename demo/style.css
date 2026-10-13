@@ -200,3 +200,18 @@ body {
     flex-direction: column;
   }
 }
+.demo-status-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.demo-navigation-items {
+  margin-top: 12px;
+  padding: 0;
+  list-style: none;
+}
+.demo-navigation-items button {
+  width: 100%;
+  text-align: left;
+}

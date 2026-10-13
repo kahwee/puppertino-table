@@ -66,7 +66,8 @@ export type FinderFilesAction =
   | { type: 'move'; ids: readonly string[]; folder: 'Projects' | 'Archive' }
   | { type: 'tag'; ids: readonly string[]; tag: string; remove?: boolean }
   | { type: 'undo' }
-  | { type: 'reset' };
+  | { type: 'reset' }
+  | { type: 'rename'; id: string; name: string };
 
 /** Fictional file operations belong to the demo, never the table library. */
 export function finderFilesReducer(
@@ -74,6 +75,28 @@ export function finderFilesReducer(
   action: FinderFilesAction,
 ): FinderFilesState {
   if (action.type === 'reset') return initialFinderFiles;
+  if (action.type === 'rename') {
+    const name = action.name.trim();
+    const file = state.files.find((item) => item.id === action.id);
+    if (
+      !file ||
+      !name ||
+      name.includes('/') ||
+      name === '.' ||
+      name === '..' ||
+      state.files.some(
+        (item) =>
+          item.id !== file.id &&
+          item.folder === file.folder &&
+          item.name.toLocaleLowerCase() === name.toLocaleLowerCase(),
+      )
+    )
+      return state;
+    return {
+      ...state,
+      files: state.files.map((item) => (item.id === action.id ? { ...item, name } : item)),
+    };
+  }
   const ids = new Set(action.type === 'undo' ? state.lastDeletedIds : action.ids);
   if (action.type === 'tag') {
     const update = (file: FileItem): FileItem =>

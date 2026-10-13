@@ -542,3 +542,35 @@
 .pt-tag-popover:not(:popover-open) {
   display: none;
 }
+
+.pt-table .pt-state-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 72px;
+  white-space: normal;
+  text-align: center;
+}
+.pt-state-message p {
+  margin: 0;
+}
+.pt-loading-indicator {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: pt-loading-turn 0.8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes pt-loading-turn {
+  to {
+    transform: rotate(1turn);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pt-loading-indicator {
+    animation: none;
+  }
+}

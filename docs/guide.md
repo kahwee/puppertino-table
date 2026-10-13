@@ -75,6 +75,21 @@ helper.accessor('added', {
 
 This renders `Oct 10, 2026 at 4:40 PM` for the corresponding timestamp. Applications choose their locale/time zone; keep that choice consistent between server rendering and hydration. Validate missing or invalid timestamps in the app before creating `Date` values. Automatic sorting also detects valid Date values when `sortFn` is omitted. The table registers TanStack's standard text, natural-text, basic and datetime sorting functions; custom `sortFn` functions remain supported.
 
+Missing timestamps can normalize to `null` in the app. An accessor returning `undefined` for those values, with `sortUndefined: 'last'`, keeps them last in both sort directions. Give accessor-function columns an explicit `id`. Render an em dash with accessible “No date added” text instead of calling `toISOString()` on an absent or invalid date. The Date Columns story includes invalid imports, timezone choices and the repeated daylight-saving hour; ISO timestamps in `<time dateTime>` preserve the actual instant.
+
+### Loading and request errors
+
+Pass `status="ready" | "loading" | "error"` to `PuppertinoTable` or `TableBody`. Ready is the default. `loadingContent` defaults to “Loading rows…” and `errorContent` to “Could not load rows.” `emptyContent` appears only after a ready request with no rows. Existing rows remain visible during refreshes and errors; the app decides when to replace or clear them.
+
+```tsx
+<PuppertinoTable {...tableProps} status={request.status}
+  loadingContent="Loading files…"
+  errorContent={<><span>Could not load files.</span><button onClick={retry}>Try again</button></>}
+  emptyContent="No files match this view." />
+```
+
+The complete table exposes `aria-busy` during loading. Both complete and custom bodies render semantic status/error messages with the correct column span. Retry buttons, request state, network calls, cancellation and error details remain application-owned. The spinner respects reduced-motion preferences.
+
 ### Controlled column sizing
 
 Pass `columnSizing` and `onColumnSizingChange` to either `PuppertinoTable` or `usePuppertinoTable`:
@@ -173,6 +188,27 @@ Uncontrolled `ColumnBrowser` accepts `storageKey` and an optional `storage` adap
 ```
 
 The cache keeps up to 100 recently committed panel IDs, including temporarily hidden ancestors. IDs must be nonempty and at most 1024 characters; saved values must be positive finite numbers. Unknown cached IDs do not create panels. Changing the key selects a separate preference namespace; no preferences are written during restoration. To reset saved preferences, remove the key and remount the browser.
+
+### Keyboard item navigation
+
+`useItemNavigation` supplies a single Tab stop plus arrow/Home/End movement for native rows, buttons and links. Pass the visible item order and a function returning each item's DOM element. `orientation` is `vertical`, `horizontal` or `grid`; grid `columns` can be a number or a function measuring the responsive layout when a key is pressed. Arrow movement stops at edges, and `getItemLabel` enables filename-prefix matching. `isItemDisabled` excludes unavailable items. Focus stays independent of selection.
+
+```tsx
+const { select } = useRowSelectionGestures(table);
+const navigation = useItemNavigation({
+  orderedIds: items.map(item => item.id),
+  getItemElement: id => elements.current.get(id),
+  getItemLabel: id => items.find(item => item.id === id)?.name ?? '',
+  onNavigate: select,
+});
+<button {...navigation.getItemProps(item.id)}
+  ref={element => { if (element) elements.current.set(item.id, element); else elements.current.delete(item.id); }}
+  onClick={event => select(item.id, { shift: event.shiftKey, toggle: event.metaKey || event.ctrlKey })}>
+  {item.name}
+</button>
+```
+
+`elements` is an app-owned `useRef(new Map<string, HTMLButtonElement>())`. Connect `onNavigate` to selection for Finder-style plain-arrow and Shift-arrow ranges; omit it for focus-only navigation. Typeahead, Shift modifiers and nested editable controls are handled separately from activation. The hook leaves Enter, Space and Command/Ctrl/Alt shortcuts to native controls or the app. When combining menu and navigation props, compose the key handlers and respect `event.defaultPrevented` rather than replacing one with the other. `nextItemId` is also exported for custom focus adapters.
 
 ### Right-click and keyboard context menus
 

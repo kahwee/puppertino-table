@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add app-owned ready/loading/error table states, accessible busy/status/error semantics, retry content and refreshes that preserve existing rows.
+- Export reusable roving item focus with list/grid/panel navigation, Shift selection integration, Home/End and filename typeahead. Keep activation and application commands caller-owned.
+- Add Finder keyboard view/history shortcuts, Quick Look with native modal focus, double-click previews, Return rename with validation, column-pane navigation and persistent list sorting/selection across view changes. All file operations remain in memory.
+- Simplify local/controlled/atom gesture recipes and extend packed-consumer checks to request and keyboard examples. Demonstrate missing/invalid dates, stable last-position sorting, timezone display and daylight-saving transitions.
+
 - **Behavior change:** automatic local sorting is now the default (`manualSorting=false`). Consumers with server pages or app-owned order must set `manualSorting` explicitly; controlled sorting state alone does not select manual mode.
 - Let table headers, bodies and standalone resize handles inherit selection-column visibility, disabled state and resize policy from `usePuppertinoTable`. Keep sizing separate from memoized row cells and suppress primitive handles for read-only widths.
 - Register TanStack's standard sorting functions, demonstrate real Date accessors with datetime sorting and semantic formatted cells, and replace Finder's display-string timestamps with Date values.

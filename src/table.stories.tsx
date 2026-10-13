@@ -6,12 +6,14 @@ import { expect, userEvent, within } from 'storybook/test';
 import { tableRecipes } from '../.storybook/table-sources.js';
 import { DateTableExample } from '../demo/date-table-example.js';
 import { type Person, people, personColumns, productColumns, products } from '../demo/fixtures.js';
+import { KeyboardNavigationExample } from '../demo/keyboard-navigation-example.js';
 import {
   AtomOwnershipExample,
   ControlledSizingExample,
   ReadOnlyStateExample,
   ResizeEventsExample,
 } from '../demo/table-state-examples.js';
+import { TableStatusExample } from '../demo/table-status-example.js';
 import {
   ColumnResizeHandle,
   type PuppertinoColumnDef,
@@ -780,7 +782,7 @@ export const DateColumns: Story = {
       source: { code: tableRecipes.dates },
       description: {
         story:
-          'Date Added keeps real Date values for chronological sorting and formats only the cell. Click once for newest first. The fixed demo locale/time zone keeps server and browser output consistent; applications choose their own.',
+          'Date Added keeps real Date values for chronological sorting and formats only the cell. Click once for newest first. Missing and invalid dates stay last in both directions. Compare display time zones and the repeated hour at daylight-saving time; timestamp order stays unchanged.',
       },
     },
   },
@@ -794,5 +796,84 @@ export const DateColumns: Story = {
     await expect(canvas.getAllByRole('row')[1]).toHaveTextContent('September notes');
     await expect(canvas.getAllByRole('row')[2]).toHaveTextContent('Morning update');
     await expect(canvas.getAllByRole('row')[3]).toHaveTextContent('October brief');
+    await expect(canvas.getAllByRole('row').at(-1)).toHaveTextContent('Invalid imported timestamp');
+    await userEvent.selectOptions(
+      canvas.getByRole('combobox', { name: 'Display time zone' }),
+      'UTC',
+    );
+    await expect(canvas.getByText('Oct 10, 2026 at 11:40 PM')).toBeInTheDocument();
+    await expect(canvas.getAllByRole('row')[1]).toHaveTextContent('September notes');
+    await userEvent.selectOptions(
+      canvas.getByRole('combobox', { name: 'Display time zone' }),
+      'America/Los_Angeles',
+    );
+  },
+};
+
+export const RequestStates: Story = {
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      source: { code: tableRecipes.status },
+      description: {
+        story:
+          'Loading, retryable errors, empty results and refreshes are app-owned. Previously loaded rows stay visible during refresh/error states. No network requests are made by the table.',
+      },
+    },
+  },
+  render: () => <TableStatusExample />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const table = canvas.getByRole('table', { name: 'Request states' });
+    await expect(table).toHaveAttribute('aria-busy', 'true');
+    await expect(canvas.getByRole('status')).toHaveTextContent('Loading people');
+    await expect(canvas.queryByText('No matching people.')).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: 'Load rows' }));
+    await expect(canvas.getAllByRole('row')).toHaveLength(4);
+    await userEvent.click(canvas.getByRole('button', { name: 'Refresh rows' }));
+    await expect(canvas.getAllByRole('row')).toHaveLength(5);
+    await expect(canvas.getByText('Person 001')).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: 'Fail request' }));
+    await expect(canvas.getByRole('alert')).toHaveTextContent('Could not refresh people');
+    await userEvent.click(canvas.getByRole('button', { name: 'Try again' }));
+    await expect(table).toHaveAttribute('aria-busy', 'true');
+    await userEvent.click(canvas.getByRole('button', { name: 'Show no results' }));
+    await expect(canvas.getByText('No matching people.')).toBeInTheDocument();
+    await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
+  },
+};
+
+export const KeyboardItems: Story = {
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      source: { code: tableRecipes.keyboard },
+      description: {
+        story:
+          'One reusable navigation hook handles native buttons in lists and grids. Selection stays in the table atom; focus is independent. Modified commands and native activation remain available to the app.',
+      },
+    },
+  },
+  render: () => <KeyboardNavigationExample />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const files = within(canvas.getByRole('list', { name: 'Keyboard files' }));
+    const first = files.getByRole('button', { name: 'Project brief.pdf' });
+    const second = files.getByRole('button', { name: 'Research notes.txt' });
+    await userEvent.click(first);
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(second).toHaveFocus();
+    await expect(second).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.keyboard('{Shift>}{ArrowDown}{/Shift}');
+    await expect(files.getByRole('button', { name: 'Budget.xlsx' })).toHaveFocus();
+    await expect(second).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(canvas.getByRole('checkbox', { name: 'Three-column grid' }));
+    await userEvent.click(first);
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(files.getByRole('button', { name: 'Cover artwork.png' })).toHaveFocus();
+    await userEvent.keyboard('b');
+    await expect(files.getByRole('button', { name: 'Budget.xlsx' })).toHaveFocus();
+    await userEvent.click(canvas.getByRole('checkbox', { name: 'Disable navigation' }));
+    await expect(first).toBeDisabled();
   },
 };

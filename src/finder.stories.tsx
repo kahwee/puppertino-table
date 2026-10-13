@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { RowSelectionState } from '@tanstack/react-table';
-import type { DragEvent, MouseEvent } from 'react';
-import { useReducer, useRef, useState } from 'react';
+import type { RowSelectionState, SortingState } from '@tanstack/react-table';
+import type { DragEvent, KeyboardEvent, MouseEvent } from 'react';
+import { useEffect, useId, useReducer, useRef, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 import { formatDateTime } from '../demo/date-format.js';
 import { FileArtwork, FilePreview, Glyph, ViewGlyph } from '../demo/finder-artwork.js';
@@ -29,9 +29,11 @@ import {
   FinderStatusBar,
   type FinderView,
   FinderWindow,
+  nextItemId,
   PuppertinoTable,
   type TableDensity,
   useContextMenu,
+  useItemNavigation,
 } from './index.js';
 import './finder-demo.css';
 
@@ -86,6 +88,7 @@ function FinderDemo({
   const [fileState, dispatchFiles] = useReducer(finderFilesReducer, initialFinderFiles);
   const { files, trash, lastDeletedIds } = fileState;
   const [selection, setSelection] = useState<RowSelectionState>({});
+  const [sorting, setSorting] = useState<SortingState>([]);
   const selectionAnchor = useRef<string | null>(null);
   const selectionSummary = useRef<HTMLOutputElement>(null);
   const [tagNames, setTagNames] = useState(['Project Alpine', 'Work', 'Review']);
@@ -98,6 +101,17 @@ function FinderDemo({
   );
   const [query, setQuery] = useState('');
   const [infoOpen, setInfoOpen] = useState(false);
+  const [quickLookOpen, setQuickLookOpen] = useState(false);
+  const quickLook = useRef<HTMLDialogElement>(null);
+  const content = useRef<HTMLDivElement>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameName, setRenameName] = useState('');
+  const [renameError, setRenameError] = useState('');
+  const renameDialog = useRef<HTMLDialogElement>(null);
+  const renameInput = useRef<HTMLInputElement>(null);
+  const renameLabelId = useId();
+  const renameErrorId = useId();
+  const pendingViewFocus = useRef<string | null>(null);
   const [history, setHistory] = useState({ folders: ['Projects'], index: 0 });
   const [dragging, setDragging] = useState<string[]>([]);
   const [over, setOver] = useState<string | null>(null);
@@ -118,6 +132,146 @@ function FinderDemo({
   const selectedFiles = visible.filter((file) => selection[file.id]);
   const canAct = selectable && !disabled;
   const active = visible.find((file) => file.id === detail);
+  useEffect(() => {
+    const dialog = quickLook.current;
+    if (!dialog) return;
+    if (quickLookOpen && active) {
+      if (!dialog.open) dialog.showModal();
+    } else if (dialog.open) dialog.close();
+  }, [quickLookOpen, active]);
+  useEffect(() => {
+    const dialog = renameDialog.current;
+    if (!dialog) return;
+    if (renamingId) {
+      if (!dialog.open) dialog.showModal();
+      const input = renameInput.current;
+      if (input) {
+        input.focus();
+        const extension = input.value.lastIndexOf('.');
+        input.setSelectionRange(0, extension > 0 ? extension : input.value.length);
+      }
+    } else if (dialog.open) dialog.close();
+  }, [renamingId]);
+  const startRename = (id: string) => {
+    const file = visible.find((item) => item.id === id);
+    if (!file || !canAct || inTrash) return;
+    setRenameName(file.name);
+    setRenameError('');
+    setRenamingId(id);
+  };
+  const commitRename = () => {
+    const file = visible.find((item) => item.id === renamingId);
+    const name = renameName.trim();
+    if (!file || !canAct || inTrash) return;
+    if (!name || name.includes('/') || name === '.' || name === '..') {
+      setRenameError('Choose a filename without a slash.');
+      return;
+    }
+    if (
+      files.some(
+        (item) =>
+          item.id !== file.id &&
+          item.folder === file.folder &&
+          item.name.toLocaleLowerCase() === name.toLocaleLowerCase(),
+      )
+    ) {
+      setRenameError('A file with this name already exists in this folder.');
+      return;
+    }
+    dispatchFiles({ type: 'rename', id: file.id, name });
+    setMessage(`Renamed ${file.name} to ${name}.`);
+    setRenamingId(null);
+  };
+  const displayIds = () => {
+    const ids = Array.from(
+      content.current?.querySelectorAll<HTMLElement>('[data-file-id]') ?? [],
+    ).map((element) => element.dataset.fileId ?? '');
+    return ids.length ? ids : visible.map((file) => file.id);
+  };
+  const navigation = useItemNavigation({
+    orderedIds: visible.map((file) => file.id),
+    getItemElement: (id) =>
+      Array.from(content.current?.querySelectorAll<HTMLElement>('[data-file-id]') ?? []).find(
+        (element) => element.dataset.fileId === id,
+      ),
+    orientation: view === 'icons' ? 'grid' : view === 'gallery' ? 'horizontal' : 'vertical',
+    columns: () => {
+      const grid = content.current?.querySelector('.pt-finder-icon-grid');
+      return grid ? getComputedStyle(grid).gridTemplateColumns.split(' ').length : 1;
+    },
+    disabled,
+    getItemLabel: (id) => visible.find((file) => file.id === id)?.name ?? '',
+    onNavigate: (id, modifiers) =>
+      selectFile(id, { shiftKey: !!modifiers.shift, metaKey: false, ctrlKey: false }, displayIds()),
+  });
+  useEffect(() => {
+    if (pendingViewFocus.current) {
+      const id = pendingViewFocus.current;
+      pendingViewFocus.current = null;
+      navigation.focus(id);
+    }
+  }, [navigation.focus]);
+  const changeView = (next: FinderView) => {
+    if (document.activeElement instanceof HTMLElement && document.activeElement.dataset.fileId)
+      pendingViewFocus.current = document.activeElement.dataset.fileId;
+    setView(next);
+    if ((next === 'columns' || next === 'gallery') && !detail) setDetail(visible[0]?.id ?? null);
+  };
+  const previewFile = (id: string) => {
+    if (disabled) return;
+    setDetail(id);
+    setQuickLookOpen(true);
+  };
+  const itemKeyDown = (id: string, event: KeyboardEvent<HTMLElement>, ids = displayIds()) => {
+    menu.getTriggerProps(id).onKeyDown(event);
+    if (event.defaultPrevented || event.target !== event.currentTarget) return;
+    if (
+      view === 'columns' &&
+      event.key === 'ArrowLeft' &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      !event.altKey
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      setDetail(null);
+      columnNavigation.focus(
+        ['Projects', 'Archive', 'Trash'].includes(folder) ? folder : 'Projects',
+      );
+      return;
+    }
+    // The list's visual order can differ from the application's source order.
+    if (
+      view === 'list' &&
+      ['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key) &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      !event.altKey
+    ) {
+      const next = nextItemId({ orderedIds: ids, currentId: id, key: event.key });
+      if (next) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (navigation.focus(next)) selectFile(next, event, ids);
+      }
+      return;
+    }
+    navigation.getItemProps(id).onKeyDown(event);
+    if (event.defaultPrevented) return;
+    if (event.key === 'Enter' && !event.shiftKey && !event.metaKey && !event.ctrlKey) {
+      event.preventDefault();
+      event.stopPropagation();
+      startRename(id);
+    } else if (event.key === ' ' && !event.metaKey && !event.ctrlKey && !event.altKey) {
+      event.preventDefault();
+      event.stopPropagation();
+      selectFile(id, event, ids);
+      previewFile(id);
+    } else if (event.key === 'Enter' && event.shiftKey) {
+      event.preventDefault();
+      selectFile(id, event, ids);
+    }
+  };
   const clearSelection = () => {
     setSelection({});
     selectionAnchor.current = null;
@@ -141,6 +295,7 @@ function FinderDemo({
     clearSelection();
     setDetail(null);
     setInfoOpen(false);
+    setQuickLookOpen(false);
     setMessage(text);
   };
   const focusAfterMutation = () => {
@@ -308,7 +463,15 @@ function FinderDemo({
       onSelect: undoDelete,
     },
   ];
-  const folderButton = (name: string) => (
+  const columnNavigation = useItemNavigation({
+    orderedIds: ['Projects', 'Archive', 'Trash'],
+    getItemElement: (id) =>
+      Array.from(content.current?.querySelectorAll<HTMLElement>('[data-folder]') ?? []).find(
+        (element) => element.dataset.folder === id,
+      ),
+    onNavigate: (id) => navigate(id),
+  });
+  const folderButton = (name: string, column = false) => (
     <FinderSidebarItem
       key={name}
       data-folder={name}
@@ -318,6 +481,22 @@ function FinderDemo({
       icon={
         <ViewGlyph view={name === 'Trash' ? 'trash' : name === 'Archive' ? 'archive' : 'folder'} />
       }
+      {...(column ? columnNavigation.getItemProps(name) : {})}
+      onKeyDown={(event) => {
+        if (!column) return;
+        columnNavigation.getItemProps(name).onKeyDown(event);
+        if (
+          !event.defaultPrevented &&
+          event.key === 'ArrowRight' &&
+          !event.metaKey &&
+          !event.ctrlKey &&
+          !event.altKey
+        ) {
+          event.preventDefault();
+          const id = selectedFiles[0]?.id ?? visible[0]?.id;
+          if (id && navigation.focus(id)) selectFile(id, event);
+        }
+      }}
       onClick={() => navigate(name)}
       {...dropProps(name)}
     >
@@ -331,10 +510,31 @@ function FinderDemo({
         onKeyDown={(event) => {
           if (
             event.target instanceof HTMLElement &&
-            event.target.closest('input,textarea,select,[role="menu"]')
+            event.target.closest('input,textarea,select,[contenteditable=true],[role="menu"]')
           )
             return;
-          if (!(event.metaKey || event.ctrlKey)) return;
+          if (event.defaultPrevented || disabled || !(event.metaKey || event.ctrlKey)) return;
+          if (['1', '2', '3', '4'].includes(event.key)) {
+            event.preventDefault();
+            const views: FinderView[] = ['icons', 'list', 'columns', 'gallery'];
+            changeView(views[Number(event.key) - 1]);
+          }
+          if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+            event.preventDefault();
+            travel(event.key === 'ArrowLeft' ? -1 : 1);
+          }
+          if (event.key.toLowerCase() === 'i' && selectedFiles.length === 1) {
+            event.preventDefault();
+            setDetail(selectedFiles[0].id);
+            setInfoOpen(true);
+          }
+          if (
+            (event.key.toLowerCase() === 'o' || event.key === 'ArrowDown') &&
+            selectedFiles.length === 1
+          ) {
+            event.preventDefault();
+            previewFile(selectedFiles[0].id);
+          }
           if (event.key.toLowerCase() === 'a') {
             event.preventDefault();
             selectAll();
@@ -376,11 +576,7 @@ function FinderDemo({
           canBack={history.index > 0}
           canForward={history.index < history.folders.length - 1}
           onTravel={travel}
-          onView={(next) => {
-            setView(next);
-            if ((next === 'columns' || next === 'gallery') && !detail)
-              setDetail(visible[0]?.id ?? null);
-          }}
+          onView={changeView}
           query={query}
           onQuery={(value) => {
             clearSelection();
@@ -390,15 +586,12 @@ function FinderDemo({
           }}
           actions={toolbarActions}
           canPreview={!disabled && selectedFiles.length === 1}
-          onPreview={() => {
-            setDetail(selectedFiles[0].id);
-            setInfoOpen(true);
-          }}
+          onPreview={() => previewFile(selectedFiles[0].id)}
         />
         <FinderBody density={density}>
           <FinderSidebar aria-label="Favorites">
             <FinderSidebarGroup label="Favorites">
-              {['Projects', 'Archive'].map(folderButton)}
+              {['Projects', 'Archive'].map((name) => folderButton(name))}
             </FinderSidebarGroup>
             <FinderSidebarGroup label="Locations">
               <div className="p-sidebar-row">
@@ -423,7 +616,18 @@ function FinderDemo({
               ))}
             </FinderSidebarGroup>
           </FinderSidebar>
-          <FinderContent>
+          <FinderContent
+            ref={content}
+            onPointerDown={(event) => {
+              if (
+                event.target instanceof HTMLElement &&
+                !event.target.closest('[data-file-id],button,input,[role="separator"],thead')
+              ) {
+                clearSelection();
+                setDetail(null);
+              }
+            }}
+          >
             {view === 'list' ? (
               <PuppertinoTable
                 key={revision}
@@ -440,8 +644,11 @@ function FinderDemo({
                 resizable={resizable}
                 disabled={disabled}
                 manualSorting={manualSorting}
+                sorting={sorting}
+                onSortingChange={setSorting}
                 getRowProps={(row) => ({
-                  tabIndex: 0,
+                  ...navigation.getItemProps(row.id),
+                  'data-file-id': row.id,
                   ...menu.getTriggerProps(row.id),
                   ...dragProps(row.original),
                   onClick: (event) =>
@@ -450,20 +657,13 @@ function FinderDemo({
                       event,
                       row.table.getRowModel().rows.map((item) => item.id),
                     ),
-                  onKeyDown: (event) => {
-                    menu.getTriggerProps(row.id).onKeyDown(event);
-                    if (
-                      event.target === event.currentTarget &&
-                      (event.key === 'Enter' || event.key === ' ')
-                    ) {
-                      event.preventDefault();
-                      selectFile(
-                        row.id,
-                        event,
-                        row.table.getRowModel().rows.map((item) => item.id),
-                      );
-                    }
-                  },
+                  onDoubleClick: () => previewFile(row.id),
+                  onKeyDown: (event) =>
+                    itemKeyDown(
+                      row.id,
+                      event,
+                      row.table.getRowModel().rows.map((item) => item.id),
+                    ),
                 })}
                 emptyContent={emptyMessage}
               />
@@ -478,9 +678,9 @@ function FinderDemo({
                     width: 170,
                     content: (
                       <>
-                        {folderButton('Projects')}
-                        {folderButton('Archive')}
-                        {folderButton('Trash')}
+                        {folderButton('Projects', true)}
+                        {folderButton('Archive', true)}
+                        {folderButton('Trash', true)}
                       </>
                     ),
                   },
@@ -497,6 +697,10 @@ function FinderDemo({
                           icon={<Glyph kind={file.kind} />}
                           {...menu.getTriggerProps(file.id)}
                           {...dragProps(file)}
+                          {...navigation.getItemProps(file.id)}
+                          data-file-id={file.id}
+                          onKeyDown={(event) => itemKeyDown(file.id, event)}
+                          onDoubleClick={() => previewFile(file.id)}
                           onClick={(event) => selectFile(file.id, event)}
                         >
                           {file.name}
@@ -528,6 +732,10 @@ function FinderDemo({
                     description={file.kind}
                     {...menu.getTriggerProps(file.id)}
                     {...dragProps(file)}
+                    {...navigation.getItemProps(file.id)}
+                    data-file-id={file.id}
+                    onKeyDown={(event) => itemKeyDown(file.id, event)}
+                    onDoubleClick={() => previewFile(file.id)}
                     onClick={(event) => selectFile(file.id, event)}
                   >
                     {file.name}
@@ -548,6 +756,10 @@ function FinderDemo({
                       selected={!!selection[file.id]}
                       {...menu.getTriggerProps(file.id)}
                       {...dragProps(file)}
+                      {...navigation.getItemProps(file.id)}
+                      data-file-id={file.id}
+                      onKeyDown={(event) => itemKeyDown(file.id, event)}
+                      onDoubleClick={() => previewFile(file.id)}
                       onClick={(event) => selectFile(file.id, event)}
                     >
                       <FileArtwork file={file} />
@@ -620,6 +832,12 @@ function FinderDemo({
                       setInfoOpen(true);
                     },
                   },
+                  {
+                    id: 'rename',
+                    label: 'Rename',
+                    disabled: !canAct || inTrash,
+                    onSelect: () => startRename(context.id),
+                  },
                   { id: 'separator', type: 'separator' },
                   ...(inTrash
                     ? [
@@ -664,6 +882,118 @@ function FinderDemo({
           }
         />
       </FinderWindow>
+      <dialog
+        ref={quickLook}
+        className="finder-demo-quick-look"
+        aria-label="Quick Look"
+        onCancel={(event) => {
+          event.preventDefault();
+          setQuickLookOpen(false);
+        }}
+        onClose={() => setQuickLookOpen(false)}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            event.stopPropagation();
+            setQuickLookOpen(false);
+          }
+          if (event.key === ' ' && event.target === event.currentTarget) {
+            event.preventDefault();
+            setQuickLookOpen(false);
+          }
+          if (active && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
+            event.preventDefault();
+            const next = nextItemId({
+              orderedIds: displayIds(),
+              currentId: active.id,
+              key: event.key,
+              orientation: 'horizontal',
+            });
+            if (next) {
+              setDetail(next);
+              if (canAct) setSelection({ [next]: true });
+            }
+          }
+        }}
+        onClick={(event) => {
+          if (event.target !== event.currentTarget) return;
+          const bounds = event.currentTarget.getBoundingClientRect();
+          if (
+            event.clientX < bounds.left ||
+            event.clientX > bounds.right ||
+            event.clientY < bounds.top ||
+            event.clientY > bounds.bottom
+          )
+            setQuickLookOpen(false);
+        }}
+      >
+        <header>
+          <button
+            type="button"
+            className="p-button"
+            aria-label="Close Quick Look"
+            onClick={() => setQuickLookOpen(false)}
+          >
+            ×
+          </button>
+          <strong>{quickLookOpen ? active?.name : null}</strong>
+        </header>
+        {quickLookOpen && active && <FilePreview file={active} />}
+      </dialog>
+      <dialog
+        ref={renameDialog}
+        className="finder-demo-rename"
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            event.stopPropagation();
+            setRenamingId(null);
+          }
+        }}
+        aria-labelledby={renameLabelId}
+        onCancel={(event) => {
+          event.preventDefault();
+          setRenamingId(null);
+        }}
+        onClose={() => setRenamingId(null)}
+      >
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            commitRename();
+          }}
+        >
+          <h2 id={renameLabelId}>Rename file</h2>
+          <label>
+            New name
+            <input
+              ref={renameInput}
+              className="p-form-text"
+              aria-label="New filename"
+              aria-invalid={!!renameError || undefined}
+              aria-describedby={renameError ? renameErrorId : undefined}
+              value={renameName}
+              onChange={(event) => {
+                setRenameName(event.target.value);
+                setRenameError('');
+              }}
+            />
+          </label>
+          {renameError && (
+            <p id={renameErrorId} role="alert">
+              {renameError}
+            </p>
+          )}
+          <footer>
+            <button type="button" className="p-button" onClick={() => setRenamingId(null)}>
+              Cancel
+            </button>
+            <button type="submit" className="p-button">
+              Rename
+            </button>
+          </footer>
+        </form>
+      </dialog>
       <fieldset className="finder-demo-controls" aria-label="Demo settings">
         <span>Try the shared components</span>
         <label>
@@ -685,12 +1015,15 @@ function FinderDemo({
             setTagNames(['Project Alpine', 'Work', 'Review']);
             clearSelection();
             setInfoOpen(false);
+            setSorting([]);
             setFolder('Projects');
             setDetail(view === 'columns' || view === 'gallery' ? 'brief' : null);
             setDragging([]);
             setOver(null);
             setQuery('');
             setHistory({ folders: ['Projects'], index: 0 });
+            setQuickLookOpen(false);
+            setRenamingId(null);
             setMessage('All changes stay in this demo');
             setRevision((value) => value + 1);
           }}
@@ -970,5 +1303,59 @@ export const Tags: Story = {
     await userEvent.click(popover.getByRole('option', { name: 'Review' }));
     await expect(popover.getByRole('button', { name: 'Remove tag Review' })).toBeVisible();
     await expect(popover.queryByRole('option', { name: 'Review' })).toBeNull();
+  },
+};
+
+export const KeyboardWorkflow: Story = {
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          'Finder-style keys across all four views: arrows, Shift ranges, type-to-select, Command/Ctrl+1–4, Space Quick Look, Return rename and Command/Ctrl+Backspace to Trash. Operations stay in the demo.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const rows = canvas.getAllByRole('row');
+    await userEvent.click(rows[1]);
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(rows[2]).toHaveFocus();
+    await userEvent.keyboard('{Shift>}{ArrowDown}{/Shift}');
+    await expect(canvas.getByLabelText('Selection summary')).toHaveTextContent('2 of 6 selected');
+    await userEvent.keyboard('b');
+    await expect(rows[3]).toHaveFocus();
+    await userEvent.keyboard(' ');
+    await expect(canvas.getByRole('dialog', { name: 'Quick Look' })).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+    await expect(rows[3]).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    const rename = within(canvas.getByRole('dialog', { name: 'Rename file' }));
+    const input = rename.getByRole('textbox', { name: 'New filename' });
+    await userEvent.clear(input);
+    await userEvent.type(input, 'Budget 2027.xlsx');
+    await userEvent.click(rename.getByRole('button', { name: 'Rename' }));
+    await expect(
+      canvas.getByText('Budget 2027.xlsx', { selector: '.finder-demo-filename' }),
+    ).toBeInTheDocument();
+    await userEvent.keyboard('{Control>}1{/Control}');
+    const icons = within(canvas.getByRole('region', { name: 'Project file icons' }));
+    const budget = icons.getByRole('button', { name: 'Budget 2027.xlsx Spreadsheet' });
+    await expect(budget).toHaveFocus();
+    await expect(budget).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.dblClick(budget);
+    await expect(canvas.getByRole('dialog', { name: 'Quick Look' })).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+    await userEvent.keyboard('{Control>}3{/Control}');
+    await expect(canvas.getByRole('region', { name: 'Workspace columns' })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Budget 2027.xlsx' })).toHaveFocus();
+    await userEvent.keyboard('{Control>}4{/Control}');
+    await expect(canvas.getByRole('region', { name: 'Project file gallery' })).toBeInTheDocument();
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(canvas.getByRole('button', { name: 'Cover artwork.png' })).toHaveFocus();
+    await userEvent.keyboard('{Control>}a{/Control}');
+    await expect(canvas.getByLabelText('Selection summary')).toHaveTextContent('6 of 6 selected');
+    await userEvent.click(canvas.getByRole('button', { name: 'Reset demo' }));
   },
 };

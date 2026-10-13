@@ -11,6 +11,9 @@ function RenderTableBody<T extends RowData>({
   disabled = false,
   getRowLabel,
   emptyContent = 'No rows',
+  status = 'ready',
+  loadingContent = 'Loading rows…',
+  errorContent = 'Could not load rows.',
   getRowProps,
   getCellProps,
   leadingRows,
@@ -23,7 +26,17 @@ function RenderTableBody<T extends RowData>({
     columnCount: table.getAllLeafColumns().length + (selectable ? 1 : 0),
   };
   return (
-    <tbody>
+    <tbody aria-busy={status === 'loading' || undefined}>
+      {status !== 'ready' && (
+        <tr className="pt-state-row">
+          <td colSpan={context.columnCount}>
+            <div className="pt-state-message" role={status === 'error' ? 'alert' : 'status'}>
+              {status === 'loading' && <span className="pt-loading-indicator" aria-hidden="true" />}
+              {status === 'loading' ? loadingContent : errorContent}
+            </div>
+          </td>
+        </tr>
+      )}
       {typeof leadingRows === 'function' ? leadingRows(table, context) : leadingRows}
       {rows.length ? (
         rows.map((row) => {
@@ -50,11 +63,11 @@ function RenderTableBody<T extends RowData>({
             </tr>
           );
         })
-      ) : (
+      ) : status === 'ready' ? (
         <tr>
           <td colSpan={context.columnCount}>{emptyContent}</td>
         </tr>
-      )}
+      ) : null}
     </tbody>
   );
 }
