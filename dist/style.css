@@ -330,8 +330,7 @@
   font: 13px var(--p-list-font, system-ui);
   text-align: left;
 }
-.pt-context-menu
-  > [role="menuitem"]:is(:hover, :focus-visible):not(:disabled):not([aria-disabled="true"]) {
+.pt-context-menu > [role="menuitem"]:focus:not(:disabled):not([aria-disabled="true"]) {
   background: var(--p-list-selection, #0165e2);
   color: var(--p-list-selection-text, #fff);
   outline: none;
@@ -431,6 +430,8 @@
   font-size: 13px;
 }
 .pt-tag-content {
+  box-sizing: border-box;
+  padding: 4px;
   max-height: calc(var(--pt-tag-max-height, 400px) - 16px);
   overflow: auto;
 }
@@ -448,15 +449,20 @@
   align-items: center;
   gap: 3px;
   padding: 5px;
-  border: 1px solid #8885;
+  border: 1px solid var(--p-field-ring, #8885);
   border-radius: 8px;
-  background: var(--p-window-bg, Canvas);
+  background: var(--p-field-bg, var(--p-window-bg, Canvas));
   min-height: 32px;
   box-sizing: border-box;
 }
-.pt-tag-field:focus-within {
-  outline: 1px solid #0085ff70;
-  outline-offset: 1px;
+.pt-tag-field:has(input:focus) {
+  box-shadow: var(--p-focus-ring, 0 0 0 3px Highlight);
+}
+@media (forced-colors: active) {
+  .pt-tag-field:has(input:focus) {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
+  }
 }
 .pt-tag-popover .pt-tag-field input {
   width: 60px;
@@ -481,8 +487,8 @@
   overflow-wrap: anywhere;
 }
 .pt-tag-token:focus-visible {
-  outline: 2px solid Highlight;
-  outline-offset: 1px;
+  outline: 3px solid var(--p-focus-ring-color, Highlight);
+  outline-offset: 0;
 }
 .pt-tag-options {
   max-height: 208px;
@@ -503,7 +509,6 @@
   padding: 5px 8px;
   min-height: 26px;
 }
-.pt-tag-options button:hover:not(:disabled),
 .pt-tag-options button[aria-selected="true"] {
   background: #0064dc;
   color: white;
@@ -976,9 +981,12 @@
 .pt-finder-folder .p-sidebar-icon[data-tone="secondary"] {
   color: var(--p-text-secondary);
 }
-.pt-finder-container button:focus-visible {
-  outline: 2px solid var(--p-control-accent);
-  outline-offset: 2px;
+/* Puppertino owns toolbar/button focus. Scope our fallback to custom items. */
+.pt-finder-folder:focus-visible,
+.pt-finder-icon-item:focus-visible,
+.pt-finder-filmstrip > button:focus-visible {
+  outline: 3px solid var(--p-focus-ring-color, Highlight);
+  outline-offset: -2px;
 }
 .pt-finder-sidebar-group + .pt-finder-sidebar-group {
   margin-top: 14px;

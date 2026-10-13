@@ -135,7 +135,13 @@ export function ContextMenu({ position, actions, ariaLabel, onClose, returnFocus
         event.preventDefault();
         items[next]?.focus();
     };
-    return (_jsx("div", { ref: menu, popover: "manual", className: "pt-context-menu", role: "menu", tabIndex: -1, "aria-label": ariaLabel, onKeyDown: navigate, onContextMenu: (event) => event.preventDefault(), style: { left: position.x, top: position.y }, children: actions.map((action) => {
+    return (_jsx("div", { ref: menu, popover: "manual", className: "pt-context-menu", role: "menu", tabIndex: -1, "aria-label": ariaLabel, onKeyDown: navigate, onPointerMove: (event) => {
+            if (event.pointerType === 'touch' || !(event.target instanceof Element))
+                return;
+            const item = event.target.closest(enabledItems);
+            if (item && event.currentTarget.contains(item))
+                item.focus({ preventScroll: true });
+        }, onContextMenu: (event) => event.preventDefault(), style: { left: position.x, top: position.y }, children: actions.map((action) => {
             if ('type' in action && action.type === 'separator')
                 return _jsx("hr", { className: "pt-menu-separator" }, action.id);
             if (!('label' in action))

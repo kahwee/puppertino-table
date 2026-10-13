@@ -137,6 +137,7 @@ export function TagPicker({
                   }}
                   aria-label={`Remove tag ${option?.label ?? key}`}
                   title={`Remove ${option?.label ?? key}`}
+                  onFocus={() => setActive(-1)}
                   onClick={() => remove(key)}
                   onKeyDown={(event) => {
                     if (event.key === 'Backspace' || event.key === 'Delete') {
@@ -209,6 +210,11 @@ export function TagPicker({
                 disabled={option.disabled}
                 aria-selected={choices[active] === option}
                 onMouseDown={(event) => event.preventDefault()}
+                onPointerMove={(event) => {
+                  if (event.pointerType === 'touch' || option.disabled) return;
+                  setActive(choices.findIndex((choice) => choice.id === option.id));
+                  input.current?.focus({ preventScroll: true });
+                }}
                 onClick={() => apply(option)}
               >
                 <span className="pt-tag-dot" aria-hidden="true" />
@@ -224,6 +230,11 @@ export function TagPicker({
                 tabIndex={-1}
                 aria-selected={active === choices.length - 1}
                 onMouseDown={(event) => event.preventDefault()}
+                onPointerMove={(event) => {
+                  if (event.pointerType === 'touch') return;
+                  setActive(choices.length - 1);
+                  input.current?.focus({ preventScroll: true });
+                }}
                 onClick={() => apply({ id: '', label: query.trim(), create: true })}
               >
                 Create tag “{query.trim()}”

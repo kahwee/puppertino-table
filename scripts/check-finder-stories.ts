@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import axe from 'axe-core';
 import type { Page } from 'playwright';
+import { checkFinderFocus } from './check-finder-focus.js';
 import { setStorybookTheme } from './storybook-theme.mjs';
 
 declare global {
@@ -170,6 +171,7 @@ export async function checkFinderStories(page: Page, base: string, evidence: str
   await page.setViewportSize({ width: 1080, height: 640 });
   await checkFinderBulkActions(page, base, evidence);
   await checkFinderTags(page, base, evidence);
+  await checkFinderFocus(page, base, evidence);
   console.log(
     'Finder stories passed: four views, light/dark/narrow, axe, search, history, shared keyboard menus and reset.',
   );

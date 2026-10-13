@@ -213,6 +213,11 @@ export function ContextMenu({
       tabIndex={-1}
       aria-label={ariaLabel}
       onKeyDown={navigate}
+      onPointerMove={(event) => {
+        if (event.pointerType === 'touch' || !(event.target instanceof Element)) return;
+        const item = event.target.closest<HTMLElement>(enabledItems);
+        if (item && event.currentTarget.contains(item)) item.focus({ preventScroll: true });
+      }}
       onContextMenu={(event) => event.preventDefault()}
       style={{ left: position.x, top: position.y }}
     >

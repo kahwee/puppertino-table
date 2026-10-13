@@ -66,7 +66,7 @@ export function TagPicker({ options, value, onValueChange, mixedValue = [], onCr
                                                 tokens.current.set(key, node);
                                             else
                                                 tokens.current.delete(key);
-                                        }, "aria-label": `Remove tag ${option?.label ?? key}`, title: `Remove ${option?.label ?? key}`, onClick: () => remove(key), onKeyDown: (event) => {
+                                        }, "aria-label": `Remove tag ${option?.label ?? key}`, title: `Remove ${option?.label ?? key}`, onFocus: () => setActive(-1), onClick: () => remove(key), onKeyDown: (event) => {
                                             if (event.key === 'Backspace' || event.key === 'Delete') {
                                                 event.preventDefault();
                                                 remove(key);
@@ -101,5 +101,15 @@ export function TagPicker({ options, value, onValueChange, mixedValue = [], onCr
                                             event.preventDefault();
                                             tokens.current.get(value[value.length - 1])?.focus();
                                         }
-                                    } })] }), _jsxs("div", { id: `${id}-options`, role: "listbox", "aria-label": "Available tags", className: "pt-tag-options", children: [candidates.map((option) => (_jsxs("button", { id: optionId(option), type: "button", role: "option", tabIndex: -1, disabled: option.disabled, "aria-selected": choices[active] === option, onMouseDown: (event) => event.preventDefault(), onClick: () => apply(option), children: [_jsx("span", { className: "pt-tag-dot", "aria-hidden": "true" }), _jsx("span", { className: "pt-tag-label", children: option.label }), mixedValue.includes(option.id) && _jsx("small", { children: "Some items" })] }, option.id))), canCreate && (_jsxs("button", { id: `${id}-option-${options.length}`, type: "button", role: "option", tabIndex: -1, "aria-selected": active === choices.length - 1, onMouseDown: (event) => event.preventDefault(), onClick: () => apply({ id: '', label: query.trim(), create: true }), children: ["Create tag \u201C", query.trim(), "\u201D"] }))] }), !candidates.length && !canCreate && (_jsx("div", { className: "pt-tag-empty", children: normalized ? 'No matching tags' : 'All tags assigned' }))] }) })] }));
+                                    } })] }), _jsxs("div", { id: `${id}-options`, role: "listbox", "aria-label": "Available tags", className: "pt-tag-options", children: [candidates.map((option) => (_jsxs("button", { id: optionId(option), type: "button", role: "option", tabIndex: -1, disabled: option.disabled, "aria-selected": choices[active] === option, onMouseDown: (event) => event.preventDefault(), onPointerMove: (event) => {
+                                        if (event.pointerType === 'touch' || option.disabled)
+                                            return;
+                                        setActive(choices.findIndex((choice) => choice.id === option.id));
+                                        input.current?.focus({ preventScroll: true });
+                                    }, onClick: () => apply(option), children: [_jsx("span", { className: "pt-tag-dot", "aria-hidden": "true" }), _jsx("span", { className: "pt-tag-label", children: option.label }), mixedValue.includes(option.id) && _jsx("small", { children: "Some items" })] }, option.id))), canCreate && (_jsxs("button", { id: `${id}-option-${options.length}`, type: "button", role: "option", tabIndex: -1, "aria-selected": active === choices.length - 1, onMouseDown: (event) => event.preventDefault(), onPointerMove: (event) => {
+                                        if (event.pointerType === 'touch')
+                                            return;
+                                        setActive(choices.length - 1);
+                                        input.current?.focus({ preventScroll: true });
+                                    }, onClick: () => apply({ id: '', label: query.trim(), create: true }), children: ["Create tag \u201C", query.trim(), "\u201D"] }))] }), !candidates.length && !canCreate && (_jsx("div", { className: "pt-tag-empty", children: normalized ? 'No matching tags' : 'All tags assigned' }))] }) })] }));
 }
