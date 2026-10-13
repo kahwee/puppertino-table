@@ -76,13 +76,6 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
     undefined,
     { timeout: 15000 },
   );
-  await page.locator('input[name="initialDark"]').focus();
-  await page.locator('input[name="initialDark"]').press('Space');
-  await page.waitForFunction(
-    () => document.querySelector('#story--examples-finder--file-table .p-dark-mode'),
-    undefined,
-    { timeout: 15000 },
-  );
   await page.screenshot({ path: `${evidence}/finder-walkthrough.png` });
 
   console.log('Checking Storybook docs: overview and manager navigation');
@@ -100,6 +93,7 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   await link.click();
   await page.waitForURL((url) => url.searchParams.get('path') === '/docs/examples-finder--docs');
   await page.frameLocator('#storybook-preview-iframe').locator('#finder-walkthrough').waitFor();
+  await checkThemeToolbar(page, base);
   console.log(
     'Storybook docs passed: media playback, readable source, live args, reset and manager navigation.',
   );
@@ -114,5 +108,46 @@ export async function checkOverviewInstallation(page: Page, base: string) {
   assert.ok(
     overviewText.includes(`pnpm add puppertino-table@${version} `),
     'The public overview installation command must match the package version',
+  );
+}
+
+async function checkThemeToolbar(page: Page, base: string) {
+  console.log('Checking Storybook Themes toolbar and preserved Finder state');
+  await page.goto(`${base}/?path=/story/examples-finder--file-table&globals=theme:light`);
+  const frame = page.frameLocator('#storybook-preview-iframe');
+  const rows = frame.getByRole('table', { name: 'Project files', exact: true }).locator('tbody tr');
+  await rows.first().click();
+  await frame.getByRole('button', { name: 'Tags', exact: true }).click();
+  await frame.getByRole('option', { name: 'Review', exact: true }).click();
+  await frame.getByRole('combobox', { name: 'Tag name' }).press('Escape');
+  await frame.getByRole('button', { name: 'Search', exact: true }).click();
+  await frame.getByRole('searchbox').fill('brief');
+  await rows.first().click();
+  await frame.getByLabel('Row density').selectOption('comfortable');
+  for (const theme of ['dark', 'light']) {
+    await page.getByRole('button', { name: 'Theme', exact: true }).click();
+    await frame.locator(theme === 'dark' ? 'html.p-dark-mode' : 'html:not(.p-dark-mode)').waitFor();
+    assert.equal(await rows.count(), 1, 'theme changes preserve filtering');
+    assert.match((await rows.first().getAttribute('class')) ?? '', /p-selected/);
+    assert.equal(await frame.getByRole('searchbox').inputValue(), 'brief');
+    assert.equal(await frame.getByLabel('Row density').inputValue(), 'comfortable');
+    await frame.getByRole('button', { name: 'Tags', exact: true }).click();
+    await frame.getByRole('button', { name: 'Remove tag Review', exact: true }).waitFor();
+    await frame.getByRole('combobox', { name: 'Tag name' }).press('Escape');
+  }
+  await page.goto(`${base}/?path=/docs/puppertino-table--docs&globals=theme:dark`);
+  await frame.locator('html.p-dark-mode').waitFor();
+  const preview = frame.locator('.sbdocs-preview').first();
+  await preview.waitFor();
+  assert.equal(
+    await preview.evaluate((element) => getComputedStyle(element).backgroundColor),
+    'rgb(36, 36, 38)',
+    'Docs previews use a dark surface, keeping Puppertino text readable',
+  );
+  await page.goto(`${base}/?path=/story/examples-finder--dark-table&globals=theme:light`);
+  await frame.locator('html.p-dark-mode').waitFor();
+  assert.equal(
+    await page.getByRole('button', { name: 'Theme set by story parameters' }).isDisabled(),
+    true,
   );
 }

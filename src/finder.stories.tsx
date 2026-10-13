@@ -57,7 +57,6 @@ const columns = helper.columns([
 
 function FinderDemo({
   initialView = 'list',
-  initialDark = false,
   initialDensity = 'compact',
   initialPreview = true,
   selectable = true,
@@ -67,7 +66,6 @@ function FinderDemo({
   manualSorting = false,
 }: {
   initialView?: FinderView;
-  initialDark?: boolean;
   initialDensity?: 'compact' | 'comfortable';
   initialPreview?: boolean;
   selectable?: boolean;
@@ -84,7 +82,6 @@ function FinderDemo({
   const [tagNames, setTagNames] = useState(['Project Alpine', 'Work', 'Review']);
   const [folder, setFolder] = useState('Projects');
   const [view, setView] = useState(initialView);
-  const [dark, setDark] = useState(initialDark);
   const [density, setDensity] = useState<TableDensity>(initialDensity);
   const [revision, setRevision] = useState(0);
   const [detail, setDetail] = useState<string | null>(
@@ -319,7 +316,7 @@ function FinderDemo({
     </FinderSidebarItem>
   );
   return (
-    <main className={`finder-demo-stage ${dark ? 'p-dark-mode' : ''}`}>
+    <main className="finder-demo-stage">
       <FinderWindow
         aria-label="Finder-style demo"
         onKeyDown={(event) => {
@@ -673,13 +670,6 @@ function FinderDemo({
         </label>
         <button
           type="button"
-          aria-label={`Toggle ${dark ? 'light' : 'dark'} theme`}
-          onClick={() => setDark(!dark)}
-        >
-          {dark ? 'Light' : 'Dark'}
-        </button>
-        <button
-          type="button"
           onClick={() => {
             menu.close();
             dispatchFiles({ type: 'reset' });
@@ -709,7 +699,6 @@ const meta = {
   tags: ['!autodocs'],
   args: {
     initialView: 'list',
-    initialDark: false,
     initialDensity: 'compact',
     initialPreview: true,
     selectable: true,
@@ -720,7 +709,7 @@ const meta = {
   },
   render: (args) => (
     <FinderDemo
-      key={`${args.initialView}-${args.initialDark}-${args.initialDensity}-${args.initialPreview}`}
+      key={`${args.initialView}-${args.initialDensity}-${args.initialPreview}`}
       {...args}
     />
   ),
@@ -744,12 +733,6 @@ const meta = {
       control: 'boolean',
       description:
         'Start column view with the first file preview selected. Gallery always shows a preview.',
-    },
-    initialDark: {
-      name: 'Start in dark mode',
-      control: 'boolean',
-      table: { category: 'Workspace setup' },
-      description: 'Start with the Puppertino dark theme. Changing this restarts the workspace.',
     },
     initialDensity: {
       name: 'Starting density',
@@ -863,12 +846,12 @@ export function Workspace() {
   },
 };
 export const DarkTable: Story = {
-  args: { initialDark: true },
+  globals: { theme: 'dark' },
   parameters: {
     docs: {
       description: {
         story:
-          'The same semantic table using Puppertino dark tokens. Use the density selector and Light button to compare geometry and contrast.',
+          'The same semantic table using Puppertino dark tokens. This story pins the dark theme. Use the Theme toolbar in File table to compare light and dark without resetting the workspace.',
       },
     },
   },
@@ -934,7 +917,8 @@ export const GalleryWorkspace: Story = {
   },
 };
 export const DarkColumns: Story = {
-  args: { initialView: 'columns', initialDark: true },
+  args: { initialView: 'columns' },
+  globals: { theme: 'dark' },
   parameters: { docs: { source: ColumnWorkspace.parameters?.docs?.source } },
 };
 export const NarrowColumns: Story = {
@@ -942,7 +926,7 @@ export const NarrowColumns: Story = {
   render: (args) => (
     <div className="finder-demo-frame">
       <FinderDemo
-        key={`${args.initialView}-${args.initialDark}-${args.initialDensity}-${args.initialPreview}`}
+        key={`${args.initialView}-${args.initialDensity}-${args.initialPreview}`}
         {...args}
       />
     </div>

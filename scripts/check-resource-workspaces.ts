@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import axe from 'axe-core';
 import type { Page } from 'playwright';
+import { setStorybookTheme } from './storybook-theme.mjs';
 
 /** Shared example page checks, separate from the table gesture stress suite. */
 export async function checkResourceWorkspaces(page: Page, base: string, evidence: string) {
@@ -385,11 +386,12 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
     );
     await target.click({ button: 'right' });
     await menu.waitFor();
-    await page.getByRole('button', { name: 'Toggle dark theme' }).click();
+    await page.keyboard.press('Escape');
+    await setStorybookTheme(page, 'dark');
     await menu.waitFor({ state: 'detached' });
     await page.addScriptTag({ content: axe.source });
     for (const theme of ['dark', 'light']) {
-      if (theme === 'light') await page.getByRole('button', { name: 'Toggle dark theme' }).click();
+      if (theme === 'light') await setStorybookTheme(page, 'light');
       await target.press('Shift+F10');
       await menu.waitFor();
       const violations = await page.evaluate(

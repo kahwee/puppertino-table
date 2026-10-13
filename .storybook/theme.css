@@ -1,0 +1,22 @@
+/* App-owned surface tokens complement Puppertino's component theme tokens. */
+:root {
+  --p-window-bg: #fff;
+  --p-text-secondary: #555;
+  --p-control-accent: #0064dc;
+  --storybook-preview-text: #252525;
+}
+:root.p-dark-mode {
+  --p-window-bg: #242426;
+  --p-text-secondary: #ccc;
+  --p-control-accent: #86b8ff;
+  --storybook-preview-text: #eee;
+}
+.sb-show-main,
+.sbdocs.sbdocs-preview {
+  background: var(--p-window-bg);
+  color: var(--storybook-preview-text);
+}
+.p-dark-mode .sb-show-main,
+.p-dark-mode .sbdocs.sbdocs-preview {
+  color-scheme: dark;
+}

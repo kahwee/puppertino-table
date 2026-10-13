@@ -19,6 +19,7 @@
   -webkit-font-smoothing: antialiased;
   container-type: inline-size;
 }
+.p-dark-mode .finder-demo-stage,
 .finder-demo-stage.p-dark-mode {
   --p-window-bg: #252527;
   --p-text-secondary: #b0b0b7;

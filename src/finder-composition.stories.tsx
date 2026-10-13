@@ -51,12 +51,11 @@ const columns = helper.columns([helper.accessor('name', { header: 'Name', size: 
 interface CompositionProps {
   view: FinderView;
   query: string;
-  dark: boolean;
   onViewChange(value: FinderView): void;
   onQueryChange(value: string): void;
 }
 /** Consumer-owned data and behavior, using only public library imports. */
-function Composition({ view, query, dark, onViewChange, onQueryChange }: CompositionProps) {
+function Composition({ view, query, onViewChange, onQueryChange }: CompositionProps) {
   const [documents, setDocuments] = useState<Document[]>([
     { id: 'brief', name: 'Brief.pdf' },
     { id: 'notes', name: 'Notes.md' },
@@ -75,7 +74,7 @@ function Composition({ view, query, dark, onViewChange, onQueryChange }: Composi
     />
   );
   return (
-    <FinderWindow aria-label="Composed document browser" className={dark ? 'p-dark-mode' : ''}>
+    <FinderWindow aria-label="Composed document browser">
       <FinderToolbar>
         <FinderTitle>Documents</FinderTitle>
         <FinderViewSwitcher
@@ -220,11 +219,10 @@ function Composition({ view, query, dark, onViewChange, onQueryChange }: Composi
 const meta = {
   title: 'Puppertino/Finder composition',
   component: Composition,
-  args: { view: 'list', query: '', dark: false },
+  args: { view: 'list', query: '' },
   argTypes: {
     view: { control: 'inline-radio', options: ['icons', 'list', 'columns', 'gallery'] },
     query: { control: 'text' },
-    dark: { control: 'boolean' },
     onViewChange: { control: false },
     onQueryChange: { control: false },
   },
@@ -271,7 +269,8 @@ export const Composed: Story = {
   },
 };
 export const DarkGallery: Story = {
-  args: { view: 'gallery', dark: true, onViewChange: () => {}, onQueryChange: () => {} },
+  globals: { theme: 'dark' },
+  args: { view: 'gallery', onViewChange: () => {}, onQueryChange: () => {} },
 };
 
 export const CustomArtwork: Story = {

@@ -6,6 +6,7 @@ import { createServer } from 'node:http';
 import path from 'node:path';
 import axe from 'axe-core';
 import { chromium } from 'playwright';
+import { setStorybookTheme } from './storybook-theme.mjs';
 
 // Capture real Storybook interactions; ffmpeg supplies README GIFs and MP4 downloads.
 const root = path.resolve('storybook-static');
@@ -187,7 +188,7 @@ try {
   await accessibility(page);
   await page.screenshot({ path: path.join(media, 'table-comfortable.png') });
   await page.getByLabel('Row density').selectOption('compact');
-  await page.getByLabel('Toggle dark theme').click();
+  await setStorybookTheme(page, 'dark');
   await accessibility(page);
   await page.screenshot({ path: path.join(media, 'table-dark.png') });
   await context.close();

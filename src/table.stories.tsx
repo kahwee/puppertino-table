@@ -241,13 +241,7 @@ export const KeyboardResize: Story = {
   },
 };
 export const Dark: Story = {
-  decorators: [
-    (Story) => (
-      <div className="demo-shell p-dark-mode" style={{ minHeight: 0, padding: 20 }}>
-        <Story />
-      </div>
-    ),
-  ],
+  globals: { theme: 'dark' },
 };
 export const Narrow: Story = {
   decorators: [

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import axe from 'axe-core';
 import type { Page } from 'playwright';
+import { setStorybookTheme } from './storybook-theme.mjs';
 
 declare global {
   interface Window {
@@ -38,7 +39,7 @@ export async function checkFinderStories(page: Page, base: string, evidence: str
     assert.deepEqual(await finderViolations(page), [], story);
     await page.screenshot({ path: `${evidence}/finder-${story}.png` });
     if (!story.includes('dark') && story !== 'narrow-columns') {
-      await page.getByLabel('Toggle dark theme').click();
+      await setStorybookTheme(page, 'dark');
       assert.deepEqual(await finderViolations(page), [], `${story} dark`);
       await page.screenshot({ path: `${evidence}/finder-${story}-dark.png` });
     }
@@ -346,7 +347,7 @@ async function checkFinderTags(page: Page, base: string, evidence: string) {
     'reset clears custom tags',
   );
   await rows.nth(0).click();
-  await page.getByLabel('Toggle dark theme').click();
+  await setStorybookTheme(page, 'dark');
   await page.setViewportSize({ width: 390, height: 760 });
   await page.getByRole('button', { name: 'Tags', exact: true }).click();
   const bounds = await dialog.boundingBox();

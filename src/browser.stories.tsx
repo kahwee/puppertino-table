@@ -74,7 +74,6 @@ function ResourceBrowser({
   delegated?: boolean;
 }) {
   const [density, setDensity] = useState<TableDensity>('compact');
-  const [dark, setDark] = useState(false);
   const [narrow, setNarrow] = useState(false);
   const [inspect, setInspect] = useState<string | null>(null);
   const [selection, setSelection] = useState<RowSelectionState>({ 'resource-0': true });
@@ -163,16 +162,13 @@ function ResourceBrowser({
   const active = resources.find((resource) => resource.id === inspect);
   const context = resources.find((resource) => resource.id === menu.state?.context);
   return (
-    <main className={`demo-shell ${dark ? 'p-dark-mode' : ''}`}>
+    <main className="demo-shell">
       <header>
         <div>
           <p className="demo-eyebrow">Shared density · caller-owned items · context commands</p>
           <h1>{tableView ? 'Resource table' : 'Project column browser'}</h1>
           <p>Fictional project items. Right-click a resource, or focus it and press Shift+F10.</p>
         </div>
-        <button type="button" className="p-button" onClick={() => setDark(!dark)}>
-          Toggle dark theme
-        </button>
       </header>
       <section
         className="demo-panel demo-browser-example"

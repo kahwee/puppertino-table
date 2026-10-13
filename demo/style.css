@@ -26,6 +26,7 @@ body {
   color: #252525;
   padding: clamp(20px, 4vw, 64px);
 }
+.p-dark-mode .demo-shell,
 .demo-shell.p-dark-mode {
   --p-window-bg: #242426;
   --p-text-secondary: #ccc;
@@ -97,6 +98,7 @@ body {
 .demo-shell a {
   color: #075dba;
 }
+.p-dark-mode .demo-shell a,
 .demo-shell.p-dark-mode a {
   color: #a1c7ff;
 }
