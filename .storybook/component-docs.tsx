@@ -1,14 +1,7 @@
-import {
-  Controls,
-  Description,
-  Primary,
-  Stories,
-  Subtitle,
-  Title,
-  useOf,
-} from '@storybook/addon-docs/blocks';
+import { Controls, Primary, Stories, Subtitle, Title, useOf } from '@storybook/addon-docs/blocks';
 import { componentGuides } from './component-guides.js';
 import { scenarioGroups, scenarioHref } from './scenarios.js';
+import { workflows } from './workflows.js';
 
 /** One primary canvas; additional docs stories show distinct recipes only. */
 export function ComponentDocs() {
@@ -18,11 +11,11 @@ export function ComponentDocs() {
     resolved.type === 'meta'
       ? scenarioGroups[resolved.preparedMeta.title as keyof typeof scenarioGroups]
       : undefined;
+  const checks = resolved.type === 'meta' ? workflows[resolved.preparedMeta.title] : undefined;
   return (
     <>
       <Title />
       <Subtitle />
-      <Description />
       <h2 id="playground">Playground</h2>
       <p>
         {guide?.intro ??
@@ -36,7 +29,7 @@ export function ComponentDocs() {
             Start with a named configuration, then adjust its native Controls. Variants share
             playgrounds; ownership links open the matching integration recipe.
           </p>
-          <ul>
+          <ul className="storybook-scenario-grid">
             {scenarios.scenarios.map((scenario) => (
               <li key={scenario.name}>
                 <a
@@ -48,14 +41,13 @@ export function ComponentDocs() {
                 >
                   {scenario.name}
                 </a>
-                {' — '}
-                {scenario.observe}
+                <span>{scenario.observe}</span>
               </li>
             ))}
           </ul>
         </>
       )}
-      {guide && (
+      {guide && !scenarios && (
         <>
           <h2 id="try-these-controls">Try these controls</h2>
           <div className="storybook-guide-table-scroll">
@@ -89,10 +81,9 @@ export function ComponentDocs() {
           <h2 id="integration">Integration</h2>
           <p>{guide.integration}</p>
           <p>
-            Open the Code panel in the full canvas or Show code above for a complete public recipe.
-            Inspect emitted callbacks in Actions. Reset Controls restores argument defaults. Where
-            provided, Reset example also clears local data, loaded children, created tags and
-            completed widths while preserving the shared theme.
+            Copy <strong>Code</strong> for a typed app. Inspect callbacks in{' '}
+            <strong>Actions</strong>. <strong>Reset example</strong>, where available, restores args
+            and local data.
           </p>
           <p>
             <a
@@ -119,6 +110,24 @@ export function ComponentDocs() {
               </ul>
             </>
           )}
+        </>
+      )}
+      {checks && (
+        <>
+          <h2 id="workflows">Workflows</h2>
+          <p>Replay named steps in Interactions.</p>
+          <ul className="storybook-workflow-links">
+            {checks.map((check) => (
+              <li key={check.story}>
+                <a
+                  href={`./?path=/story/${check.story}&addonPanel=storybook/interactions/panel`}
+                  target="_top"
+                >
+                  {check.name}
+                </a>
+              </li>
+            ))}
+          </ul>
         </>
       )}
       <Stories includePrimary={false} />

@@ -113,6 +113,68 @@ export async function checkStorybookQuality(page: Page, base: string, evidence: 
     await frame.getByRole('button', { name: 'Remove tag Client', exact: true }).count(),
     0,
   );
+  const codeIncludes = async (marker: string) =>
+    page.waitForFunction(
+      (text) =>
+        [...document.querySelectorAll('pre')].some((node) => node.textContent?.includes(text)),
+      marker,
+    );
+  await page.goto(
+    `${base}/?path=/story/puppertino-tag-picker--assigned&args=allowCreation:false;optionSet:disabledTags`,
+  );
+  await frame.getByRole('button', { name: 'Tags', exact: true }).waitFor();
+  await page.getByRole('tab', { name: 'Code', exact: true }).click();
+  await codeIncludes('disabled": true');
+  assert.ok(
+    (await page.locator('pre').allTextContents()).some(
+      (code) => code.includes('DocumentTags') && !code.includes('onCreate='),
+    ),
+  );
+  await page.getByRole('tab', { name: /^Controls/ }).click();
+  await page.locator('input[name="allowCreation"]').press('Space');
+  await page.getByRole('tab', { name: 'Code', exact: true }).click();
+  await codeIncludes('onCreate=');
+
+  await page.goto(
+    `${base}/?path=/story/puppertino-outline-view--default&args=loadingDelay:1200;simulateError:false;density:compact`,
+  );
+  await frame.getByRole('treegrid').waitFor();
+  await page.getByRole('tab', { name: 'Code', exact: true }).click();
+  await codeIncludes('loadingDelay={1200}');
+  await codeIncludes('simulateError={false}');
+  await page.getByRole('tab', { name: /^Controls/ }).click();
+  await page.locator('input[name="simulateError"]').press('Space');
+  await page.getByRole('tab', { name: 'Code', exact: true }).click();
+  await codeIncludes('simulateError={true}');
+
+  await page.goto(
+    `${base}/?path=/story/puppertino-split-view--default&args=orientation:vertical;container:compact;sidebarHidden:true`,
+  );
+  await frame.getByRole('region', { name: 'Content', exact: true }).waitFor();
+  await page.getByRole('tab', { name: 'Code', exact: true }).click();
+  await codeIncludes('orientation={"vertical"}');
+  await codeIncludes('width: 390');
+  await codeIncludes('useState(true)');
+  await page.goto(`${base}/?path=/docs/start-here-overview--docs`);
+  await frame.locator('pre').filter({ hasText: 'pnpm add puppertino-table@' }).waitFor();
+  await frame.getByRole('navigation', { name: 'State ownership choices' }).waitFor();
+  await frame.getByRole('navigation', { name: 'State ownership choices' }).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: `${evidence}/integration-guide.png` });
+  await frame
+    .getByRole('navigation', { name: 'State ownership choices' })
+    .getByRole('link', { name: /^React/ })
+    .click();
+  await page.waitForURL(
+    (url) => url.searchParams.get('path') === '/story/puppertino-table--selection',
+  );
+  await frame.getByLabel('Checked rows').waitFor();
+  await page.goto(`${base}/?path=/docs/puppertino-table--docs`);
+  await frame.getByRole('link', { name: 'Select across pages', exact: true }).click();
+  await page.waitForURL(
+    (url) => url.searchParams.get('path') === '/story/puppertino-table--paginated-selection',
+  );
+  await page.getByRole('tab', { name: 'Interactions', exact: true, selected: true }).waitFor();
+  await page.getByText('Return to the selected first page', { exact: false }).waitFor();
   console.log(
     'Story quality passed: typed scenario links, matching configuration/ownership Code, full data resets, synchronized archive/preview controls, and compact workspace navigation.',
   );

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useArgs } from 'storybook/preview-api';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { splitPlaygroundSource } from '../.storybook/playground-source.js';
 import { ResettableExample } from '../.storybook/resettable-example.js';
 import { tableRecipes } from '../.storybook/table-sources.js';
 import { SplitViewExample } from '../demo/split-view-example.js';
@@ -83,7 +84,16 @@ const meta = {
   },
   parameters: {
     docs: {
-      source: { language: 'tsx', type: 'code', code: tableRecipes.split },
+      source: {
+        language: 'tsx',
+        type: 'dynamic',
+        transform: (
+          _code: string,
+          context: {
+            args: Parameters<typeof SplitViewExample>[0] & { container?: 'fluid' | 'compact' };
+          },
+        ) => splitPlaygroundSource(tableRecipes.split, context.args),
+      },
       description: {
         component:
           'Adjacent panes with thin dividers, clamped sizes, pointer/keyboard resizing, completion-only persistence, hidden panes and compact navigation. App toolbar buttons restore panes and choose the active compact pane.',

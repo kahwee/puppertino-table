@@ -1,9 +1,13 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { finderViewRecipes } from '../.storybook/finder-recipes.js';
-import { tablePlaygroundSource } from '../.storybook/playground-source.js';
+import {
+  outlinePlaygroundSource,
+  splitPlaygroundSource,
+  tablePlaygroundSource,
+} from '../.storybook/playground-source.js';
 import { createTableRecipes } from '../.storybook/table-recipes.js';
-import { tagPickerRecipe } from '../.storybook/tag-picker-recipe.js';
+import { tagPickerRecipe, tagPickerSource } from '../.storybook/tag-picker-recipe.js';
 import { documentWorkspaceRecipe } from '../.storybook/workspace-recipe.js';
 
 const [
@@ -53,6 +57,30 @@ const workspace = documentWorkspaceRecipe(
 );
 const files = Object.entries({
   'document-workspace': workspace,
+  'outline-live': outlinePlaygroundSource(recipes.outline, {
+    loadingDelay: 1200,
+    simulateError: false,
+    density: 'compact',
+    expanded: { projects: true },
+    rowSelection: { readme: true },
+  }),
+  'split-live': splitPlaygroundSource(recipes.split, {
+    orientation: 'vertical',
+    container: 'compact',
+    activePaneId: 'detail',
+    sidebarHidden: true,
+  }),
+  'tag-existing': tagPickerSource({
+    allowCreation: false,
+    optionSet: 'disabledTags',
+    mixedValue: ['work'],
+    title: 'He said "Review"',
+  }),
+  'tag-custom': tagPickerSource({
+    optionSet: 'custom',
+    options: [{ id: 'one', label: 'A custom tag' }],
+    value: ['one'],
+  }),
   'table-comfortable-disabled': tablePlaygroundSource(recipes.uncontrolled, {
     density: 'comfortable',
     disabled: true,

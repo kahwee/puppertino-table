@@ -227,6 +227,8 @@ Checkboxes and row gestures share a fixed range anchor. Pass `selectionAnchor` t
 
 ## Storybook playgrounds
 
+Choose flat rows (Table), a tree (Outline), a folder path (Column view), or adjacent panes (Split view). Internal state stays local; React owns values/callbacks; atoms share state. Set `manualSorting` for server-owned order.
+
 Open named scenarios from the component docs to start with typed args presets. Table Controls group appearance, selection, sorting, sizing and accessibility; State ownership compares React and atoms with matching recipes. The composed document workspace combines locations, resizable panes, previews, tags and Trash/undo. Named Interactions steps explain each workflow; Reset example restores local data and argument defaults.
 
 Each component opens with a typed Playground that stays at its declared defaults. Component docs pair live Controls with concrete scenarios, integration decisions and keyboard guidance. Use Controls for prop variants, shared Theme and Viewport toolbars for appearance and responsive layouts, and the native Code panel for complete public integration recipes. Outline disclosure/selection and Split pane visibility/navigation synchronize with args and expose callbacks in Actions. Named Interactions steps make workflows replayable. Regression-only canvases are excluded from navigation and Autodocs. Column view combines table/column layouts, internal/controlled/read-only/persistent widths, density and menu triggers. Tag picker offers option datasets, mixed values, disabled tags and optional creation. Finder views and checkbox settings use args; the Theme toolbar applies across stories. Distinct API recipes and interaction workflows keep their own examples.

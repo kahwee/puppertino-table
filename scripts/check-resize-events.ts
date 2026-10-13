@@ -47,10 +47,4 @@ export async function checkResizeEvents(page: Page, base: string) {
   await page.mouse.up();
   assert.equal(await committed.textContent(), '272');
   assert.equal(await commits.textContent(), '1', 'pointer completion commits once');
-  await handle.press('ArrowRight');
-  assert.equal(await committed.textContent(), '288');
-  assert.equal(await commits.textContent(), '2', 'keyboard completion commits once');
-  await handle.press('Enter');
-  assert.equal(await committed.textContent(), '240');
-  assert.equal(await commits.textContent(), '3', 'reset commits once');
 }

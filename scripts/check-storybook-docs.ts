@@ -242,11 +242,9 @@ async function checkFocusedViewDocs(page: Page, base: string) {
       count,
       `${component}: only focused examples appear in docs`,
     );
-    await page.getByRole('table', { name: 'Playground scenarios' }).waitFor();
+    await page.getByRole('heading', { name: 'Open a scenario', exact: true }).waitFor();
     await page.getByRole('heading', { name: 'Integration', exact: true }).waitFor();
-    assert.ok(
-      (await page.locator('body').innerText()).includes('Inspect emitted callbacks in Actions.'),
-    );
+    assert.ok((await page.locator('body').innerText()).includes('Inspect callbacks in Actions.'));
   }
   const preview = page.locator('.sbdocs-preview').first().locator('..');
   await preview.getByRole('switch', { name: 'Show code' }).click();

@@ -820,6 +820,36 @@ export const PaginatedSelection: Story = {
     },
   },
   render: () => <PaginatedSelectionExample />,
+  play: async ({ canvas, step }) => {
+    const all = () => canvas.getByRole('checkbox', { name: 'Select all visible rows' });
+    await step('Select the first page', async () => {
+      await expect(all()).not.toBeChecked();
+      await userEvent.click(canvas.getAllByRole('checkbox', { name: /^Select Person/ })[0]);
+      await expect(all()).toHaveAttribute('aria-checked', 'mixed');
+      await expect((all() as HTMLInputElement).indeterminate).toBe(true);
+      all().focus();
+      await userEvent.keyboard(' ');
+      await expect(all()).toBeChecked();
+      await expect(canvas.getByLabelText('Total selected')).toHaveTextContent('2');
+    });
+    await step('Select and clear the second page without losing the first', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Switch page' }));
+      await expect(all()).not.toBeChecked();
+      await userEvent.click(all());
+      await expect(canvas.getByLabelText('Total selected')).toHaveTextContent('4');
+      await userEvent.click(all());
+      await expect(canvas.getByLabelText('Total selected')).toHaveTextContent('2');
+    });
+    await step('Return to the selected first page', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Switch page' }));
+      await expect(all()).toBeChecked();
+      await userEvent.click(canvas.getAllByRole('checkbox', { name: /^Select Person/ })[0]);
+      await expect(all()).toHaveAttribute('aria-checked', 'mixed');
+      await userEvent.click(all());
+      await userEvent.click(all());
+      await expect(canvas.getByLabelText('Total selected')).toHaveTextContent('0');
+    });
+  },
 };
 
 export const ResizeEvents: Story = {
@@ -835,14 +865,21 @@ export const ResizeEvents: Story = {
     },
   },
   render: () => <ResizeEventsExample />,
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const edge = canvas.getByRole('separator', { name: 'Resize Name column' });
-    edge.focus();
-    await userEvent.keyboard('{ArrowRight}');
-    await expect(canvas.getByLabelText('Preview name width')).toHaveTextContent('256');
-    await expect(canvas.getByLabelText('Committed name width')).toHaveTextContent('256');
-    await expect(canvas.getByLabelText('Resize commits')).toHaveTextContent('1');
+    await step('Commit a keyboard resize', async () => {
+      edge.focus();
+      await userEvent.keyboard('{ArrowRight}');
+      await expect(canvas.getByLabelText('Preview name width')).toHaveTextContent('256');
+      await expect(canvas.getByLabelText('Committed name width')).toHaveTextContent('256');
+      await expect(canvas.getByLabelText('Resize commits')).toHaveTextContent('1');
+    });
+    await step('Reset commits the default width', async () => {
+      await userEvent.keyboard('{Enter}');
+      await expect(canvas.getByLabelText('Committed name width')).toHaveTextContent('240');
+      await expect(canvas.getByLabelText('Resize commits')).toHaveTextContent('2');
+    });
   },
 };
 

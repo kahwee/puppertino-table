@@ -1,4 +1,5 @@
 import { Meta, Source } from '@storybook/addon-docs/blocks';
+import { IntegrationGuide } from '../.storybook/integration-guide.js';
 import packageJson from '../package.json';
 
 <Meta title="Start here/Overview" />
@@ -15,21 +16,19 @@ Composable Finder workspaces, semantic React tables and independently resizable 
   <table className="storybook-guide-table" aria-label="Choose a Storybook example">
     <thead><tr><th scope="col">Goal</th><th scope="col">Start here</th><th scope="col">What to try</th></tr></thead>
     <tbody>
-      <tr><td>Build a Finder-style app</td><td><a href="./?path=/docs/examples-finder--docs" target="_top">Finder walkthrough</a></td><td>All five views, Five views, gestures, preview and app-owned commands</td></tr>
+      <tr><td>Build a Finder-style app</td><td><a href="./?path=/docs/examples-finder--docs" target="_top">Finder walkthrough</a></td><td>Five views, previews and file commands</td></tr>
       <tr><td>Compose your own Finder</td><td><a href="./?path=/docs/puppertino-finder-composition--docs" target="_top">Finder primitives</a></td><td>Reusable window, toolbar, sidebar, five views, tags and content slots</td></tr>
-      <tr><td>Explore table APIs</td><td><a href="./?path=/docs/puppertino-table--docs" target="_top">Table</a></td><td>Sorting, checkbox ranges, grouped headers, controlled state and external atoms</td></tr>
-      <tr><td>Load a hierarchy on expansion</td><td><a href="./?path=/docs/puppertino-outline-view--docs" target="_top">Outline view</a></td><td>Nested disclosure, sibling sorting, lazy children, retry and keyboard navigation</td></tr>
-      <tr><td>Arrange sidebar and detail panes</td><td><a href="./?path=/docs/puppertino-split-view--docs" target="_top">Split view</a></td><td>Horizontal/vertical resizing, compact navigation and hidden panes</td></tr>
-      <tr><td>Compose a custom browser</td><td><a href="./?path=/docs/puppertino-column-view--docs" target="_top">Column view</a></td><td>Controlled panel widths, native links, richer menus and density inheritance</td></tr>
+      <tr><td>Flat rows</td><td><a href="./?path=/docs/puppertino-table--docs" target="_top">Table</a></td><td>Flat rows, sorting and selection</td></tr>
+      <tr><td>Tree rows</td><td><a href="./?path=/docs/puppertino-outline-view--docs" target="_top">Outline view</a></td><td>Tree rows, disclosure and lazy loading</td></tr>
+      <tr><td>Pane layouts</td><td><a href="./?path=/docs/puppertino-split-view--docs" target="_top">Split view</a></td><td>Resizable panes and compact navigation</td></tr>
+      <tr><td>Folder paths</td><td><a href="./?path=/docs/puppertino-column-view--docs" target="_top">Column view</a></td><td>A folder path across adjacent columns</td></tr>
       <tr><td>Navigate between sections</td><td><a href="./?path=/docs/puppertino-sidebar--docs" target="_top">Sidebar</a></td><td>Grouped headings, native links/buttons, app-owned selection and touch sizing</td></tr>
       <tr><td>Assign shared tags</td><td><a href="./?path=/docs/puppertino-tag-picker--docs" target="_top">Tag picker</a></td><td>Mixed values, option data, optional creation and keyboard editing</td></tr>
     </tbody>
   </table>
 </div>
 
-Each component starts with **Playground**. Use **Controls** for variants and the shared **Theme** toolbar for light/dark. Row clicks and in-app controls stay synchronized with args. **Show code** provides public imports and working state wiring.
-
-Separate stories cover distinct integration recipes or responsive workflows. Regression-only stories stay indexed for browser tests and are excluded from navigation and Autodocs. Finder **Reset demo** restores files, selection and geometry while preserving view, theme and density.
+Open **Playground** to explore Controls, **Code** to copy a typed recipe, and **Interactions** to replay workflows. Use Theme and Viewport to compare appearance.
 
 The examples use [Phosphor Icons](https://phosphoricons.com/), following [Puppertino’s icon guidance](https://puppertino.com/docs/icons/). Toolbar symbols use regular weight; selected views use fill. Icon slots remain application-owned React nodes.
 
@@ -59,13 +58,18 @@ export function Files() {
 
 ## Choose the right ownership
 
-Sorting automatically orders the supplied rows by default. Set `manualSorting` when supplying a server page or when your application owns row ordering. Sorting state ownership is independent: local sorting works with internal state, controlled values or external atoms.
+<IntegrationGuide />
 
-The library owns table semantics, column/panel sizing gestures, selection primitives, density and menu behavior. Your app owns data fetching, folder routes, file moves, preview content and command authorization. Drag/drop in the Finder example uses native HTML events and in-memory state.
+Your app owns data, routes, previews and commands. Components own rendering, navigation and gestures.
+
+<details>
+<summary>Compatibility and styling</summary>
 
 Omitted density inherits an enclosing `DensityScope` through CSS custom properties. Explicit presets start a new scope; partial metrics override just the supplied values. Scoped table rules require CSS `@scope` support: Chrome/Edge 118+, Safari 17.4+, Firefox 146+.
 
 React and React DOM (`^19.3.0`), TanStack Table and Puppertino are peers. Base UI is a runtime dependency for context menus. Import Puppertino's dark-mode CSS when using `.p-dark-mode`. No React provider is needed for density.
+
+</details>
 
 ## More detail
 

@@ -3,14 +3,9 @@ import { useState } from 'react';
 import { useArgs } from 'storybook/preview-api';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { ResettableExample } from '../.storybook/resettable-example.js';
-import { tagPickerRecipe } from '../.storybook/tag-picker-recipe.js';
+import { standardOptions, tagOptions, tagPickerSource } from '../.storybook/tag-picker-recipe.js';
 import { type TagOption, TagPicker, type TagPickerProps } from './index.js';
 
-const standardOptions: TagOption[] = [
-  { id: 'review', label: 'Review' },
-  { id: 'work', label: 'Work' },
-  { id: 'alpine', label: 'Project Alpine' },
-];
 interface PickerExampleProps extends TagPickerProps {
   optionSet: 'standard' | 'longLabels' | 'disabledTags' | 'custom';
   allowCreation: boolean;
@@ -23,21 +18,7 @@ function PickerExample({
   ...props
 }: PickerExampleProps) {
   const [created, setCreated] = useState<TagOption[]>([]);
-  const base =
-    optionSet === 'custom'
-      ? options
-      : optionSet === 'longLabels'
-        ? standardOptions.map((option) =>
-            option.id === 'review'
-              ? {
-                  ...option,
-                  label: 'A very long project name that wraps without widening the popover',
-                }
-              : option,
-          )
-        : optionSet === 'disabledTags'
-          ? standardOptions.map((option) => ({ ...option, disabled: option.id !== 'alpine' }))
-          : standardOptions;
+  const base = tagOptions(optionSet, options);
   return (
     <TagPicker
       {...props}
@@ -62,7 +43,14 @@ const meta = {
   parameters: {
     layout: 'centered',
     docs: {
-      source: { type: 'code', language: 'tsx', code: tagPickerRecipe },
+      source: {
+        type: 'dynamic',
+        language: 'tsx',
+        transform: (
+          _code: string,
+          context: { args: PickerExampleProps; unmappedArgs?: PickerExampleProps },
+        ) => tagPickerSource(context.unmappedArgs ?? context.args),
+      },
       description: {
         component:
           'Controlled tag assignment with token navigation, mixed state, native popover placement and optional app-owned creation. Use optionSet and allowCreation for variants in this Playground.',
@@ -156,24 +144,30 @@ type Story = StoryObj<typeof meta>;
 export const Assigned: Story = { name: 'Playground' };
 export const KeyboardWorkflow: Story = {
   tags: ['!dev', '!autodocs'],
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     await expect(canvas.queryByRole('dialog')).toBeNull();
 
-    await userEvent.click(canvas.getByRole('button', { name: 'Tags' }));
-    const input = canvas.getByRole('combobox', { name: 'Tag name' });
-    await userEvent.type(input, 'review');
-    await expect(canvas.queryByRole('option', { name: /Create tag/ })).toBeNull();
-    await userEvent.clear(input);
-    await userEvent.keyboard('{ArrowDown}{Enter}');
-    await expect(canvas.getByRole('button', { name: 'Remove tag Work' })).toBeVisible();
-    await userEvent.keyboard('{Backspace}');
-    await expect(canvas.getByRole('button', { name: 'Remove tag Work' })).toHaveFocus();
-    await userEvent.keyboard('{Backspace}');
-    await expect(canvas.queryByRole('button', { name: 'Remove tag Work' })).toBeNull();
-    await expect(input).toHaveFocus();
-    await userEvent.keyboard('{Escape}');
-    await expect(canvas.getByRole('button', { name: 'Tags' })).toHaveFocus();
+    await step('Open the picker and filter existing tags', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Tags' }));
+      const input = canvas.getByRole('combobox', { name: 'Tag name' });
+      await userEvent.type(input, 'review');
+      await expect(canvas.queryByRole('option', { name: /Create tag/ })).toBeNull();
+      await userEvent.clear(input);
+    });
+    await step('Choose a tag, then remove its token with Backspace', async () => {
+      await userEvent.keyboard('{ArrowDown}{Enter}');
+      await expect(canvas.getByRole('button', { name: 'Remove tag Work' })).toBeVisible();
+      await userEvent.keyboard('{Backspace}');
+      await expect(canvas.getByRole('button', { name: 'Remove tag Work' })).toHaveFocus();
+      await userEvent.keyboard('{Backspace}');
+      await expect(canvas.queryByRole('button', { name: 'Remove tag Work' })).toBeNull();
+      await expect(canvas.getByRole('combobox', { name: 'Tag name' })).toHaveFocus();
+    });
+    await step('Escape restores focus to the trigger', async () => {
+      await userEvent.keyboard('{Escape}');
+      await expect(canvas.getByRole('button', { name: 'Tags' })).toHaveFocus();
+    });
   },
 };
 export const ClippedContainer: Story = {

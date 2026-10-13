@@ -342,32 +342,6 @@ async function checkStories() {
       await all.uncheck();
       assert.equal(await page.locator('tbody input:checked').count(), 0);
     }
-    if (story === 'paginated-selection') {
-      const all = page.getByRole('checkbox', { name: 'Select all visible rows', exact: true });
-      const rows = page.getByRole('checkbox', { name: /^Select Person/ });
-      const total = page.getByLabel('Total selected');
-      assert.equal(await all.isChecked(), false);
-      await rows.first().check();
-      assert.equal(await all.getAttribute('aria-checked'), 'mixed');
-      assert.equal(await all.evaluate((input) => (input as HTMLInputElement).indeterminate), true);
-      await all.press('Space');
-      assert.equal(await all.isChecked(), true);
-      assert.equal(await total.textContent(), '2');
-      await page.getByRole('button', { name: 'Switch page' }).click();
-      assert.equal(await all.isChecked(), false);
-      assert.equal(await all.getAttribute('aria-checked'), 'false');
-      await all.check();
-      assert.equal(await total.textContent(), '4');
-      await all.uncheck();
-      assert.equal(await total.textContent(), '2', 'clearing a page preserves other pages');
-      await page.getByRole('button', { name: 'Switch page' }).click();
-      assert.equal(await all.isChecked(), true);
-      await rows.first().uncheck();
-      assert.equal(await all.getAttribute('aria-checked'), 'mixed');
-      await all.check();
-      await all.uncheck();
-      assert.equal(await total.textContent(), '0');
-    }
     if (story === 'empty' || story === 'disabled') {
       assert.equal(
         await page

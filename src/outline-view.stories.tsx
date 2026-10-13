@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useLayoutEffect, useState } from 'react';
 import { useArgs } from 'storybook/preview-api';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { outlinePlaygroundSource } from '../.storybook/playground-source.js';
 import { ResettableExample } from '../.storybook/resettable-example.js';
 import { tableRecipes } from '../.storybook/table-sources.js';
 import { OutlineViewExample, type OutlineViewExampleProps } from '../demo/outline-view-example.js';
@@ -119,7 +120,12 @@ const meta = {
   },
   parameters: {
     docs: {
-      source: { language: 'tsx', type: 'code', code: tableRecipes.outline },
+      source: {
+        language: 'tsx',
+        type: 'dynamic',
+        transform: (_code: string, context: { args: OutlineViewExampleProps }) =>
+          outlinePlaygroundSource(tableRecipes.outline, context.args),
+      },
       description: {
         component:
           'Hierarchical rows with disclosure in the first column, sorting within each sibling group, keyboard navigation, selection and cancellable app-owned loadChildren. Option-click recursively expands or collapses a branch. Use the Theme toolbar for dark mode.',
@@ -170,35 +176,41 @@ export const LoadingAndRetry = {
 
 export const KeyboardAndSelection = {
   tags: ['!dev', '!autodocs'],
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const grid = canvas.getByRole('treegrid', { name: 'Document hierarchy' });
-    await userEvent.click(canvas.getByRole('button', { name: 'Expand Projects' }));
-    await canvas.findByRole('button', { name: 'Expand Source' });
-    await userEvent.keyboard('{ArrowRight}');
-    await expect(canvas.getByRole('row', { name: /Source/ })).toHaveFocus();
-    await userEvent.keyboard('{ArrowRight}');
-    await canvas.findByRole('checkbox', { name: 'Select index.ts' });
-    await userEvent.keyboard('{ArrowRight}');
-    await expect(canvas.getByRole('row', { name: /index.ts/ })).toHaveFocus();
-    await userEvent.keyboard('{ArrowLeft}');
-    await expect(canvas.getByRole('row', { name: /Source/ })).toHaveFocus();
-    await userEvent.click(canvas.getByRole('checkbox', { name: 'Select all visible rows' }));
-    await expect(
-      within(grid)
-        .getAllByRole('checkbox')
-        .every((input) => (input as HTMLInputElement).checked),
-    ).toBe(true);
-    await userEvent.click(canvas.getByRole('button', { name: 'Sort by Name' }));
-    const names = within(grid)
-      .getAllByRole('row')
-      .slice(1)
-      .map((row) => row.textContent);
-    await expect(names[0]).toContain('Archive');
-    await expect(names[1]).toContain('Projects');
-    await expect(names[2]).toContain('package.json');
-    await expect(names[3]).toContain('Source');
-    await expect(names[4]).toContain('cell.tsx');
+    await step('Expand and navigate the hierarchy', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Expand Projects' }));
+      await canvas.findByRole('button', { name: 'Expand Source' });
+      await userEvent.keyboard('{ArrowRight}');
+      await expect(canvas.getByRole('row', { name: /Source/ })).toHaveFocus();
+      await userEvent.keyboard('{ArrowRight}');
+      await canvas.findByRole('checkbox', { name: 'Select index.ts' });
+      await userEvent.keyboard('{ArrowRight}');
+      await expect(canvas.getByRole('row', { name: /index.ts/ })).toHaveFocus();
+      await userEvent.keyboard('{ArrowLeft}');
+      await expect(canvas.getByRole('row', { name: /Source/ })).toHaveFocus();
+    });
+    await step('Select every visible eligible row', async () => {
+      await userEvent.click(canvas.getByRole('checkbox', { name: 'Select all visible rows' }));
+      await expect(
+        within(grid)
+          .getAllByRole('checkbox')
+          .every((input) => (input as HTMLInputElement).checked),
+      ).toBe(true);
+    });
+    await step('Sort siblings while preserving their hierarchy', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Sort by Name' }));
+      const names = within(grid)
+        .getAllByRole('row')
+        .slice(1)
+        .map((row) => row.textContent);
+      await expect(names[0]).toContain('Archive');
+      await expect(names[1]).toContain('Projects');
+      await expect(names[2]).toContain('package.json');
+      await expect(names[3]).toContain('Source');
+      await expect(names[4]).toContain('cell.tsx');
+    });
   },
 } satisfies Story;
 export const Disabled = {
@@ -208,17 +220,23 @@ export const Disabled = {
 
 export const CancellationAndCaching = {
   tags: ['!dev', '!autodocs'],
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Expand Projects' }));
-    await userEvent.click(canvas.getByRole('button', { name: 'Collapse Projects' }));
-    await expect(canvas.queryByRole('button', { name: 'Expand Source' })).toBeNull();
-    await userEvent.click(canvas.getByRole('button', { name: 'Expand Projects' }));
-    await canvas.findByRole('button', { name: 'Expand Source' });
-    await expect(canvas.getByLabelText('Child requests')).toHaveTextContent('2 requests');
-    await userEvent.click(canvas.getByRole('button', { name: 'Collapse Projects' }));
-    await userEvent.click(canvas.getByRole('button', { name: 'Expand Projects' }));
-    await expect(canvas.getByRole('button', { name: 'Expand Source' })).toBeInTheDocument();
-    await expect(canvas.getByLabelText('Child requests')).toHaveTextContent('2 requests');
+    await step('Cancel an unfinished request', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Expand Projects' }));
+      await userEvent.click(canvas.getByRole('button', { name: 'Collapse Projects' }));
+      await expect(canvas.queryByRole('button', { name: 'Expand Source' })).toBeNull();
+    });
+    await step('Retry and cache the completed result', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Expand Projects' }));
+      await canvas.findByRole('button', { name: 'Expand Source' });
+      await expect(canvas.getByLabelText('Child requests')).toHaveTextContent('2 requests');
+    });
+    await step('Reopen without another request', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Collapse Projects' }));
+      await userEvent.click(canvas.getByRole('button', { name: 'Expand Projects' }));
+      await expect(canvas.getByRole('button', { name: 'Expand Source' })).toBeInTheDocument();
+      await expect(canvas.getByLabelText('Child requests')).toHaveTextContent('2 requests');
+    });
   },
 } satisfies Story;
