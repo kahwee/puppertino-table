@@ -405,7 +405,7 @@ export const DelegatedMenus: Story = {
   },
 };
 export const DelegatedTableMenus: Story = { args: { delegated: true, tableView: true } };
-export const CustomStyling: StoryObj = {
+export const CustomStyling: Story = {
   render: () => (
     <DensityScope
       density="comfortable"
@@ -539,7 +539,7 @@ function DensityInheritanceExample() {
     </main>
   );
 }
-export const DensityInheritance: StoryObj = {
+export const DensityInheritance: Story = {
   parameters: { controls: { disable: true } },
   render: () => <DensityInheritanceExample />,
 };

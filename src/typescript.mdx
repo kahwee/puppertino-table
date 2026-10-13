@@ -1,0 +1,52 @@
+import { Meta, Source, Canvas } from '@storybook/addon-docs/blocks';
+import * as TypedStories from './typed-table.stories';
+import { tableRecipes } from '../.storybook/table-sources';
+
+<Meta title="Start here/TypeScript" />
+
+# TypeScript usage
+
+Start with your application's row model. `createPuppertinoColumnHelper<Asset>()` checks accessor keys and infers each cell's value: Size receives a number and Date Added receives a Date. Keep dates as Date values for chronological sorting; format them inside the cell.
+
+## Typed rows, columns and props
+
+Save this complete example as `typed-table-example.tsx`. `satisfies PuppertinoTableProps<Asset>` validates options and row callbacks while preserving inference. The recipe is compiled against the installed package during `pnpm check`.
+
+<Source language="tsx" code={tableRecipes.typed} />
+
+## Write a typed Storybook story
+
+Save this next to the example as `assets.stories.tsx`. Bind the generic component to your row model before passing it to `Meta`. Put required props in metadata args, and derive `StoryObj<typeof meta>` so each story inherits those defaults. Use `satisfies Story` to check overrides and infer play/decorator arguments. See [Storybook's TypeScript documentation](https://storybook.js.org/docs/writing-stories/typescript).
+
+<Source language="tsx" code={`import type { Meta, StoryObj } from '@storybook/react-vite';
+import { PuppertinoTable } from 'puppertino-table';
+import { type Asset, assetTableProps } from './typed-table-example';
+
+const AssetTable = PuppertinoTable<Asset>;
+const meta = {
+  title: 'App/Assets',
+  component: AssetTable,
+  args: assetTableProps,
+  argTypes: {
+    data: { control: false },
+    columns: { control: false },
+    density: { control: 'inline-radio', options: ['native', 'compact', 'comfortable'] },
+  },
+} satisfies Meta<typeof AssetTable>;
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default = {} satisfies Story;
+export const Compact = { args: { density: 'compact' } } satisfies Story;
+export const Disabled = { args: { disabled: true } } satisfies Story;
+`} />
+
+Use Controls for serializable behavior options. Columns contain functions and dates need deliberate construction; keep those fixtures in TypeScript. Change density, selection or disabled mode in the full canvas to explore the same component props your app will use.
+
+<Canvas of={TypedStories.Default} />
+
+## State ownership
+
+Automatic sorting is the default. React-controlled sorting uses `SortingState` with `useState<SortingState>([])`; selection uses `RowSelectionState`. Set `manualSorting` when the app supplies an already ordered server page. External atoms and controlled props cannot own the same state slice. The package checks these conflicts at compile time.
+
+<a href="./?path=/docs/puppertino-table--docs" target="_top">Explore state ownership and gesture recipes</a> · <a href="./?path=/story/puppertino-typed-table--default" target="_top">Open the typed table canvas</a>

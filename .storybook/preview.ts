@@ -18,11 +18,11 @@ const preview: Preview = {
       storySort: {
         order: [
           'Start here',
-          ['Overview'],
+          ['Overview', 'TypeScript'],
           'Examples',
           ['Finder'],
           'Puppertino',
-          ['Table', 'Resource browser'],
+          ['Typed table', 'Table', 'Resource browser'],
         ],
       },
     },

@@ -78,6 +78,26 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   );
   await page.screenshot({ path: `${evidence}/finder-walkthrough.png` });
 
+  console.log('Checking Storybook docs: typed integration guide');
+  await page.goto(`${base}/iframe.html?id=start-here-typescript--docs&viewMode=docs`);
+  await page.locator('#typescript-usage').waitFor();
+  await page.getByRole('table', { name: 'Assets', exact: true }).waitFor();
+  await page.waitForFunction(() => {
+    const sources = Array.from(document.querySelectorAll('pre'), (node) => node.textContent ?? '');
+    return [
+      'satisfies PuppertinoTableProps<Asset>',
+      'satisfies Meta<typeof AssetTable>',
+      'StoryObj<typeof meta>',
+    ].every((marker) => sources.some((source) => source.includes(marker)));
+  });
+  const typedSources = await page.locator('pre').allTextContents();
+  assert.ok(
+    typedSources.some((source) => source.includes('satisfies PuppertinoTableProps<Asset>')),
+  );
+  assert.ok(typedSources.some((source) => source.includes('satisfies Meta<typeof AssetTable>')));
+  assert.ok(typedSources.some((source) => source.includes('StoryObj<typeof meta>')));
+  assert.ok(typedSources.every((source) => !source.includes('../src/')));
+
   console.log('Checking Storybook docs: overview and manager navigation');
   await checkOverviewInstallation(page, base);
   assert.equal(

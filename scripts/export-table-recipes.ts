@@ -10,6 +10,7 @@ const [
   dateFormat,
   statusExample,
   navigationExample,
+  typedExample,
 ] = await Promise.all(
   [
     'demo/fixtures.tsx',
@@ -19,6 +20,7 @@ const [
     'demo/date-format.ts',
     'demo/table-status-example.tsx',
     'demo/keyboard-navigation-example.tsx',
+    'demo/typed-table-example.tsx',
   ].map((file) => readFile(file, 'utf8')),
 );
 const recipes = createTableRecipes({
@@ -29,6 +31,7 @@ const recipes = createTableRecipes({
   dateFormat,
   statusExample,
   navigationExample,
+  typedExample,
 });
 const directory = process.argv[2];
 if (!directory) throw new Error('Provide the installed consumer directory.');

@@ -6,6 +6,7 @@ export interface TableRecipeSources {
   dateFormat: string;
   statusExample: string;
   navigationExample: string;
+  typedExample: string;
 }
 
 export function createTableRecipes({
@@ -16,6 +17,7 @@ export function createTableRecipes({
   dateFormat,
   statusExample,
   navigationExample,
+  typedExample,
 }: TableRecipeSources) {
   // Reuse the rendered examples so documentation cannot drift from their state wiring.
   const peopleFixture = fixtures
@@ -85,6 +87,7 @@ ${owner}  });
 }`;
   }
   return {
+    typed: `'use client';\n${styles}\n${typedExample.replace("'../src/index.js'", "'puppertino-table'")}`,
     controlled: recipe(
       `import { useState } from 'react';
 import type { RowSelectionState, SortingState } from '@tanstack/react-table';
