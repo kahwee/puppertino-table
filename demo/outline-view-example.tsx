@@ -64,8 +64,17 @@ const columns = helper.columns([
 
 export type OutlineViewExampleProps = Pick<
   OutlineViewProps<OutlineItem>,
-  'disabled' | 'density' | 'selectable' | 'selectionCheckboxes' | 'resizable' | 'manualSorting'
->;
+  | 'disabled'
+  | 'density'
+  | 'selectable'
+  | 'selectionCheckboxes'
+  | 'resizable'
+  | 'manualSorting'
+  | 'expanded'
+  | 'rowSelection'
+  | 'onExpandedChange'
+  | 'onRowSelectionChange'
+> & { loadingDelay?: number; simulateError?: boolean; foldersSelectable?: boolean };
 export function OutlineViewExample({
   disabled = false,
   density = 'comfortable',
@@ -73,9 +82,18 @@ export function OutlineViewExample({
   selectionCheckboxes = true,
   resizable = true,
   manualSorting = false,
+  loadingDelay = 600,
+  simulateError = true,
+  foldersSelectable = true,
+  expanded: controlledExpanded,
+  rowSelection,
+  onExpandedChange,
+  onRowSelectionChange,
 }: OutlineViewExampleProps) {
-  const [selection, setSelection] = useState<RowSelectionState>({});
-  const [expanded, setExpanded] = useState<OutlineExpandedState>({});
+  const [localSelection, setSelection] = useState<RowSelectionState>({});
+  const [localExpanded, setExpanded] = useState<OutlineExpandedState>({});
+  const selection = rowSelection ?? localSelection;
+  const expanded = controlledExpanded ?? localExpanded;
   const [activePane, setActivePane] = useState('outline');
   const [requests, setRequests] = useState(0);
   const [revision, setRevision] = useState(0);
@@ -98,10 +116,11 @@ export function OutlineViewExample({
       const timer = setTimeout(() => {
         signal.removeEventListener('abort', abort);
         resolve();
-      }, 600);
+      }, loadingDelay);
       signal.addEventListener('abort', abort, { once: true });
     });
-    if (item.id === 'archive' && attempt === 1) throw new Error('Example unavailable response');
+    if (simulateError && item.id === 'archive' && attempt === 1)
+      throw new Error('Example unavailable response');
     return children[item.id] ?? [];
   };
   return (
@@ -158,15 +177,23 @@ export function OutlineViewExample({
                   loadChildren={loadChildren}
                   cacheKey={String(revision)}
                   expanded={expanded}
-                  onExpandedChange={setExpanded}
+                  onExpandedChange={(next) => {
+                    setExpanded(next);
+                    onExpandedChange?.(next);
+                  }}
                   ariaLabel="Document hierarchy"
                   density={density}
                   selectable={selectable}
+                  isRowSelectable={foldersSelectable ? undefined : (item) => item.kind !== 'Folder'}
                   selectionCheckboxes={selectionCheckboxes}
                   resizable={resizable}
                   manualSorting={manualSorting}
                   rowSelection={selection}
-                  onRowSelectionChange={setSelection}
+                  onRowSelectionChange={(updater) => {
+                    const next = typeof updater === 'function' ? updater(selection) : updater;
+                    setSelection(next);
+                    onRowSelectionChange?.(next);
+                  }}
                   disabled={disabled}
                 />
               ),

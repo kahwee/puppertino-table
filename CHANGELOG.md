@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Improve Storybook around reliable typed Playgrounds, synchronized Outline disclosure/selection and Split pane state, callback spies, named interaction steps, conditional controls, native Code/Viewport tools, component scenario/integration/keyboard guidance, and complete typed Finder/Tag Picker recipes. Consolidate visual and data variants into args while preserving hidden regression coverage.
+
 ## 0.12.0 — 2026-10-13
 
 - Add Outline to both Finder examples and shared view metadata, preserving the established four-view API for existing icon maps. Share file IDs, selection, sorting and column sizing across List/Outline; retain search, tags, history, rename, Quick Look and file commands.

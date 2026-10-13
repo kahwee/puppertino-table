@@ -2,6 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { finderViewRecipes } from '../.storybook/finder-recipes.js';
 import { createTableRecipes } from '../.storybook/table-recipes.js';
+import { tagPickerRecipe } from '../.storybook/tag-picker-recipe.js';
 
 const [
   fixtures,
@@ -50,6 +51,9 @@ const files = Object.entries({
   'finder-list': finderViewRecipes.list,
   'finder-outline': finderViewRecipes.outline,
   'finder-columns': finderViewRecipes.columns,
+  'finder-icons': finderViewRecipes.icons,
+  'finder-gallery': finderViewRecipes.gallery,
+  'tag-picker': tagPickerRecipe,
 }).map(([name, source]) => ({
   name: `recipe-${name}.tsx`,
   source,
@@ -62,6 +66,7 @@ await writeFile(
 declare module '@codedgar/puppertino/lists';
 declare module '@codedgar/puppertino/forms';
 declare module '@codedgar/puppertino/sidebars';
+declare module '@codedgar/puppertino/popovers';
 declare module 'puppertino-table/style.css';
 `,
 );

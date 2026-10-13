@@ -101,6 +101,7 @@ const meta = {
     },
     selectionCheckboxes: {
       control: 'boolean',
+      if: { arg: 'selectable' },
       description: 'Show the selection column when selectable; hide for row-only gestures.',
       table: { defaultValue: { summary: String(tableDefaults.selectionCheckboxes) } },
     },

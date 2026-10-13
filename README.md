@@ -227,7 +227,7 @@ Checkboxes and row gestures share a fixed range anchor. Pass `selectionAnchor` t
 
 ## Storybook playgrounds
 
-Each component opens with a typed Playground. Use Controls for prop variants, the shared Theme toolbar for appearance, and Show code for public integration recipes. Regression-only canvases are excluded from navigation and Autodocs. Column view combines table/column layouts, internal/controlled/read-only/persistent widths, density and menu triggers. Tag picker offers option datasets, mixed values, disabled tags and optional creation. Finder views and checkbox settings use args; the Theme toolbar applies across stories. Distinct API recipes and interaction workflows keep their own examples.
+Each component opens with a typed Playground that stays at its declared defaults. Component docs pair live Controls with concrete scenarios, integration decisions and keyboard guidance. Use Controls for prop variants, shared Theme and Viewport toolbars for appearance and responsive layouts, and the native Code panel for complete public integration recipes. Outline disclosure/selection and Split pane visibility/navigation synchronize with args and expose callbacks in Actions. Named Interactions steps make workflows replayable. Regression-only canvases are excluded from navigation and Autodocs. Column view combines table/column layouts, internal/controlled/read-only/persistent widths, density and menu triggers. Tag picker offers option datasets, mixed values, disabled tags and optional creation. Finder views and checkbox settings use args; the Theme toolbar applies across stories. Distinct API recipes and interaction workflows keep their own examples.
 
 ## Develop
 

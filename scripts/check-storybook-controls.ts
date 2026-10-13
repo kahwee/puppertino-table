@@ -188,6 +188,50 @@ export async function checkPlaygroundControls(page: Page, base: string, evidence
     const frame = document.querySelector<HTMLIFrameElement>('#storybook-preview-iframe');
     return frame?.contentDocument?.querySelector('[data-pt-density="compact"]') != null;
   });
+  await frame.getByRole('button', { name: 'Expand Projects', exact: true }).click();
+  await frame.getByRole('button', { name: 'Expand Source', exact: true }).waitFor();
+  await page.waitForFunction(
+    () =>
+      (window as unknown as { playgroundArgs: Record<string, Record<string, unknown>> })
+        .playgroundArgs['puppertino-outline-view--default']?.expanded != null &&
+      (
+        window as unknown as {
+          playgroundArgs: Record<string, { expanded?: Record<string, boolean> }>;
+        }
+      ).playgroundArgs['puppertino-outline-view--default']?.expanded?.projects === true,
+  );
+  await page.locator('input[name="foldersSelectable"]').press('Space');
+  await page.waitForFunction(() => {
+    const document = window.document.querySelector<HTMLIFrameElement>(
+      '#storybook-preview-iframe',
+    )?.contentDocument;
+    return (
+      document?.querySelector<HTMLInputElement>('input[aria-label="Select Projects"]')?.disabled ===
+      true
+    );
+  });
+  await frame.getByRole('checkbox', { name: 'Select package.json', exact: true }).click();
+  await page.waitForFunction(
+    () =>
+      (
+        window as unknown as {
+          playgroundArgs: Record<string, { rowSelection?: Record<string, boolean> }>;
+        }
+      ).playgroundArgs['puppertino-outline-view--default']?.rowSelection?.package === true,
+  );
+  await page.locator('input[name="simulateError"]').press('Space');
+  await frame.getByRole('button', { name: 'Expand Archive', exact: true }).click();
+  await frame.getByRole('checkbox', { name: 'Select Meeting notes.txt', exact: true }).waitFor();
+  assert.equal(await frame.getByRole('button', { name: 'Retry Archive' }).count(), 0);
+  await page.getByRole('tab', { name: /^Actions/ }).click();
+  await page
+    .getByRole('treeitem', { name: /onExpandedChange/ })
+    .first()
+    .waitFor();
+  await page.getByRole('tab', { name: 'Code', exact: true }).click();
+  await page.waitForFunction(() => document.body.textContent?.includes('loadChildren'));
+  assert.ok((await page.locator('body').innerText()).includes("from 'puppertino-table'"));
+  await page.getByRole('tab', { name: /^Controls/ }).click();
   await page.screenshot({ path: `${evidence}/outline-playground-controls.png` });
 
   await page.goto(`${base}/?path=/story/puppertino-split-view--default`);
@@ -204,9 +248,42 @@ export async function checkPlaygroundControls(page: Page, base: string, evidence
   await page.locator('input[name="resizable"]').press('Space');
   await frame.getByRole('separator').first().waitFor({ state: 'hidden' });
   assert.equal(await frame.getByRole('separator').count(), 0, 'Split resizing follows its arg');
+  await page.locator('input[name="control-orientation"][value="horizontal"]').check();
+  await page.locator('input[name="control-container"][value="compact"]').check();
+  await page.waitForFunction(
+    () =>
+      document
+        .querySelector<HTMLIFrameElement>('#storybook-preview-iframe')
+        ?.contentDocument?.querySelector('.pt-split-view')
+        ?.getAttribute('data-compact') === 'true',
+  );
+  await frame.getByRole('button', { name: 'Detail', exact: true }).click();
+  await page.waitForFunction(
+    () =>
+      document.querySelector<HTMLInputElement>('input[name="control-activePaneId"][value="detail"]')
+        ?.checked,
+  );
+  await page.locator('input[name="control-activePaneId"][value="sidebar"]').check();
+  await frame.getByRole('region', { name: 'Sidebar', exact: true }).waitFor();
+  await frame.getByRole('button', { name: 'Hide sidebar', exact: true }).click();
+  await page.waitForFunction(
+    () => document.querySelector<HTMLInputElement>('input[name="sidebarHidden"]')?.checked,
+  );
+  await page.locator('input[name="sidebarHidden"]').press('Space');
+  await frame.getByRole('region', { name: 'Sidebar', exact: true }).waitFor();
   await page.screenshot({ path: `${evidence}/split-playground-controls.png` });
 
+  await page.getByRole('button', { name: /^Viewport size/ }).click();
+  await page.getByRole('option', { name: 'Small mobile', exact: true }).click();
+  await page.waitForFunction(
+    () =>
+      document.querySelector<HTMLIFrameElement>('#storybook-preview-iframe')?.contentWindow
+        ?.innerWidth === 320,
+  );
+  await page.getByRole('button', { name: /^Viewport size/ }).click();
+  await page.getByRole('option', { name: 'Reset viewport', exact: true }).click();
+
   console.log(
-    'Playground Controls passed: live layout, width ownership, synchronized density/narrow/resizing, preserved workspace state, mixed and disabled tags, optional creation, and Finder view/density changes that preserve file moves.',
+    'Playground Controls passed: live layout, width ownership, synchronized density/narrow/resizing, preserved workspace state, mixed and disabled tags, optional creation, controlled Outline state/loading/eligibility, synchronized Split panes, native Actions/Code/Viewport tools, and Finder view/density changes that preserve file moves.',
   );
 }

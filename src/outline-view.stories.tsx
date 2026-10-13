@@ -1,7 +1,25 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, within } from 'storybook/test';
+import { useLayoutEffect, useState } from 'react';
+import { useArgs } from 'storybook/preview-api';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import { tableRecipes } from '../.storybook/table-sources.js';
-import { OutlineViewExample } from '../demo/outline-view-example.js';
+import { OutlineViewExample, type OutlineViewExampleProps } from '../demo/outline-view-example.js';
+
+/** Commit disclosure immediately; Storybook broadcasts the same args asynchronously. */
+function OutlinePlayground(props: OutlineViewExampleProps) {
+  const [expanded, setExpanded] = useState(props.expanded);
+  useLayoutEffect(() => setExpanded(props.expanded), [props.expanded]);
+  return (
+    <OutlineViewExample
+      {...props}
+      expanded={expanded}
+      onExpandedChange={(next) => {
+        setExpanded(next);
+        props.onExpandedChange?.(next);
+      }}
+    />
+  );
+}
 
 const meta = {
   title: 'Puppertino/Outline view',
@@ -13,22 +31,84 @@ const meta = {
     selectionCheckboxes: true,
     resizable: true,
     manualSorting: false,
+    loadingDelay: 600,
+    simulateError: true,
+    foldersSelectable: true,
+    expanded: {},
+    rowSelection: {},
+    onExpandedChange: fn(),
+    onRowSelectionChange: fn(),
+  },
+  render: function Playground(args) {
+    const [, updateArgs] = useArgs<typeof args>();
+    return (
+      <OutlinePlayground
+        {...args}
+        onExpandedChange={(expanded) => {
+          args.onExpandedChange?.(expanded);
+          updateArgs({ expanded });
+        }}
+        onRowSelectionChange={(updater) => {
+          const rowSelection =
+            typeof updater === 'function' ? updater(args.rowSelection ?? {}) : updater;
+          args.onRowSelectionChange?.(rowSelection);
+          updateArgs({ rowSelection });
+        }}
+      />
+    );
   },
   argTypes: {
-    disabled: { control: 'boolean', table: { category: 'Behavior' } },
-    selectable: { control: 'boolean', table: { category: 'Selection' } },
+    loadingDelay: {
+      type: 'number',
+      control: { type: 'range', min: 0, max: 2000, step: 100 },
+      description: 'Fictional API delay in milliseconds; change before expanding a new branch.',
+      table: { category: 'Loading scenario' },
+    },
+    simulateError: {
+      type: 'boolean',
+      control: 'boolean',
+      description: 'Archive fails its first request, then succeeds on retry.',
+      table: { category: 'Loading scenario' },
+    },
+    foldersSelectable: {
+      type: 'boolean',
+      control: 'boolean',
+      if: { arg: 'selectable' },
+      description: 'Allow groups to select, or keep selection to document leaves.',
+      table: { category: 'Selection' },
+    },
+    expanded: {
+      type: { name: 'object', value: {} },
+      control: 'object',
+      description: 'Controlled disclosure keyed by stable IDs.',
+      table: { category: 'Example state' },
+    },
+    rowSelection: {
+      type: { name: 'object', value: {} },
+      control: 'object',
+      description: 'Controlled selected IDs; hidden selections remain stored.',
+      if: { arg: 'selectable' },
+      table: { category: 'Example state' },
+    },
+    onExpandedChange: { control: false, table: { category: 'Events' } },
+    onRowSelectionChange: { control: false, table: { category: 'Events' } },
+    disabled: { type: 'boolean', control: 'boolean', table: { category: 'Behavior' } },
+    selectable: { type: 'boolean', control: 'boolean', table: { category: 'Selection' } },
     selectionCheckboxes: {
+      type: 'boolean',
       control: 'boolean',
       if: { arg: 'selectable' },
       table: { category: 'Selection' },
     },
     density: {
+      type: { name: 'enum', value: ['native', 'compact', 'comfortable'] },
       control: 'inline-radio',
       options: ['native', 'compact', 'comfortable'],
       table: { category: 'Appearance' },
     },
-    resizable: { control: 'boolean', table: { category: 'Sizing' } },
+    resizable: { type: 'boolean', control: 'boolean', table: { category: 'Sizing' } },
     manualSorting: {
+      type: 'boolean',
       control: 'boolean',
       description: 'Enable for server-owned sibling order.',
       table: { category: 'Sorting', defaultValue: { summary: 'false' } },
@@ -48,23 +128,43 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 export const Default = { name: 'Playground' } satisfies Story;
 export const LoadingAndRetry = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Expand Projects' }));
-    await expect(canvas.getByRole('status')).toHaveTextContent('Loading');
-    await expect(
-      canvas.findByRole('button', { name: 'Expand Source' }),
-    ).resolves.toBeInTheDocument();
-    await userEvent.click(canvas.getByRole('button', { name: 'Expand Archive' }));
-    await expect(
-      canvas.findByRole('button', { name: 'Retry Archive' }),
-    ).resolves.toBeInTheDocument();
-    await userEvent.click(canvas.getByRole('button', { name: 'Retry Archive' }));
-    await expect(
-      canvas.findByRole('checkbox', { name: 'Select Meeting notes.txt' }),
-    ).resolves.toBeInTheDocument();
+  name: 'Lazy loading workflow',
+  args: { loadingDelay: 600, simulateError: true },
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          'Replay the named Interactions steps to inspect loading, one failed request and retry. Change the same loading scenario in Playground Controls.',
+      },
+    },
+  },
+  play: async ({ canvas, args, step }) => {
+    await step('Load Projects and report controlled disclosure', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Expand Projects' }));
+      await expect(canvas.getByRole('status')).toHaveTextContent('Loading');
+      await expect(
+        canvas.findByRole('button', { name: 'Expand Source' }),
+      ).resolves.toBeInTheDocument();
+      await expect(args.onExpandedChange).toHaveBeenCalledWith(
+        expect.objectContaining({ projects: true }),
+      );
+    });
+    await step('Show an app-owned failure on Archive', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Expand Archive' }));
+      await expect(
+        canvas.findByRole('button', { name: 'Retry Archive' }),
+      ).resolves.toBeInTheDocument();
+    });
+    await step('Retry the same branch successfully', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Retry Archive' }));
+      await expect(
+        canvas.findByRole('checkbox', { name: 'Select Meeting notes.txt' }),
+      ).resolves.toBeInTheDocument();
+    });
   },
 } satisfies Story;
+
 export const KeyboardAndSelection = {
   tags: ['!dev', '!autodocs'],
   play: async ({ canvasElement }) => {

@@ -679,3 +679,12 @@ Column navigation, paths and item commands remain app-owned. `ColumnView` shares
 Both Finder examples compose the public `OutlineView`. The complete demo shares leaf IDs, selection anchors, sorting and a column-width atom with `TableView`; the hierarchy and file commands remain application-owned. Non-file group rows use `isRowSelectable(item)` to exclude them from selection. This optional predicate is available to complete tables and the shared hook too; eligibility never authorizes a command.
 
 `OutlineView` accepts the same `getRowProps` and `getCellProps` as `TableView`. Row attributes and classes compose with treegrid semantics, focus and selection. A custom `onClick` or `onKeyDown` can call `event.preventDefault()` to handle an application action before the internal selection/navigation handler. Disclosure controls and checkbox events remain isolated. Use row hooks for app context-menu, drag/drop and activation behavior.
+
+
+## Storybook authoring and exploration
+
+Start in each component’s Playground. Change serializable props in Controls, inspect `fn()` callback payloads in Actions, use Theme/Viewport for appearance and responsive layouts, and copy the complete public recipe from Code. The docs pair the live arg table with suggested scenarios, integration choices and keyboard behavior. See the [TypeScript and Storybook guide](https://kahwee.github.io/puppertino-table/?path=/docs/start-here-typescript--docs) for a complete controlled story file.
+
+Keep one Playground per component. Represent variants with typed args and conditional argTypes; keep functions, JSX and row schemas in TypeScript. A named render function can use `useArgs` to synchronize emitted changes. Call the supplied callback before updating args so Actions and `play` assertions observe the event. Outline’s `expanded` and `rowSelection` and Split View’s pane visibility and active-pane controls demonstrate this pattern.
+
+Reserve public stories for distinct integration contracts. Regression-only scenarios use `!dev` and `!autodocs` while retaining the default `test` tag. Keep scripted interactions off the primary Playground; use fixed regression args and `step` groups to make the Interactions trace readable. Wait for actual loading/focus states, and query the document for portaled menus. This repository typechecks complete public recipes against an installed tarball, exercises manager Controls and toolbar features, and runs all indexed stories, including hidden regressions, during `pnpm check`.

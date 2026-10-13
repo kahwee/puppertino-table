@@ -1,4 +1,7 @@
 const aliases = {
+  'puppertino-split-view--vertical': ['puppertino-split-view--default', 'orientation:vertical'],
+  'puppertino-split-view--compact': ['puppertino-split-view--default', 'container:compact'],
+  'puppertino-sidebar--touch': ['puppertino-sidebar--default', 'size:touch'],
   'examples-finder--outline-workspace': ['examples-finder--file-table', 'initialView:outline'],
   'examples-finder--column-workspace': ['examples-finder--file-table', 'initialView:columns'],
   'examples-finder--icon-workspace': ['examples-finder--file-table', 'initialView:icons'],

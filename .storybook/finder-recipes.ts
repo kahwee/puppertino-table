@@ -42,20 +42,35 @@ export function Workspace() {
     ]} />
   </DensityScope>;
 }`,
-  icons: `// Your app owns the icon grid and selected item.
-const menu = useContextMenu<string>();
-<div className="my-icon-grid">{files.map(file => <button key={file.id}
-  type="button" aria-pressed={selectedId === file.id}
-  onClick={() => setSelectedId(file.id)} {...menu.getTriggerProps(file.id)}>
-  <FileArtwork file={file} /><span>{file.name}</span>
-</button>)}</div>;`,
-  gallery: `// Your app renders the preview and filmstrip.
-<>
-<Preview file={files.find(file => file.id === selectedId)} />
-<section aria-label="Gallery files">{files.map(file => <button key={file.id}
-  type="button" aria-label={file.name} aria-pressed={selectedId === file.id}
-  onClick={() => setSelectedId(file.id)} {...menu.getTriggerProps(file.id)}>
-  <FileArtwork file={file} />
-</button>)}</section>
-</>;`,
+  icons: `'use client';
+import { useState } from 'react';
+import { FinderIconGrid, FinderIconItem } from 'puppertino-table';
+
+type FileItem = { id: string; name: string; kind: string };
+const files: FileItem[] = [{ id: 'brief', name: 'Project brief.pdf', kind: 'PDF document' }];
+export function IconCollection() {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  return <FinderIconGrid aria-label="Documents">{files.map(file =>
+    <FinderIconItem key={file.id} selected={selectedId === file.id}
+      description={file.kind} artwork={<span aria-hidden="true">📄</span>}
+      onClick={() => setSelectedId(file.id)}>{file.name}</FinderIconItem>
+  )}</FinderIconGrid>;
+}`,
+  gallery: `'use client';
+import { useState } from 'react';
+import { FinderGallery, FinderFilmstrip, FinderGalleryItem } from 'puppertino-table';
+
+type FileItem = { id: string; name: string; preview: string };
+const files: FileItem[] = [{ id: 'brief', name: 'Project brief.pdf', preview: 'App-owned document preview' }];
+export function GalleryCollection() {
+  const [selectedId, setSelectedId] = useState(files[0]?.id ?? '');
+  const selected = files.find(file => file.id === selectedId);
+  return <FinderGallery aria-label="Documents">
+    <article aria-label="Preview"><h2>{selected?.name}</h2><p>{selected?.preview}</p></article>
+    <FinderFilmstrip aria-label="Choose a document">{files.map(file =>
+      <FinderGalleryItem key={file.id} selected={selectedId === file.id}
+        aria-label={file.name} onClick={() => setSelectedId(file.id)}>{file.name}</FinderGalleryItem>
+    )}</FinderFilmstrip>
+  </FinderGallery>;
+}`,
 };

@@ -231,7 +231,7 @@ async function checkTableRecipes(page: Page, base: string) {
 async function checkFocusedViewDocs(page: Page, base: string) {
   for (const [component, count] of [
     ['outline-view', 2],
-    ['split-view', 2],
+    ['split-view', 1],
     ['sidebar', 1],
   ] as const) {
     await page.goto(`${base}/iframe.html?id=puppertino-${component}--docs&viewMode=docs`);
@@ -240,6 +240,11 @@ async function checkFocusedViewDocs(page: Page, base: string) {
       await page.locator('.sbdocs-preview').count(),
       count,
       `${component}: only focused examples appear in docs`,
+    );
+    await page.getByRole('table', { name: 'Playground scenarios' }).waitFor();
+    await page.getByRole('heading', { name: 'Integration', exact: true }).waitFor();
+    assert.ok(
+      (await page.locator('body').innerText()).includes('Inspect emitted callbacks in Actions.'),
     );
   }
   const preview = page.locator('.sbdocs-preview').first().locator('..');

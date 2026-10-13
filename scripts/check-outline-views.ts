@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import axe from 'axe-core';
-import type { Page } from 'playwright';
+import type { Locator, Page } from 'playwright';
+import { storyQuery } from './story-presets.mjs';
 import { setStorybookTheme } from './storybook-theme.mjs';
 
 declare global {
@@ -22,13 +23,26 @@ async function violations(page: Page) {
 export async function checkOutlineViews(page: Page, base: string, evidence: string) {
   await page.setViewportSize({ width: 1200, height: 800 });
   await page.goto(`${base}/iframe.html?id=puppertino-outline-view--default&viewMode=story`);
+  // Storybook broadcasts controlled args asynchronously; wait for the rendered value.
+  const setCheckbox = async (checkbox: Locator, checked: boolean) => {
+    if ((await checkbox.isChecked()) === checked) return;
+    const label = await checkbox.getAttribute('aria-label');
+    await checkbox.click();
+    await page.waitForFunction(
+      ({ label, checked }) =>
+        Array.from(document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')).find(
+          (input) => input.getAttribute('aria-label') === label,
+        )?.checked === checked,
+      { label, checked },
+    );
+  };
   const grid = page.getByRole('treegrid', { name: 'Document hierarchy' });
   await grid.waitFor();
   await page.getByRole('button', { name: 'Expand Projects', exact: true }).click();
   await page.getByRole('button', { name: 'Expand Source', exact: true }).waitFor();
   await page.getByRole('button', { name: 'Expand Source', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Select index.ts', exact: true }).waitFor();
-  await page.getByRole('checkbox', { name: 'Select index.ts', exact: true }).check();
+  await setCheckbox(page.getByRole('checkbox', { name: 'Select index.ts', exact: true }), true);
   const bulk = page.getByRole('checkbox', { name: 'Select all visible rows', exact: true });
   await page.getByRole('button', { name: 'Collapse Projects', exact: true }).click();
   assert.equal(
@@ -36,8 +50,8 @@ export async function checkOutlineViews(page: Page, base: string, evidence: stri
     'false',
     'hidden descendants do not affect the visible bulk state',
   );
-  await bulk.check();
-  await bulk.uncheck();
+  await setCheckbox(bulk, true);
+  await setCheckbox(bulk, false);
   await page.getByRole('button', { name: 'Expand Projects', exact: true }).click();
   assert.equal(
     await page.getByRole('checkbox', { name: 'Select index.ts', exact: true }).isChecked(),
@@ -74,7 +88,7 @@ export async function checkOutlineViews(page: Page, base: string, evidence: stri
     .click({ modifiers: ['Alt'] });
   await page.getByRole('checkbox', { name: 'Select index.ts', exact: true }).waitFor();
   assert.equal(await page.getByLabel('Child requests').textContent(), '2 requests');
-  await page.getByRole('checkbox', { name: 'Select index.ts', exact: true }).check();
+  await setCheckbox(page.getByRole('checkbox', { name: 'Select index.ts', exact: true }), true);
   for (const theme of ['light', 'dark']) {
     await setStorybookTheme(page, theme);
     assert.deepEqual(await violations(page), [], `outline ${theme}`);
@@ -112,9 +126,15 @@ export async function checkOutlineViews(page: Page, base: string, evidence: stri
     'cache invalidation fetches new children while retaining ID-based selection',
   );
   await page.setViewportSize({ width: 1200, height: 800 });
-  await page.goto(`${base}/iframe.html?id=puppertino-split-view--vertical&viewMode=story`);
+  await page.goto(`${base}/iframe.html?${storyQuery('puppertino-split-view--vertical')}`);
   const divider = page.getByRole('separator', { name: 'Resize Sidebar pane', exact: true });
   await divider.waitFor();
+  await page.waitForFunction(
+    () =>
+      document
+        .querySelector('[aria-label="Resize Sidebar pane"]')
+        ?.getAttribute('aria-orientation') === 'horizontal',
+  );
   const initial = Number(await divider.getAttribute('aria-valuenow'));
   await divider.focus();
   await divider.press('ArrowDown');

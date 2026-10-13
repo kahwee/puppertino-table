@@ -5,9 +5,29 @@ export function SplitViewExample({
   orientation = 'horizontal',
   resizable = true,
   disabled = false,
-}: Pick<SplitViewProps, 'orientation' | 'resizable' | 'disabled'>) {
-  const [active, setActive] = useState('sidebar');
-  const [hidden, setHidden] = useState(false);
+  activePaneId,
+  sidebarHidden,
+  onActivePaneChange,
+  onSidebarHiddenChange,
+  onSizesCommit,
+}: Pick<SplitViewProps, 'orientation' | 'resizable' | 'disabled' | 'onSizesCommit'> & {
+  activePaneId?: 'sidebar' | 'content' | 'detail';
+  sidebarHidden?: boolean;
+  onActivePaneChange?(id: 'sidebar' | 'content' | 'detail'): void;
+  onSidebarHiddenChange?(hidden: boolean): void;
+}) {
+  const [localActive, setLocalActive] = useState<'sidebar' | 'content' | 'detail'>('sidebar');
+  const active = activePaneId ?? localActive;
+  const setActive = (id: 'sidebar' | 'content' | 'detail') => {
+    setLocalActive(id);
+    onActivePaneChange?.(id);
+  };
+  const [localHidden, setLocalHidden] = useState(false);
+  const hidden = sidebarHidden ?? localHidden;
+  const setHidden = (value: boolean) => {
+    setLocalHidden(value);
+    onSidebarHiddenChange?.(value);
+  };
   const [committed, setCommitted] = useState<SplitViewSizes>({});
   return (
     <main>
@@ -36,7 +56,7 @@ export function SplitViewExample({
           type="button"
           className="p-button"
           aria-pressed={hidden}
-          onClick={() => setHidden((value) => !value)}
+          onClick={() => setHidden(!hidden)}
         >
           Hide sidebar
         </button>
@@ -48,7 +68,10 @@ export function SplitViewExample({
           resizable={resizable}
           disabled={disabled}
           activePaneId={active}
-          onSizesCommit={setCommitted}
+          onSizesCommit={(sizes) => {
+            setCommitted(sizes);
+            onSizesCommit?.(sizes);
+          }}
           panes={[
             {
               id: 'sidebar',

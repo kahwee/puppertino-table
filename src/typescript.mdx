@@ -1,5 +1,6 @@
 import { Meta, Source, Canvas } from '@storybook/addon-docs/blocks';
 import * as TableStories from './table.stories';
+import controlledStory from '../.storybook/controlled-story-example.tsx?raw';
 import { tableRecipes } from '../.storybook/table-sources';
 
 <Meta title="Start here/TypeScript" />
@@ -52,6 +53,30 @@ Use `satisfies Meta<typeof Component>` and `StoryObj<typeof meta>` to validate d
 For controlled components, use `useArgs` from `storybook/preview-api` in the story render function to update args when the component emits a change. Supply `fn()` from `storybook/test` for callbacks you want to inspect or assert. App selection, form values and view switches should update the same args that Controls edits.
 
 Use the shared Theme global rather than a theme arg or a separate dark story. Keep regression-only stories tagged `['!dev', '!autodocs']`; they remain indexed and tested without filling the docs page. See [Args](https://storybook.js.org/docs/writing-stories/args), [ArgTypes](https://storybook.js.org/docs/api/arg-types) and [Tags](https://storybook.js.org/docs/writing-stories/tags).
+
+## Controlled args and observable events
+
+This complete story file keeps `value` in args, so changing Controls and assigning a tag exercise the same state. Call the supplied `fn()` callback before `updateArgs`: this preserves Actions logging and lets `play` assert the public event. The render function is named so Storybook hooks run in the supported render context. The source file is typechecked with this repository.
+
+<Source language="tsx" code={controlledStory.replace("'../src/index.js'", "'puppertino-table'")} />
+
+Keep Playground free of scripted interactions so it opens at its declared defaults. Use a fixed regression scenario when testing a workflow needs to change state. Label related interactions with `step`, use the provided `canvas`, and query the document for portaled menus. Use async assertions for focus and loading, rather than assuming a popup is ready immediately after it appears.
+
+## Use the Storybook 10 tools
+
+| Tool | Use it for |
+| --- | --- |
+| Controls | Serializable component props and example state, with dependent controls shown only when applicable. Reset returns args to metadata defaults. |
+| Actions | Inspect callback payloads from explicit `fn()` args. Do not replace callbacks with regex-generated actions when tests need to assert them. |
+| Code | Copy a complete public integration recipe in the full canvas. The same source appears in the docs Show code panel. |
+| Theme | One shared appearance global across components and docs. |
+| Viewport | Check mobile, tablet and desktop sizing without creating device-specific stories. |
+| Interactions | Replay named workflow steps and inspect async assertions. |
+| Accessibility | Inspect the canvas scanner; browser regressions additionally cover keyboard, themes and responsive layouts. |
+
+A new story earns a navigation entry when it demonstrates a distinct integration contract. Use args for density, disabled state, labels, layout, datasets and responsive variants. Hidden regression stories retain the implicit `test` tag; removing `dev` and `autodocs` affects presentation, not coverage. CSF 3 with `satisfies` remains the stable format used here.
+
+See Storybook's [Code panel](https://storybook.js.org/docs/writing-docs/code-panel), [Viewport](https://storybook.js.org/docs/essentials/viewport), [interaction steps](https://storybook.js.org/docs/writing-tests/interaction-testing#group-interactions-with-the-step-function), and [conditional controls](https://storybook.js.org/docs/essentials/controls#conditional-controls).
 
 ## State ownership
 

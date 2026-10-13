@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { useArgs } from 'storybook/preview-api';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { tagPickerRecipe } from '../.storybook/tag-picker-recipe.js';
 import { type TagOption, TagPicker, type TagPickerProps } from './index.js';
 
 const standardOptions: TagOption[] = [
@@ -57,7 +58,16 @@ function PickerExample({
 const meta = {
   title: 'Puppertino/Tag picker',
   component: PickerExample,
-  parameters: { layout: 'centered' },
+  parameters: {
+    layout: 'centered',
+    docs: {
+      source: { type: 'code', language: 'tsx', code: tagPickerRecipe },
+      description: {
+        component:
+          'Controlled tag assignment with token navigation, mixed state, native popover placement and optional app-owned creation. Use optionSet and allowCreation for variants in this Playground.',
+      },
+    },
+  },
   args: {
     optionSet: 'standard',
     allowCreation: true,
@@ -142,6 +152,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 export const Assigned: Story = { name: 'Playground' };
 export const KeyboardWorkflow: Story = {
+  tags: ['!dev', '!autodocs'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.queryByRole('dialog')).toBeNull();
@@ -163,6 +174,7 @@ export const KeyboardWorkflow: Story = {
   },
 };
 export const ClippedContainer: Story = {
+  tags: ['!dev', '!autodocs'],
   args: {
     optionSet: 'custom',
     options: Array.from({ length: 30 }, (_, index) => ({
@@ -202,6 +214,7 @@ export const ClippedContainer: Story = {
 };
 
 export const CreateTag: Story = {
+  tags: ['!dev', '!autodocs'],
   args: { value: [] },
   parameters: {
     docs: {
@@ -211,13 +224,17 @@ export const CreateTag: Story = {
       },
     },
   },
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Tags' }));
-    await userEvent.type(canvas.getByRole('combobox', { name: 'Tag name' }), 'Client');
-    await userEvent.click(canvas.getByRole('option', { name: 'Create tag “Client”' }));
-    await expect(args.onCreate).toHaveBeenLastCalledWith('Client');
-    await expect(await canvas.findByRole('button', { name: 'Remove tag Client' })).toBeVisible();
-    await userEvent.keyboard('{Escape}');
+  play: async ({ canvas, args, step }) => {
+    await step('Create an app-owned option and assign its ID', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Tags' }));
+      await userEvent.type(canvas.getByRole('combobox', { name: 'Tag name' }), 'Client');
+      await userEvent.click(canvas.getByRole('option', { name: 'Create tag “Client”' }));
+      await expect(args.onCreate).toHaveBeenLastCalledWith('Client');
+      await expect(await canvas.findByRole('button', { name: 'Remove tag Client' })).toBeVisible();
+    });
+    await step('Dismiss and restore the trigger', async () => {
+      await userEvent.keyboard('{Escape}');
+      await expect(canvas.getByRole('button', { name: 'Tags' })).toHaveFocus();
+    });
   },
 };

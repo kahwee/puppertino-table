@@ -161,6 +161,12 @@ export async function checkFinderStories(page: Page, base: string, evidence: str
   await page.getByText('No file selected', { exact: true }).waitFor();
   await page.getByRole('searchbox', { name: 'Search files' }).fill('');
   await page.getByRole('button', { name: 'Research notes.txt', exact: true }).focus();
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
   await page.keyboard.press('Shift+F10');
   await page.getByRole('menuitem', { name: 'Move to Archive', exact: true }).click();
   assert.equal(
