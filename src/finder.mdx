@@ -121,13 +121,11 @@ Drag Project brief.pdf from a row onto **Archive** in Favorites. The highlighted
 
 The example supplies `draggable`, `onDragStart`, `onDragOver` and `onDrop` to table rows and browser items. It validates the ID against its own in-memory items before changing folders. The package supplies composable rows/items, not a drag/drop engine or file operations. <a href="https://github.com/kahwee/puppertino-table/blob/main/src/finder.stories.tsx" target="_blank" rel="noopener noreferrer">Read the complete example</a>.
 
-## Dark and narrow columns
-
-<Canvas of={Finder.DarkColumns} />
+## Narrow columns
 
 <Canvas of={Finder.NarrowColumns} />
 
-The narrow example constrains the same workspace to 620px. Its toolbar wraps and the browser scrolls internally to keep ancestors reachable. Dark mode uses shared theme tokens and preserves selected-text contrast.
+The narrow example constrains the same workspace to 620px. Its toolbar wraps and the browser scrolls internally to keep ancestors reachable. Use the Storybook **Theme** toolbar to view this workspace in dark mode; it uses shared theme tokens and preserves selected-text contrast.
 
 ## Compare spacing and themes
 

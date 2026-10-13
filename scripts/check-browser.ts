@@ -10,6 +10,7 @@ import { checkResizeEvents } from './check-resize-events.js';
 import { checkResourceWorkspaces } from './check-resource-workspaces.js';
 import { checkStorybookDocs } from './check-storybook-docs.js';
 import { checkStorybookInteractions } from './check-storybook-interactions.js';
+import { setStorybookTheme } from './storybook-theme.mjs';
 
 async function serve(directory: string, mount = '/') {
   const root = path.resolve(directory);
@@ -262,7 +263,6 @@ try {
     'external-atoms',
     'keyboard-resize',
     'controlled-sizing',
-    'dark',
     'narrow',
     'empty',
     'disabled',
@@ -300,20 +300,23 @@ try {
       await page.locator('#storybook-root').getByRole('table').count(),
       story === 'independent-tables' ? 2 : 1,
     );
-    if (story === 'default' || story === 'dark') {
-      const selection = await page.locator('table.pt-table').evaluate((table) => {
-        const header = table.querySelector('thead .pt-selection-control > span');
-        const row = table.querySelector('tbody .pt-selection-control > span');
-        return {
-          headerX: header?.getBoundingClientRect().x ?? -1,
-          rowX: row?.getBoundingClientRect().x ?? -2,
-          width: row?.getBoundingClientRect().width,
-          puppertino: row?.parentElement?.classList.contains('p-checkbox'),
-        };
-      });
-      assert.equal(selection.headerX, selection.rowX, 'selection controls align');
-      assert.equal(selection.width, 16);
-      assert.equal(selection.puppertino, true);
+    if (story === 'default') {
+      for (const theme of ['dark', 'light']) {
+        await setStorybookTheme(page, theme);
+        const selection = await page.locator('table.pt-table').evaluate((table) => {
+          const header = table.querySelector('thead .pt-selection-control > span');
+          const row = table.querySelector('tbody .pt-selection-control > span');
+          return {
+            headerX: header?.getBoundingClientRect().x ?? -1,
+            rowX: row?.getBoundingClientRect().x ?? -2,
+            width: row?.getBoundingClientRect().width,
+            puppertino: row?.parentElement?.classList.contains('p-checkbox'),
+          };
+        });
+        assert.equal(selection.headerX, selection.rowX, 'selection controls align');
+        assert.equal(selection.width, 16);
+        assert.equal(selection.puppertino, true);
+      }
     }
     if (story === 'external-atoms') {
       await page.waitForFunction(

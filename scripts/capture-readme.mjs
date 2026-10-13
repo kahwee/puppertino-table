@@ -255,12 +255,13 @@ try {
   await columns.context.close();
 
   for (const [story, name] of [
-    ['dark-columns', 'columns-dark'],
+    ['column-workspace', 'columns-dark'],
     ['icon-workspace', 'icons-light'],
     ['gallery-workspace', 'gallery-preview'],
     ['narrow-columns', 'columns-narrow'],
   ]) {
     const capture = await open(story);
+    if (name === 'columns-dark') await setStorybookTheme(capture.page, 'dark');
     await accessibility(capture.page);
     await screenshot(capture.page, name);
     await capture.context.close();

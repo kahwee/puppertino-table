@@ -1204,17 +1204,6 @@ export function Workspace() {
     },
   },
 };
-export const DarkTable: Story = {
-  globals: { theme: 'dark' },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'The same semantic table using Puppertino dark tokens. This story pins the dark theme. Use the Theme toolbar in File table to compare light and dark without resetting the workspace.',
-      },
-    },
-  },
-};
 export const ComfortableTable: Story = {
   args: { initialDensity: 'comfortable' },
   parameters: {
@@ -1274,11 +1263,6 @@ export const GalleryWorkspace: Story = {
       },
     },
   },
-};
-export const DarkColumns: Story = {
-  args: { initialView: 'columns' },
-  globals: { theme: 'dark' },
-  parameters: { docs: { source: ColumnWorkspace.parameters?.docs?.source } },
 };
 export const NarrowColumns: Story = {
   args: { initialView: 'columns', initialPreview: false },
@@ -1402,4 +1386,3 @@ export const QuickLook: Story = {
     await expect(preview.getByRole('heading', { name: 'Project brief.pdf' })).toBeInTheDocument();
   },
 };
-export const DarkQuickLook: Story = { ...QuickLook, globals: { theme: 'dark' } };

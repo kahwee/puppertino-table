@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Remove dedicated dark-mode stories and use the existing Storybook Theme toolbar for every example; retain dark-theme browser and modal coverage through shared globals.
+
 - Focus the Table Storybook sidebar on nine primary examples; keep specialized stories available to browser checks by direct URL. Open Default without an automatic sort, and verify sorting in browser checks instead.
 - Add a direct generic typed table Storybook example and TypeScript integration guide, checked numeric/Date cells and props, compile-time story contracts, and packed-consumer coverage for the new recipe.
 

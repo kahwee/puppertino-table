@@ -31,7 +31,6 @@ export async function checkFinderStories(page: Page, base: string, evidence: str
     'column-workspace',
     'icon-workspace',
     'gallery-workspace',
-    'dark-columns',
     'narrow-columns',
   ]) {
     await page.goto(`${base}/iframe.html?id=examples-finder--${story}&viewMode=story`);
@@ -39,12 +38,20 @@ export async function checkFinderStories(page: Page, base: string, evidence: str
     await app.waitFor();
     assert.deepEqual(await finderViolations(page), [], story);
     await page.screenshot({ path: `${evidence}/finder-${story}.png` });
-    if (!story.includes('dark') && story !== 'narrow-columns') {
-      await setStorybookTheme(page, 'dark');
-      assert.deepEqual(await finderViolations(page), [], `${story} dark`);
-      await page.screenshot({ path: `${evidence}/finder-${story}-dark.png` });
-    }
+    await setStorybookTheme(page, 'dark');
+    assert.deepEqual(await finderViolations(page), [], `${story} dark`);
+    await page.screenshot({ path: `${evidence}/finder-${story}-dark.png` });
   }
+  // Check the same modal in both themes through the shared Storybook globals.
+  await page.goto(`${base}/iframe.html?id=examples-finder--file-table&viewMode=story`);
+  await page.getByRole('row', { name: /Project brief.pdf/ }).click();
+  await page.keyboard.press('Space');
+  await page.getByRole('dialog', { name: 'Quick Look' }).waitFor();
+  for (const theme of ['light', 'dark']) {
+    await setStorybookTheme(page, theme);
+    assert.deepEqual(await finderViolations(page), [], `Quick Look ${theme}`);
+  }
+  await page.keyboard.press('Escape');
   // Mix native checkboxes, row keyboard gestures and view changes through one anchor.
   await page.goto(`${base}/iframe.html?id=examples-finder--checkbox-selection&viewMode=story`);
   const rows = page.getByRole('table', { name: 'Project files', exact: true }).locator('tbody tr');

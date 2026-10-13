@@ -74,7 +74,7 @@ Command/Ctrl-click toggles an item; Shift-click extends a range from a fixed anc
 | --- | --- |
 | ![Compact table with two selected files](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/table-selection.png) | ![Dark table with readable selected-file icons](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/table-dark.png) |
 
-[Compare comfortable spacing](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--comfortable-table) · [Dark columns](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--dark-columns) · [Narrow columns](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--narrow-columns)
+[Compare comfortable spacing](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--comfortable-table) · [Dark columns](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--column-workspace&globals=theme:dark) · [Narrow columns](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--narrow-columns)
 
 ## Watch the interactions
 

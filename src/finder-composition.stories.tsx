@@ -330,11 +330,6 @@ export const TagAndTrashWorkflow: Story = {
     await expect(canvas.getByLabelText('Document count')).toHaveTextContent('1 item');
   },
 };
-export const DarkGallery: Story = {
-  globals: { theme: 'dark' },
-  args: { view: 'gallery' },
-};
-
 export const CustomArtwork: Story = {
   parameters: { controls: { disable: true } },
   render: () => (

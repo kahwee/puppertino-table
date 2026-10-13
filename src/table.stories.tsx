@@ -294,11 +294,6 @@ export const KeyboardResize: Story = {
     await expect(edge).toHaveAttribute('aria-valuenow', '240');
   },
 };
-export const Dark: Story = {
-  tags: ['!dev'],
-  parameters: { docs: { source: { code: tableRecipes.controlled } } },
-  globals: { theme: 'dark' },
-};
 export const Narrow: Story = {
   tags: ['!dev'],
   parameters: { docs: { source: { code: tableRecipes.controlled } } },

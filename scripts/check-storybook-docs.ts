@@ -165,12 +165,6 @@ async function checkThemeToolbar(page: Page, base: string) {
     'rgb(36, 36, 38)',
     'Docs previews use a dark surface, keeping Puppertino text readable',
   );
-  await page.goto(`${base}/?path=/story/examples-finder--dark-table&globals=theme:light`);
-  await frame.locator('html.p-dark-mode').waitFor();
-  assert.equal(
-    await page.getByRole('button', { name: 'Theme set by story parameters' }).isDisabled(),
-    true,
-  );
 }
 
 async function checkTableRecipes(page: Page, base: string) {
