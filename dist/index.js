@@ -11,6 +11,7 @@ export { OutlineView } from './outline-view.js';
 export { ColumnResizeHandle } from './resize-handle.js';
 export { RowSelectionCheckbox } from './row-selection-checkbox.js';
 export { applySelectionGesture, } from './selection-gestures.js';
+export { Sidebar, SidebarGroup, SidebarItem, } from './sidebar.js';
 export { clampSize, columnSizeBounds, readColumnSizing } from './sizing.js';
 export { SplitView, } from './split-view.js';
 export { PuppertinoTable, PuppertinoTable as TableView } from './table.js';

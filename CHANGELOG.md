@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Export reusable `Sidebar`, `SidebarGroup`, and native button/link `SidebarItem` components with typed sizes and trailing details. Compose Finder sidebars from these primitives and refine them with Puppertino’s attached material, standard desktop rows and headings, hover feedback, scrollable groups, truncated labels, and larger touch targets.
+
 ## 0.10.0 — 2026-10-12
 
 - Add Apple-named `OutlineView`, `SplitView`, `TableView` and `ColumnView` APIs. Outline rows support sibling sorting, disclosure, visible-only bulk selection, keyboard navigation and cancellable lazy `loadChildren` with caching/retry. Split panes support both axes, compact navigation, hidden panes and completion-only size persistence. Rename the resource-browser Storybook group to Column view.

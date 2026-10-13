@@ -12,6 +12,7 @@ export { ColumnResizeHandle } from './resize-handle.js';
 export type { ColumnResizeHandleProps, ColumnResizeOptions } from './resize-types.js';
 export { RowSelectionCheckbox } from './row-selection-checkbox.js';
 export { applySelectionGesture, type SelectionGestureResult, type SelectionModifiers, } from './selection-gestures.js';
+export { Sidebar, SidebarGroup, type SidebarGroupProps, SidebarItem, type SidebarItemButtonProps, type SidebarItemLinkProps, type SidebarItemProps, type SidebarProps, type SidebarSize, } from './sidebar.js';
 export { type ColumnSizeBounds, clampSize, columnSizeBounds, readColumnSizing } from './sizing.js';
 export { SplitView, type SplitViewPane, type SplitViewProps, type SplitViewSizes, } from './split-view.js';
 export { PuppertinoTable, PuppertinoTable as TableView } from './table.js';

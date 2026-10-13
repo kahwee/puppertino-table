@@ -722,3 +722,76 @@
   /* biome-ignore lint/complexity/noImportantStyles: Prevent descendant text selection during the active pointer gesture. */
   user-select: none !important;
 }
+
+/* Portable sidebar enhancements. Puppertino owns material and size variants. */
+.pt-sidebar {
+  --p-sidebar-touch-secondary: var(--p-sidebar-text-dim);
+  --p-sidebar-touch-detail: var(--p-sidebar-text-dim);
+  --p-sidebar-text-dim: color-mix(in srgb, var(--p-sidebar-text) 75%, var(--p-sidebar-material));
+  min-width: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.pt-sidebar-group > .p-sidebar-header {
+  margin: 0;
+}
+.pt-sidebar-group + .pt-sidebar-group {
+  margin-top: 8px;
+}
+.pt-sidebar-item {
+  width: 100%;
+  border: 0;
+  font-family: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.pt-sidebar-item:not(.p-selected) {
+  background: transparent;
+}
+.pt-sidebar-item:not(.p-selected):hover {
+  background: var(--p-sidebar-hover);
+}
+.pt-sidebar-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pt-sidebar-item .p-sidebar-detail {
+  color: var(--p-sidebar-text-dim);
+  flex-shrink: 0;
+  padding-left: 8px;
+}
+.pt-sidebar-item .p-sidebar-icon[data-tone="secondary"] {
+  color: var(--p-sidebar-text-dim);
+}
+.pt-sidebar-item:focus-visible {
+  outline: 3px solid var(--p-focus-ring-color, Highlight);
+  outline-offset: -3px;
+}
+.pt-sidebar-item:disabled {
+  color: var(--p-sidebar-text-dim);
+  cursor: default;
+}
+.pt-sidebar-item:disabled:hover {
+  background: transparent;
+}
+.pt-sidebar-item:disabled .p-sidebar-icon {
+  color: var(--p-sidebar-text-dim);
+}
+@media (pointer: coarse) {
+  .pt-sidebar .p-sidebar-row {
+    min-height: 44px;
+    height: auto;
+    border-radius: 22px;
+    padding-left: 14px;
+    font-size: 17px;
+    font-weight: 400;
+  }
+  .pt-sidebar .p-sidebar-icon {
+    width: 22px;
+    height: 22px;
+    margin-right: 12px;
+  }
+}

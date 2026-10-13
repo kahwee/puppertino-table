@@ -76,7 +76,7 @@ import { createAtom } from '@tanstack/react-store';
 import type { ColumnSizingState, SortingState, RowSelectionState } from '@tanstack/react-table';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { PuppertinoBodyContext, PuppertinoRowProps, ColumnResizeHandleProps, TableHeaderProps, TableBodyProps, RowSelectionCheckboxProps, PuppertinoTableOptions, PuppertinoTableAtoms } from 'puppertino-table';
-import { type DelegatedContextMenuOptions, type ContextMenuItem, type ContextMenuState, type ColumnBrowserItemLinkProps, OutlineView, SplitView, ColumnView, TableView, FinderWindow, FinderToolbar, FinderTitle, FinderBody, FinderContent, FinderIconGrid, FinderIconItem, FinderStatusBar, TagPicker, PuppertinoTable, DensityScope, ColumnBrowser, ColumnBrowserItem, ContextMenu, useContextMenu, usePuppertinoTable, useRowSelectionGestures, applySelectionGesture, fitColumnBrowser, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
+import { type DelegatedContextMenuOptions, type ContextMenuItem, type ContextMenuState, type ColumnBrowserItemLinkProps, Sidebar, SidebarGroup, SidebarItem, OutlineView, SplitView, ColumnView, TableView, FinderWindow, FinderToolbar, FinderTitle, FinderBody, FinderContent, FinderIconGrid, FinderIconItem, FinderStatusBar, TagPicker, PuppertinoTable, DensityScope, ColumnBrowser, ColumnBrowserItem, ContextMenu, useContextMenu, usePuppertinoTable, useRowSelectionGestures, applySelectionGesture, fitColumnBrowser, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
 type Item = { id: string; title: string; price: number };
 const helper = createPuppertinoColumnHelper<Item>();
 const columns = helper.columns([
@@ -96,6 +96,10 @@ const columnMarkup = renderToStaticMarkup(createElement(ColumnView, {
   ariaLabel: 'Consumer columns', columns: [{id:'root',label:'Root',content:'Root'}],
 }));
 if (!columnMarkup.includes('Consumer columns') || TableView !== PuppertinoTable) throw new Error('Apple-named consumer exports failed');
+
+const sidebarMarkup = renderToStaticMarkup(createElement(Sidebar, { 'aria-label': 'Consumer sections', size: 'touch' },
+  createElement(SidebarGroup, {label:'Favorites'}, createElement(SidebarItem, {href:'/projects',selected:true,detail:12}, 'Projects'))));
+if (!sidebarMarkup.includes('p-sidebar-touch') || !sidebarMarkup.includes('href="/projects"') || !sidebarMarkup.includes('aria-current="page"') || !sidebarMarkup.includes('p-sidebar-detail')) throw new Error('Portable sidebar consumer SSR failed');
 
 const finderMarkup = renderToStaticMarkup(createElement(FinderWindow, { 'aria-label': 'Consumer Finder' },
   createElement(FinderToolbar, null, createElement(FinderTitle, { as: 'h2' }, 'Documents')),

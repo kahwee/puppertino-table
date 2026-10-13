@@ -1,6 +1,14 @@
 'use client';
-import { type ComponentPropsWithRef, type ReactNode, useId } from 'react';
+import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { DensityScope, type DensityScopeProps } from './density.js';
+import {
+  Sidebar,
+  SidebarGroup,
+  type SidebarGroupProps,
+  SidebarItem,
+  type SidebarItemButtonProps,
+  type SidebarProps,
+} from './sidebar.js';
 
 export type FinderWindowProps = ComponentPropsWithRef<'section'>;
 export function FinderWindow({ className = '', children, ...props }: FinderWindowProps) {
@@ -16,57 +24,16 @@ export function FinderBody({ className = '', ...props }: DensityScopeProps) {
 export function FinderContent({ className = '', ...props }: ComponentPropsWithRef<'div'>) {
   return <div {...props} className={`pt-finder-content ${className}`} />;
 }
-export function FinderSidebar({ className = '', ...props }: ComponentPropsWithRef<'nav'>) {
-  return <nav {...props} className={`p-sidebar p-sidebar-medium pt-finder-sidebar ${className}`} />;
+export function FinderSidebar({ className = '', ...props }: SidebarProps) {
+  return <Sidebar {...props} className={`pt-finder-sidebar ${className}`} />;
 }
-export interface FinderSidebarGroupProps extends ComponentPropsWithRef<'section'> {
-  label: string;
+export type FinderSidebarGroupProps = SidebarGroupProps;
+export function FinderSidebarGroup({ className = '', ...props }: FinderSidebarGroupProps) {
+  return <SidebarGroup {...props} className={`pt-finder-sidebar-group ${className}`} />;
 }
-export function FinderSidebarGroup({
-  label,
-  children,
-  className = '',
-  ...props
-}: FinderSidebarGroupProps) {
-  const id = useId();
-  return (
-    <section {...props} className={`pt-finder-sidebar-group ${className}`} aria-labelledby={id}>
-      <h2 id={id} className="p-sidebar-header">
-        {label}
-      </h2>
-      {children}
-    </section>
-  );
-}
-export interface FinderSidebarItemProps
-  extends Omit<ComponentPropsWithRef<'button'>, 'aria-current'> {
-  selected?: boolean;
-  icon?: ReactNode;
-  iconTone?: 'accent' | 'secondary';
-}
-export function FinderSidebarItem({
-  selected,
-  icon,
-  iconTone = 'accent',
-  children,
-  className = '',
-  ...props
-}: FinderSidebarItemProps) {
-  return (
-    <button
-      type="button"
-      {...props}
-      className={`p-sidebar-row pt-finder-folder ${selected ? 'p-selected' : ''} ${className}`}
-      aria-current={selected ? 'page' : undefined}
-    >
-      {icon && (
-        <span className="p-sidebar-icon" data-tone={iconTone}>
-          {icon}
-        </span>
-      )}
-      <span>{children}</span>
-    </button>
-  );
+export type FinderSidebarItemProps = SidebarItemButtonProps;
+export function FinderSidebarItem({ className = '', ...props }: FinderSidebarItemProps) {
+  return <SidebarItem {...props} className={`pt-finder-folder ${className}`} />;
 }
 export function FinderPathBar({ className = '', ...props }: ComponentPropsWithRef<'nav'>) {
   return <nav aria-label="Current location" {...props} className={`pt-finder-path ${className}`} />;

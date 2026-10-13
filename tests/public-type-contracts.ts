@@ -208,3 +208,18 @@ const columnView = {
 // @ts-expect-error ColumnView uses columns; panels is the legacy ColumnBrowser vocabulary.
 const invalidColumnView: ColumnViewProps = { ariaLabel: 'Columns', panels: [] };
 void [columnView, invalidColumnView];
+
+import type { SidebarItemButtonProps, SidebarItemLinkProps, SidebarProps } from '../src/index.js';
+
+const sidebar = { size: 'touch', 'aria-label': 'Sections' } satisfies SidebarProps;
+const sidebarLink = {
+  href: '/projects',
+  selected: true,
+  detail: 12,
+} satisfies SidebarItemLinkProps;
+const sidebarButton = { onClick: () => {}, disabled: true } satisfies SidebarItemButtonProps;
+// @ts-expect-error Sidebar sizes use Puppertino's named variants.
+const invalidSidebar: SidebarProps = { size: 'giant' };
+// @ts-expect-error A sidebar link needs a real destination.
+const invalidSidebarLink: SidebarItemLinkProps = { selected: true };
+void [sidebar, sidebarLink, sidebarButton, invalidSidebar, invalidSidebarLink];

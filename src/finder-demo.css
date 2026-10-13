@@ -2,7 +2,7 @@
   --p-window-bg: #fff;
   --p-text-secondary: #65656b;
   --p-control-accent: #0064dc;
-  --finder-sidebar: #ededee;
+  --finder-sidebar: var(--p-sidebar-material, #e6e6e6);
   --finder-radius: 14px;
   --finder-sidebar-icon: #0078f0;
   --finder-toolbar: #fafafa;
@@ -24,7 +24,7 @@
   --p-window-bg: #252527;
   --p-text-secondary: #b0b0b7;
   --p-control-accent: #8dbbff;
-  --finder-sidebar: #2c2c2e;
+  --finder-sidebar: var(--p-sidebar-material, #161616);
   --finder-sidebar-icon: #0a99ff;
   --finder-toolbar: #2b2b2e;
   --finder-line: #444448;

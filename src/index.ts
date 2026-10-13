@@ -97,6 +97,17 @@ export {
   type SelectionGestureResult,
   type SelectionModifiers,
 } from './selection-gestures.js';
+export {
+  Sidebar,
+  SidebarGroup,
+  type SidebarGroupProps,
+  SidebarItem,
+  type SidebarItemButtonProps,
+  type SidebarItemLinkProps,
+  type SidebarItemProps,
+  type SidebarProps,
+  type SidebarSize,
+} from './sidebar.js';
 export { type ColumnSizeBounds, clampSize, columnSizeBounds, readColumnSizing } from './sizing.js';
 export {
   SplitView,

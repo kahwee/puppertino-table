@@ -18,6 +18,25 @@ Build Finder-style React workspaces, accessible tables and resizable column brow
 
 Tables support local or server-owned sorting, shared range selection and bounded pointer/keyboard resizing. Browser panels resize independently. Density, dark themes, menus and optional width persistence work across the shared primitives. Fine-grained sizing subscriptions keep the memoized row body out of resize renders.
 
+## Sidebar
+
+Use the sidebar on its own or inside your own split view. Your app supplies selection and navigation.
+
+```tsx
+import { Sidebar, SidebarGroup, SidebarItem } from 'puppertino-table';
+
+<Sidebar aria-label="Sections">
+  <SidebarGroup label="Favorites">
+    <SidebarItem selected={section === 'projects'} onClick={() => setSection('projects')}>
+      Projects
+    </SidebarItem>
+    <SidebarItem href="/archive" detail={12}>Archive</SidebarItem>
+  </SidebarGroup>
+</Sidebar>
+```
+
+Import Puppertino's sidebar CSS and `puppertino-table/style.css`. Use `size="small"`, `"medium"`, `"large"` (default), or `"touch"`; icons, details, native props and refs are supported. Touch pointers receive larger row targets. `FinderSidebar` uses the same primitives within the Finder layout.
+
 ## Install
 
 ```sh

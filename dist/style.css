@@ -723,6 +723,79 @@
   user-select: none !important;
 }
 
+/* Portable sidebar enhancements. Puppertino owns material and size variants. */
+.pt-sidebar {
+  --p-sidebar-touch-secondary: var(--p-sidebar-text-dim);
+  --p-sidebar-touch-detail: var(--p-sidebar-text-dim);
+  --p-sidebar-text-dim: color-mix(in srgb, var(--p-sidebar-text) 75%, var(--p-sidebar-material));
+  min-width: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.pt-sidebar-group > .p-sidebar-header {
+  margin: 0;
+}
+.pt-sidebar-group + .pt-sidebar-group {
+  margin-top: 8px;
+}
+.pt-sidebar-item {
+  width: 100%;
+  border: 0;
+  font-family: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.pt-sidebar-item:not(.p-selected) {
+  background: transparent;
+}
+.pt-sidebar-item:not(.p-selected):hover {
+  background: var(--p-sidebar-hover);
+}
+.pt-sidebar-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pt-sidebar-item .p-sidebar-detail {
+  color: var(--p-sidebar-text-dim);
+  flex-shrink: 0;
+  padding-left: 8px;
+}
+.pt-sidebar-item .p-sidebar-icon[data-tone="secondary"] {
+  color: var(--p-sidebar-text-dim);
+}
+.pt-sidebar-item:focus-visible {
+  outline: 3px solid var(--p-focus-ring-color, Highlight);
+  outline-offset: -3px;
+}
+.pt-sidebar-item:disabled {
+  color: var(--p-sidebar-text-dim);
+  cursor: default;
+}
+.pt-sidebar-item:disabled:hover {
+  background: transparent;
+}
+.pt-sidebar-item:disabled .p-sidebar-icon {
+  color: var(--p-sidebar-text-dim);
+}
+@media (pointer: coarse) {
+  .pt-sidebar .p-sidebar-row {
+    min-height: 44px;
+    height: auto;
+    border-radius: 22px;
+    padding-left: 14px;
+    font-size: 17px;
+    font-weight: 400;
+  }
+  .pt-sidebar .p-sidebar-icon {
+    width: 22px;
+    height: 22px;
+    margin-right: 12px;
+  }
+}
+
 .pt-finder-container,
 .pt-finder-container * {
   box-sizing: border-box;
@@ -731,12 +804,12 @@
   --p-window-bg: #fff;
   --p-text-secondary: #65656b;
   --p-control-accent: #0064dc;
-  --finder-sidebar: #ededee;
+  --finder-sidebar: var(--p-sidebar-material, #e6e6e6);
   --finder-radius: 14px;
   --finder-sidebar-icon: #0078f0;
   --finder-toolbar: #fafafa;
   --finder-line: #dcdce0;
-  --finder-default-sidebar-width: 172px;
+  --finder-default-sidebar-width: 240px;
   color: #29292d;
   font:
     13px -apple-system,
@@ -751,7 +824,7 @@
   --p-window-bg: #252527;
   --p-text-secondary: #b0b0b7;
   --p-control-accent: #8dbbff;
-  --finder-sidebar: #2c2c2e;
+  --finder-sidebar: var(--p-sidebar-material, #161616);
   --finder-sidebar-icon: #0a99ff;
   --finder-toolbar: #2b2b2e;
   --finder-line: #444448;
@@ -830,41 +903,14 @@
   height: 390px;
   display: flex;
 }
+/* Keep Puppertino's attached material, row capsules and section typography. */
 .pt-finder-sidebar {
   width: var(--finder-sidebar-width, var(--finder-default-sidebar-width));
   flex-shrink: 0;
-  padding: 8px;
   background: var(--finder-sidebar);
-  border-right: 1px solid var(--finder-line);
+  overflow: auto;
+  overscroll-behavior: contain;
   position: relative;
-}
-.pt-finder-sidebar h2 {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--p-text-secondary);
-  min-height: 18px;
-  padding: 0;
-  margin: 14px 10px 6px;
-}
-.pt-finder-folder,
-.pt-finder-sidebar button {
-  width: 100%;
-  border: 0;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  color: inherit;
-}
-.pt-finder-folder:not(.p-selected),
-.pt-finder-sidebar button:not(.p-selected) {
-  background: transparent;
-}
-.pt-finder-sidebar .p-sidebar-icon {
-  color: var(--finder-sidebar-icon);
-}
-.pt-finder-sidebar :where(.p-sidebar-icon) svg {
-  width: 18px;
-  height: 18px;
 }
 .pt-finder-content {
   flex: 1;
@@ -1139,9 +1185,6 @@
   background: #8883;
   color: inherit;
 }
-.pt-finder-folder .p-sidebar-icon {
-  color: var(--finder-sidebar-icon);
-}
 
 .pt-finder-details button {
   color: inherit;
@@ -1158,18 +1201,11 @@
   margin: 0;
   min-width: 0;
 }
-.pt-finder-folder .p-sidebar-icon[data-tone="secondary"] {
-  color: var(--p-text-secondary);
-}
 /* Puppertino owns toolbar/button focus. Scope our fallback to custom items. */
-.pt-finder-folder:focus-visible,
 .pt-finder-icon-item:focus-visible,
 .pt-finder-filmstrip > button:focus-visible {
   outline: 3px solid var(--p-focus-ring-color, Highlight);
   outline-offset: -2px;
-}
-.pt-finder-sidebar-group + .pt-finder-sidebar-group {
-  margin-top: 14px;
 }
 
 .pt-finder-preview-artwork {
