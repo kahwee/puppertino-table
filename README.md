@@ -21,7 +21,7 @@ Tables support local or server-owned sorting, shared range selection and bounded
 ## Install
 
 ```sh
-pnpm add puppertino-table@0.9.1 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
+pnpm add puppertino-table@0.10.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
 ```
 
 React 19 (`^19.3.0`), TanStack Table and Puppertino are peer dependencies. Import the Puppertino styles used by your components, followed by the library stylesheet:

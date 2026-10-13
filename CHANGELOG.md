@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.10.0 — 2026-10-12
+
 - Add Apple-named `OutlineView`, `SplitView`, `TableView` and `ColumnView` APIs. Outline rows support sibling sorting, disclosure, visible-only bulk selection, keyboard navigation and cancellable lazy `loadChildren` with caching/retry. Split panes support both axes, compact navigation, hidden panes and completion-only size persistence. Rename the resource-browser Storybook group to Column view.
 
 - Consolidate Storybook variants into args-driven playgrounds while retaining the focused Table sidebar. Replace flag-only Resource browser variants with one playground and keep separate styling and density-inheritance recipes.
