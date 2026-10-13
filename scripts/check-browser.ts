@@ -64,8 +64,8 @@ const browser = await chromium.launch({
 const evidence = 'test-results/browser';
 await mkdir(evidence, { recursive: true });
 const errors: string[] = [];
-try {
-  await checkStorybookInteractions(browser, stories.base);
+async function checkDemo() {
+  const started = performance.now();
   for (const theme of process.env.PUPPERTINO_STORIES_ONLY ? [] : ['light', 'dark']) {
     const page = await browser.newPage({
       viewport: { width: 1440, height: 1000 },
@@ -243,6 +243,14 @@ try {
     }
     await page.close();
   }
+  console.log(
+    `Demo browser checks completed in ${((performance.now() - started) / 1000).toFixed(1)}s`,
+  );
+}
+
+async function checkStories() {
+  const started = performance.now();
+  await checkStorybookInteractions(browser, stories.base);
   const page = await browser.newPage({
     viewport: { width: 1280, height: 900 },
     reducedMotion: 'reduce',
@@ -725,6 +733,20 @@ try {
   await checkFinderStories(page, stories.base, evidence);
   await checkStorybookDocs(page, stories.base, evidence);
   await page.close();
+  console.log(
+    `Storybook browser checks completed in ${((performance.now() - started) / 1000).toFixed(1)}s`,
+  );
+}
+
+try {
+  // Each suite owns separate contexts and screenshot paths. Keep concurrency at two
+  // so pointer gestures and accessibility scans do not overwhelm a hosted runner.
+  // Wait for both before closing Chromium, including when either suite fails.
+  const results = await Promise.allSettled([checkDemo(), checkStories()]);
+  const failures = results
+    .filter((result) => result.status === 'rejected')
+    .map((result) => result.reason);
+  if (failures.length) throw new AggregateError(failures, 'Browser verification failed');
   assert.deepEqual(errors, []);
   console.log(
     process.env.PUPPERTINO_STORIES_ONLY
