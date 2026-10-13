@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { useArgs } from 'storybook/preview-api';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import {
   ColumnBrowser,
   ColumnBrowserItem,
@@ -20,6 +20,7 @@ import {
   FinderActions,
   FinderBody,
   FinderContent,
+  FinderEmptyState,
   FinderFilmstrip,
   FinderGallery,
   FinderGalleryItem,
@@ -140,7 +141,11 @@ function Composition({ view, query, onViewChange, onQueryChange }: CompositionPr
           </FinderSidebarGroup>
         </FinderSidebar>
         <FinderContent>
-          {view === 'list' ? (
+          {visible.length === 0 ? (
+            <FinderEmptyState role="status">
+              {query ? 'No matching documents' : 'No documents'}
+            </FinderEmptyState>
+          ) : view === 'list' ? (
             <PuppertinoTable
               data={visible}
               columns={columns}
@@ -219,12 +224,30 @@ function Composition({ view, query, onViewChange, onQueryChange }: CompositionPr
 const meta = {
   title: 'Puppertino/Finder composition',
   component: Composition,
-  args: { view: 'list', query: '' },
+  args: { view: 'list', query: '', onViewChange: fn(), onQueryChange: fn() },
   argTypes: {
-    view: { control: 'inline-radio', options: ['icons', 'list', 'columns', 'gallery'] },
-    query: { control: 'text' },
-    onViewChange: { control: false },
-    onQueryChange: { control: false },
+    view: {
+      control: 'inline-radio',
+      options: ['icons', 'list', 'columns', 'gallery'],
+      description:
+        'Live view, synchronized with the Finder toolbar. Preserves documents and selection.',
+      table: { category: 'State' },
+    },
+    query: {
+      control: 'text',
+      description: 'Live filename filter, synchronized with Finder search.',
+      table: { category: 'State' },
+    },
+    onViewChange: {
+      control: false,
+      description: 'Emits the view selected in the toolbar.',
+      table: { category: 'Events' },
+    },
+    onQueryChange: {
+      control: false,
+      description: 'Emits search edits and folder navigation resets.',
+      table: { category: 'Events' },
+    },
   },
   parameters: {
     layout: 'padded',
@@ -240,16 +263,31 @@ const meta = {
     return (
       <Composition
         {...args}
-        onViewChange={(view) => updateArgs({ view })}
-        onQueryChange={(query) => updateArgs({ query })}
+        onViewChange={(view) => {
+          args.onViewChange(view);
+          updateArgs({ view });
+        }}
+        onQueryChange={(query) => {
+          args.onQueryChange(query);
+          updateArgs({ query });
+        }}
       />
     );
   },
 } satisfies Meta<typeof Composition>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-export const Composed: Story = {
-  args: { onViewChange: () => {}, onQueryChange: () => {} },
+export const Composed: Story = {};
+
+export const TagAndTrashWorkflow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'An automated interaction example: tag a selected document, switch views, then move it to Trash. Reload the story to replay.',
+      },
+    },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('row', { name: /Brief.pdf/ }));
@@ -270,11 +308,11 @@ export const Composed: Story = {
 };
 export const DarkGallery: Story = {
   globals: { theme: 'dark' },
-  args: { view: 'gallery', onViewChange: () => {}, onQueryChange: () => {} },
+  args: { view: 'gallery' },
 };
 
 export const CustomArtwork: Story = {
-  args: { onViewChange: () => {}, onQueryChange: () => {} },
+  parameters: { controls: { disable: true } },
   render: () => (
     <FinderWindow aria-label="Image browser">
       <FinderToolbar>
@@ -302,5 +340,39 @@ export const CustomArtwork: Story = {
     const bounds = image?.getBoundingClientRect();
     await expect(bounds?.width).toBeLessThanOrEqual(68);
     await expect(bounds?.height).toBeLessThanOrEqual(80);
+  },
+};
+
+export const NoResults: Story = {
+  args: { query: 'missing' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'An empty search result, using FinderEmptyState. Clear the search to recover your documents.',
+      },
+    },
+  },
+};
+
+export const SearchAndViewWorkflow: Story = {
+  args: { query: 'brief' },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Toolbar and search changes update Storybook args and emit callbacks in Actions.',
+      },
+    },
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByLabelText('Document count')).toHaveTextContent('1 item');
+    await userEvent.click(canvas.getByRole('button', { name: /^Gallery$/ }));
+    await expect(args.onViewChange).toHaveBeenLastCalledWith('gallery');
+    await expect(canvas.getByRole('button', { name: 'Brief.pdf' })).toBeVisible();
+    await userEvent.clear(canvas.getByRole('searchbox'));
+    await expect(args.onQueryChange).toHaveBeenLastCalledWith('');
+    await expect(canvas.getByLabelText('Document count')).toHaveTextContent('2 items');
+    await expect(canvas.getByRole('button', { name: 'Notes.md' })).toBeVisible();
   },
 };

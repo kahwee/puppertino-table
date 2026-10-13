@@ -34,8 +34,16 @@ const meta = {
     title: { control: 'text' },
     trigger: { control: false },
     triggerClassName: { control: 'text' },
-    onValueChange: { control: false },
-    onCreate: { control: false },
+    onValueChange: {
+      control: false,
+      description: 'Emits assigned IDs; the story synchronizes them with Controls.',
+      table: { category: 'Events' },
+    },
+    onCreate: {
+      control: false,
+      description: 'Optional creation callback. Omit to restrict selection to existing tags.',
+      table: { category: 'Events' },
+    },
   },
   render: function Controlled(args) {
     const [, updateArgs] = useArgs();
@@ -44,15 +52,19 @@ const meta = {
         {...args}
         onValueChange={(value) => {
           args.onValueChange(value);
-          updateArgs({ value });
+          updateArgs({ value, mixedValue: args.mixedValue?.filter((id) => !value.includes(id)) });
         }}
-        onCreate={(label) => {
-          args.onCreate?.(label);
-          updateArgs({
-            options: [...args.options, { id: label, label }],
-            value: [...args.value, label],
-          });
-        }}
+        onCreate={
+          args.onCreate
+            ? (label) => {
+                args.onCreate?.(label);
+                updateArgs({
+                  options: [...args.options, { id: label, label }],
+                  value: [...args.value, label],
+                });
+              }
+            : undefined
+        }
       />
     );
   },
@@ -87,6 +99,10 @@ export const MixedSelection: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Tags' }));
     await userEvent.click(canvas.getByRole('option', { name: 'Work Some items' }));
     await expect(canvas.getByRole('button', { name: 'Remove tag Work' })).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Remove tag Work' }));
+    await expect(canvas.getByRole('option', { name: /^Work$/ })).toBeVisible();
+    await expect(canvas.queryByText('Some items')).toBeNull();
+    await userEvent.keyboard('{Escape}');
   },
 };
 export const Disabled: Story = { args: { disabled: true } };
@@ -154,5 +170,47 @@ export const ClippedContainer: Story = {
     await expect(bounds.bottom).toBeLessThanOrEqual(window.innerHeight);
     await expect(bounds.top).toBeGreaterThanOrEqual(0);
     await expect(dialog.getAttribute('data-p-popover-place')).toBe('top');
+  },
+};
+
+export const ExistingTagsOnly: Story = {
+  args: { value: [], onCreate: undefined },
+  parameters: {
+    docs: {
+      description: { story: 'Omit onCreate to offer only your application’s existing tags.' },
+    },
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Tags' }));
+    const input = canvas.getByRole('combobox', { name: 'Tag name' });
+    await userEvent.type(input, 'Client');
+    await expect(canvas.queryByRole('option', { name: /Create tag/ })).toBeNull();
+    await expect(canvas.getByText('No matching tags')).toBeVisible();
+    await userEvent.clear(input);
+    await userEvent.click(canvas.getByRole('option', { name: 'Work' }));
+    await expect(args.onValueChange).toHaveBeenLastCalledWith(['work']);
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
+export const CreateTag: Story = {
+  args: { value: [] },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The application creates the option and assigns it. Watch options and value update in Controls, and the callback in Actions.',
+      },
+    },
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Tags' }));
+    await userEvent.type(canvas.getByRole('combobox', { name: 'Tag name' }), 'Client');
+    await userEvent.click(canvas.getByRole('option', { name: 'Create tag “Client”' }));
+    await expect(args.onCreate).toHaveBeenLastCalledWith('Client');
+    await expect(canvas.getByRole('button', { name: 'Remove tag Client' })).toBeVisible();
+    await userEvent.keyboard('{Escape}');
   },
 };

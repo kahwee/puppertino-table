@@ -716,7 +716,9 @@ const meta = {
   argTypes: {
     selectionCheckboxes: {
       control: 'boolean',
-      description: 'Show optional table checkboxes. Finder uses row selection by default.',
+      description:
+        'Show optional table checkboxes when selection is enabled. Finder uses row selection by default.',
+      table: { category: 'Table behavior' },
       if: { arg: 'initialView', eq: 'list' },
     },
     initialView: {
@@ -835,7 +837,7 @@ export function Workspace() {
       { id: 'files', label: 'Files', content: <ColumnBrowserItem href="#brief">Project brief.pdf</ColumnBrowserItem> },
       { id: 'preview', label: 'Preview', content: <p>Your app-owned preview</p> },
     ]} />
-  </FinderBody>;
+  </DensityScope>;
 }`,
       },
       description: {
