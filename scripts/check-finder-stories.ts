@@ -87,6 +87,15 @@ export async function checkFinderStories(page: Page, base: string, evidence: str
   await page.getByRole('searchbox', { name: 'Search files' }).fill('budget');
   assert.equal(await page.getByRole('row').count(), 2);
   await page.getByRole('row').filter({ hasText: 'Budget.xlsx' }).waitFor();
+  await page.getByRole('searchbox', { name: 'Search files' }).press('Escape');
+  await page.waitForFunction(() => document.activeElement?.getAttribute('aria-label') === 'Search');
+  assert.equal(await page.getByRole('searchbox', { name: 'Search files' }).count(), 0);
+  await page.getByRole('row').filter({ hasText: 'Project brief.pdf' }).waitFor();
+  await page.keyboard.press('Space');
+  await page.waitForFunction(
+    () => document.activeElement?.getAttribute('aria-label') === 'Search files',
+  );
+  await page.getByRole('searchbox', { name: 'Search files' }).fill('budget');
   await page.getByRole('button', { name: 'Columns', exact: true }).click();
   await page.getByRole('region', { name: 'Workspace columns' }).waitFor();
   await page.getByRole('button', { name: 'Budget.xlsx', exact: true }).waitFor();
