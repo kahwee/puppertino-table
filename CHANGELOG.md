@@ -1,7 +1,14 @@
 # Changelog
 
-## Unreleased
+## 0.9.0 — 2026-10-13
 
+- Export composable Finder window/body/content, toolbar groups/buttons/title, window controls, history, view switcher, search, actions, sidebar groups/items, icon grid/items, gallery/filmstrip/items, preview, details, empty-state and path/status-bar primitives. Refactor the complete Finder demo to use these public components.
+- Keep controlled view/search/tag values, selected item state, native props/refs and icon/content slots consistent. Reuse the existing typed context-menu actions; keep file data, artwork and mutations application-owned. Include the shared Finder styling in the existing CSS export and add a public-API-only composition example, guide and packed-consumer type/rendering checks.
+- Avoid stealing search focus when a deferred post-delete or restore focus update runs after the user has moved to another control.
+- Export controlled `TagPicker`, `TagOption` and `TagPickerProps` independently of Finder file data. Support mixed bulk selections, optional application-owned creation and disabled tags.
+- Add keyboard suggestion navigation, deliberate two-step Backspace removal and case-insensitive duplicate prevention. Anchor the native top-layer popover to its trigger, clamp it to the viewport and reposition on scroll/resize.
+- Reuse Puppertino popover material, arrow and theme; refine token spacing and hollow tag indicators. Replace demo Phosphor icons with thin Lucide outlines, including the Finder-oriented tag icon.
+- Add standalone Storybook tag controls and assigned, mixed, disabled, long-label, disabled-tag and clipped-container examples.
 - Polish the Finder Storybook workspace: continuous sidebar material, content-aligned path/status bars, quieter toolbar spacing, pill-shaped search, larger icon previews and consistent sidebar icon colors in both themes. Improve tag-suggestion hover contrast, consolidate duplicate chrome styles and remove obsolete selectors. Refresh the demo screenshots and screencasts.
 
 ## 0.8.0 — 2026-10-13

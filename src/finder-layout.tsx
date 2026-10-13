@@ -1,0 +1,146 @@
+'use client';
+import { type ComponentPropsWithRef, type ReactNode, useId } from 'react';
+import { DensityScope, type DensityScopeProps } from './density.js';
+
+export type FinderWindowProps = ComponentPropsWithRef<'section'>;
+export function FinderWindow({ className = '', children, ...props }: FinderWindowProps) {
+  return (
+    <section {...props} className={`pt-finder-container ${className}`}>
+      <div className="p-window pt-finder-window">{children}</div>
+    </section>
+  );
+}
+export function FinderBody({ className = '', ...props }: DensityScopeProps) {
+  return <DensityScope {...props} className={`pt-finder-workspace ${className}`} />;
+}
+export function FinderContent({ className = '', ...props }: ComponentPropsWithRef<'div'>) {
+  return <div {...props} className={`pt-finder-content ${className}`} />;
+}
+export function FinderSidebar({ className = '', ...props }: ComponentPropsWithRef<'nav'>) {
+  return <nav {...props} className={`p-sidebar p-sidebar-medium pt-finder-sidebar ${className}`} />;
+}
+export interface FinderSidebarGroupProps extends ComponentPropsWithRef<'section'> {
+  label: string;
+}
+export function FinderSidebarGroup({
+  label,
+  children,
+  className = '',
+  ...props
+}: FinderSidebarGroupProps) {
+  const id = useId();
+  return (
+    <section {...props} className={`pt-finder-sidebar-group ${className}`} aria-labelledby={id}>
+      <h2 id={id} className="p-sidebar-header">
+        {label}
+      </h2>
+      {children}
+    </section>
+  );
+}
+export interface FinderSidebarItemProps
+  extends Omit<ComponentPropsWithRef<'button'>, 'aria-current'> {
+  selected?: boolean;
+  icon?: ReactNode;
+  iconTone?: 'accent' | 'secondary';
+}
+export function FinderSidebarItem({
+  selected,
+  icon,
+  iconTone = 'accent',
+  children,
+  className = '',
+  ...props
+}: FinderSidebarItemProps) {
+  return (
+    <button
+      type="button"
+      {...props}
+      className={`p-sidebar-row pt-finder-folder ${selected ? 'p-selected' : ''} ${className}`}
+      aria-current={selected ? 'page' : undefined}
+    >
+      {icon && (
+        <span className="p-sidebar-icon" data-tone={iconTone}>
+          {icon}
+        </span>
+      )}
+      <span>{children}</span>
+    </button>
+  );
+}
+export function FinderPathBar({ className = '', ...props }: ComponentPropsWithRef<'nav'>) {
+  return <nav aria-label="Current location" {...props} className={`pt-finder-path ${className}`} />;
+}
+export function FinderStatusBar({ className = '', ...props }: ComponentPropsWithRef<'footer'>) {
+  return <footer {...props} className={`pt-finder-status ${className}`} />;
+}
+export function FinderDetails({ className = '', ...props }: ComponentPropsWithRef<'aside'>) {
+  return <aside {...props} className={`pt-finder-details ${className}`} />;
+}
+export interface FinderPreviewProps extends ComponentPropsWithRef<'div'> {
+  artwork?: ReactNode;
+  heading?: ReactNode;
+  description?: ReactNode;
+}
+export function FinderPreview({
+  className = '',
+  artwork,
+  heading,
+  description,
+  children,
+  ...props
+}: FinderPreviewProps) {
+  return (
+    <div {...props} className={`pt-finder-preview ${className}`}>
+      {artwork && <div className="pt-finder-preview-artwork">{artwork}</div>}
+      {heading && <h2>{heading}</h2>}
+      {description && <p>{description}</p>}
+      {children}
+    </div>
+  );
+}
+export function FinderEmptyState({ className = '', ...props }: ComponentPropsWithRef<'div'>) {
+  return <div {...props} className={`pt-finder-empty ${className}`} />;
+}
+export function FinderIconGrid({ className = '', ...props }: ComponentPropsWithRef<'section'>) {
+  return <section {...props} className={`pt-finder-icon-grid ${className}`} />;
+}
+export interface FinderIconItemProps extends Omit<ComponentPropsWithRef<'button'>, 'aria-pressed'> {
+  selected?: boolean;
+  artwork?: ReactNode;
+  description?: ReactNode;
+}
+export function FinderIconItem({
+  selected,
+  artwork,
+  description,
+  children,
+  className = '',
+  ...props
+}: FinderIconItemProps) {
+  return (
+    <button
+      type="button"
+      {...props}
+      aria-pressed={!!selected}
+      className={`pt-finder-icon-item ${className}`}
+    >
+      {artwork && <div className="pt-finder-item-artwork">{artwork}</div>}
+      <span>{children}</span>
+      {description && <small>{description}</small>}
+    </button>
+  );
+}
+export function FinderGallery({ className = '', ...props }: ComponentPropsWithRef<'section'>) {
+  return <section {...props} className={`pt-finder-gallery ${className}`} />;
+}
+export function FinderFilmstrip({ className = '', ...props }: ComponentPropsWithRef<'section'>) {
+  return <section {...props} className={`pt-finder-filmstrip ${className}`} />;
+}
+export interface FinderGalleryItemProps
+  extends Omit<ComponentPropsWithRef<'button'>, 'aria-pressed'> {
+  selected?: boolean;
+}
+export function FinderGalleryItem({ selected, ...props }: FinderGalleryItemProps) {
+  return <button type="button" {...props} aria-pressed={!!selected} />;
+}

@@ -410,3 +410,130 @@
 .pt-browser-item.p-selected .pt-item-secondary {
   color: inherit;
 }
+
+/* Puppertino supplies the material, arrow, dark palette and popover rim. */
+.pt-tag-picker {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: inline-flex;
+  min-width: 0;
+}
+.pt-tag-popover.p-popover {
+  border: 0;
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  width: 264px;
+  max-width: calc(100vw - 16px);
+  padding: 8px;
+  overflow: visible;
+  font-size: 13px;
+}
+.pt-tag-content {
+  max-height: calc(var(--pt-tag-max-height, 400px) - 16px);
+  overflow: auto;
+}
+.pt-tag-title {
+  text-align: center;
+  font-size: 12px;
+  padding: 0 6px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pt-tag-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  padding: 5px;
+  border: 1px solid #8885;
+  border-radius: 8px;
+  background: var(--p-window-bg, Canvas);
+  min-height: 32px;
+  box-sizing: border-box;
+}
+.pt-tag-field:focus-within {
+  outline: 1px solid #0085ff70;
+  outline-offset: 1px;
+}
+.pt-tag-popover .pt-tag-field input {
+  width: 60px;
+  flex: 1;
+  min-width: 40px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  box-shadow: none;
+  outline: none;
+}
+.pt-tag-token {
+  border: 0;
+  border-radius: 3px;
+  background: #8883;
+  color: inherit;
+  font: inherit;
+  padding: 1px 4px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.pt-tag-token:focus-visible {
+  outline: 2px solid Highlight;
+  outline-offset: 1px;
+}
+.pt-tag-options {
+  max-height: 208px;
+  overflow: auto;
+  margin-top: 14px;
+}
+.pt-tag-options button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  border-radius: 5px;
+  padding: 5px 8px;
+  min-height: 26px;
+}
+.pt-tag-options button:hover:not(:disabled),
+.pt-tag-options button[aria-selected="true"] {
+  background: #0064dc;
+  color: white;
+}
+.pt-tag-options button:disabled,
+.pt-tag-token:disabled {
+  opacity: 0.5;
+}
+.pt-tag-dot {
+  width: 11px;
+  height: 11px;
+  box-sizing: border-box;
+  border: 1.3px solid currentColor;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.pt-tag-label {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.pt-tag-options small {
+  font-size: 10px;
+  white-space: nowrap;
+}
+.pt-tag-empty {
+  padding: 6px 8px;
+  font-size: 12px;
+}
+/* Puppertino's display rule must not override the native closed state. */
+.pt-tag-popover:not(:popover-open) {
+  display: none;
+}

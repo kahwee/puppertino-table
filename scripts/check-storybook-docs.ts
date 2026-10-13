@@ -89,7 +89,11 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   await page.locator('#puppertino-table').waitFor();
   assert.equal(
     await page.getByRole('table', { name: 'Choose a Storybook example' }).getByRole('row').count(),
-    4,
+    5,
+  );
+  assert.equal(
+    await page.getByRole('link', { name: 'Finder primitives', exact: true }).getAttribute('href'),
+    './?path=/docs/puppertino-finder-composition--docs',
   );
   const link = page.getByRole('link', { name: 'Finder walkthrough', exact: true });
   assert.equal(await link.getAttribute('target'), '_top');

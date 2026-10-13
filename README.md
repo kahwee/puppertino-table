@@ -1,11 +1,12 @@
 # Puppertino Table
 
-Finder-style React tables and column browsers, built on [Puppertino](https://puppertino.com/) and [TanStack Table](https://tanstack.com/table). Bring your own data, icons and app actions.
+Composable Finder windows, toolbars, sidebars, previews, tags, tables and column browsers, built on [Puppertino](https://puppertino.com/) and [TanStack Table](https://tanstack.com/table). Bring your own data, icons and app actions.
 
 [Storybook guide](https://kahwee.github.io/puppertino-table/?path=/docs/start-here-overview--docs) · [API guide](https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md) · [npm](https://www.npmjs.com/package/puppertino-table)
 
 ![Compact file table with sortable headers and bounded resize handles](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/table-light.png)
 
+- Public Finder primitives with icon/content slots and controlled view, search and selection. [Compose a Finder](https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md#compose-a-finder).
 - Semantic tables, typed columns, local or server-owned sorting, and range selection.
 - Pointer and keyboard resizing, width limits, reset, cancellation, completed-gesture callbacks, and optional browser width persistence.
 - Independently resizable column-browser panels with native links and caller-rendered previews.
@@ -16,7 +17,7 @@ Finder-style React tables and column browsers, built on [Puppertino](https://pup
 ## Install and use
 
 ```sh
-pnpm add puppertino-table@0.8.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
+pnpm add puppertino-table@0.9.0 @tanstack/react-table@9.2.8 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
 ```
 
 ```tsx
@@ -107,3 +108,43 @@ pnpm capture:readme  # regenerate curated screenshots and screencasts; needs Chr
 GitHub Pages publishes Storybook after main passes verification. See [releasing](https://github.com/kahwee/puppertino-table/blob/main/RELEASING.md) for npm releases and [pointer profiling](https://github.com/kahwee/puppertino-table/blob/main/docs/pointer-performance.md) for measured resizing behavior. Media stays in the repository/Pages; it is not bundled into npm.
 
 MIT. React, TanStack Table and Puppertino retain their respective licenses.
+
+### Shared tag picker
+
+`TagPicker` is independent of Finder and tables. It takes stable tag IDs and
+controlled values; your application owns creation, persistence and bulk updates.
+
+```tsx
+import { useState } from 'react';
+import { TagPicker, type TagOption } from 'puppertino-table';
+import '@codedgar/puppertino/colors';
+import '@codedgar/puppertino/buttons';
+import '@codedgar/puppertino/popovers';
+import 'puppertino-table/style.css';
+
+const options: TagOption[] = [
+  { id: 'review', label: 'Review' },
+  { id: 'work', label: 'Work' },
+];
+
+function DocumentTags() {
+  const [value, setValue] = useState<string[]>(['review']);
+  return <TagPicker options={options} value={value} onValueChange={setValue} />;
+}
+```
+
+Pass `mixedValue` for tags present on only some selected records. Choosing one
+adds it to `value`; apply that addition to every selected record. Optional
+`onCreate(label)` receives a trimmed name: add its option and assigned ID in your
+application. Existing labels match without case sensitivity, preventing duplicate
+creation suggestions. IDs must be unique; unknown assigned IDs remain visible.
+
+Use `trigger` for your own icon and `triggerClassName` for a Puppertino toolbar
+button. The library has no icon dependency. Finder uses Lucide at 20px with a
+1.5-unit stroke; these are web approximations of macOS symbols.
+
+Arrow keys navigate suggestions; Enter assigns or creates. Backspace in an empty
+field focuses the last token before a second Backspace removes it. Escape closes
+and returns focus. Disabled options cannot be assigned or removed. The native
+Popover API keeps the panel above clipping containers; current browsers supporting
+that API are required. Puppertino supplies its material, arrow, shadow and theme.

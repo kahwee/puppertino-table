@@ -75,7 +75,7 @@ import { createAtom } from '@tanstack/react-store';
 import type { ColumnSizingState, SortingState, RowSelectionState } from '@tanstack/react-table';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { PuppertinoBodyContext, PuppertinoRowProps, ColumnResizeHandleProps, TableHeaderProps, TableBodyProps, RowSelectionCheckboxProps, PuppertinoTableOptions, PuppertinoTableAtoms } from 'puppertino-table';
-import { type DelegatedContextMenuOptions, type ContextMenuItem, type ContextMenuState, type ColumnBrowserItemLinkProps, PuppertinoTable, DensityScope, ColumnBrowser, ColumnBrowserItem, ContextMenu, useContextMenu, usePuppertinoTable, useRowSelectionGestures, applySelectionGesture, fitColumnBrowser, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
+import { type DelegatedContextMenuOptions, type ContextMenuItem, type ContextMenuState, type ColumnBrowserItemLinkProps, FinderWindow, FinderToolbar, FinderTitle, FinderBody, FinderContent, FinderIconGrid, FinderIconItem, FinderStatusBar, TagPicker, PuppertinoTable, DensityScope, ColumnBrowser, ColumnBrowserItem, ContextMenu, useContextMenu, usePuppertinoTable, useRowSelectionGestures, applySelectionGesture, fitColumnBrowser, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
 type Item = { id: string; title: string; price: number };
 const helper = createPuppertinoColumnHelper<Item>();
 const columns = helper.columns([
@@ -83,6 +83,14 @@ const columns = helper.columns([
   helper.accessor('price', { header: 'Price', cell: cell => cell.getValue() }),
 ]);
 const data: Item[] = [{ id: 'ten', title: 'Ten', price: 10 }, { id: 'two', title: 'Two', price: 2 }];
+const finderMarkup = renderToStaticMarkup(createElement(FinderWindow, { 'aria-label': 'Consumer Finder' },
+  createElement(FinderToolbar, null, createElement(FinderTitle, { as: 'h2' }, 'Documents')),
+  createElement(FinderBody, { density: 'comfortable' }, createElement(FinderContent, null,
+    createElement(FinderIconGrid, null, createElement(FinderIconItem, { selected: true, onClick: () => {} }, 'Brief.pdf')))),
+  createElement(FinderStatusBar, null, '1 item')));
+if (!finderMarkup.includes('pt-finder-window') || !finderMarkup.includes('aria-pressed="true"')) throw new Error('Finder composition SSR failed');
+const tagMarkup = renderToStaticMarkup(createElement(TagPicker, { options: [{ id: 'review', label: 'Review' }], value: ['review'], onValueChange: () => {} }));
+if (!tagMarkup.includes('Remove tag Review') || !tagMarkup.includes('popover="auto"')) throw new Error('Tag picker SSR failed');
 const browserMarkup = renderToStaticMarkup(createElement(DensityScope, { density: 'comfortable' }, createElement(ColumnBrowser, {
   storageKey: 'consumer.browser', storage: { getItem: () => { throw new Error('SSR read storage'); }, setItem: () => { throw new Error('SSR wrote storage'); } }, ariaLabel: 'Consumer browser', onWidthsCommit: widths => { const value: number | undefined = widths.root; void value; }, panels: [{ id: 'root', label: 'Root', content: createElement(ColumnBrowserItem, { selected: true }, 'Item') }, { id: 'current', label: 'Current', content: 'Current entries' }],
 })));
@@ -186,7 +194,7 @@ console.log('React ${react}: typed imports and server rendering passed');
       [
         '--input-type=module',
         '-e',
-        "import { readFileSync } from 'node:fs'; import assert from 'node:assert/strict'; const css = readFileSync(new URL(import.meta.resolve('puppertino-table/style.css')), 'utf8'); assert.match(css, /\\.pt-/);",
+        "import { readFileSync } from 'node:fs'; import assert from 'node:assert/strict'; const css = readFileSync(new URL(import.meta.resolve('puppertino-table/style.css')), 'utf8'); assert.match(css, /\\.pt-/); assert.match(css, /\\.pt-finder-window/); assert.match(css, /\\.pt-tag-popover/);",
       ],
       { cwd: directory, stdio: 'inherit' },
     );

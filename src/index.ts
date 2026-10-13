@@ -28,6 +28,49 @@ export {
   type TableDensity,
 } from './density.js';
 export {
+  FinderBody,
+  FinderContent,
+  FinderDetails,
+  FinderEmptyState,
+  FinderFilmstrip,
+  FinderGallery,
+  FinderGalleryItem,
+  type FinderGalleryItemProps,
+  FinderIconGrid,
+  FinderIconItem,
+  type FinderIconItemProps,
+  FinderPathBar,
+  FinderPreview,
+  type FinderPreviewProps,
+  FinderSidebar,
+  FinderSidebarGroup,
+  type FinderSidebarGroupProps,
+  FinderSidebarItem,
+  type FinderSidebarItemProps,
+  FinderStatusBar,
+  FinderWindow,
+  type FinderWindowProps,
+} from './finder-layout.js';
+export {
+  FinderActions,
+  type FinderActionsProps,
+  FinderHistory,
+  type FinderHistoryProps,
+  FinderSearch,
+  type FinderSearchProps,
+  FinderTitle,
+  type FinderTitleProps,
+  FinderToolbar,
+  FinderToolbarButton,
+  FinderToolbarGroup,
+  type FinderToolbarProps,
+  type FinderView,
+  FinderViewSwitcher,
+  type FinderViewSwitcherProps,
+  FinderWindowControls,
+  type FinderWindowControlsProps,
+} from './finder-toolbar.js';
+export {
   createPuppertinoColumnHelper,
   type PuppertinoColumnDef,
   type PuppertinoTableInstance,
@@ -59,6 +102,7 @@ export type {
   TableBodyProps,
   TableHeaderProps,
 } from './table-types.js';
+export { type TagOption, TagPicker, type TagPickerProps } from './tag-picker.js';
 export { useColumnResize } from './use-column-resize.js';
 export { usePuppertinoTable } from './use-puppertino-table.js';
 export {

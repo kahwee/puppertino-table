@@ -301,14 +301,14 @@ async function checkFinderTags(page: Page, base: string, evidence: string) {
   await rows.nth(2).click({ modifiers: ['Control'] });
   await page.getByRole('button', { name: 'Tags', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Assign tags' });
-  await dialog.getByRole('button', { name: 'Review', exact: true }).click();
+  await dialog.getByRole('option', { name: 'Review', exact: true }).click();
   await dialog.getByRole('button', { name: 'Remove tag Review', exact: true }).waitFor();
   assert.equal(
-    await dialog.getByRole('button', { name: 'Review', exact: true }).count(),
+    await dialog.getByRole('option', { name: 'Review', exact: true }).count(),
     0,
     'assigned tag becomes a token, not a suggestion',
   );
-  await dialog.getByRole('textbox', { name: 'Tag name' }).fill('Client');
+  await dialog.getByRole('combobox', { name: 'Tag name' }).fill('Client');
   await page.keyboard.press('Enter');
   await dialog.getByRole('button', { name: 'Remove tag Client', exact: true }).waitFor();
   assert.deepEqual(await finderViolations(page), [], 'tag popover accessibility');

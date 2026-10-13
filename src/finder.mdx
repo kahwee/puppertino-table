@@ -7,6 +7,12 @@ import * as Finder from './finder.stories';
 
 Compare all four Finder-style views, watch a gesture, then try it and copy the integration recipe. All files are fictional; moves update only the example's in-memory state. Videos have controls and never autoplay.
 
+The window, toolbar, sidebar, view controls, search, action menus, icon/gallery layouts,
+preview containers, tags and bottom bars are public exports. Start with the
+[composition example](./?path=/docs/puppertino-finder-composition--docs) to build
+your own Finder without importing demo modules. File data and operations stay in
+your application.
+
 ## File table
 
 Click a sortable header, select rows (Shift-click extends a range), and switch density or theme. Drag a divider, then double-click it to reset. Right-click a row for commands. **Reset demo** restores files, selection and widths while preserving your current view, theme and density.
@@ -31,7 +37,7 @@ Select files and click the tag-shaped toolbar icon. The anchored Puppertino popo
 
 Sidebar tags filter files across Projects and Archive. Tags survive moves, Trash and Put Back; Reset demo clears them. Tags are app-owned state in `demo/finder-files.ts`, not part of the table API.
 
-The chrome follows [Apple’s Finder toolbar reference](https://support.apple.com/guide/mac-help/customize-the-finder-toolbar-and-sidebar-mchlp3011/mac) and the supplied macOS screenshots: grouped icon controls, monochrome sidebar symbols, menu commands and a quiet bottom status bar. Puppertino supplies window, toolbar, sidebar and popover styles; Phosphor regular icons use 20px toolbar and 18px sidebar slots.
+The chrome follows [Apple’s Finder toolbar reference](https://support.apple.com/guide/mac-help/customize-the-finder-toolbar-and-sidebar-mchlp3011/mac) and the supplied macOS screenshots: grouped icon controls, monochrome sidebar symbols, menu commands and a quiet bottom status bar. Puppertino supplies window, toolbar, sidebar and popover styles; Lucide outline icons with a 1.5-unit stroke use 20px toolbar and 18px sidebar slots.
 
 <Canvas of={Finder.Tags} />
 

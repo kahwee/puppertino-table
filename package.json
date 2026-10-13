@@ -1,6 +1,6 @@
 {
   "name": "puppertino-table",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": false,
   "publishConfig": {
     "access": "public",
@@ -8,7 +8,7 @@
   },
   "type": "module",
   "license": "MIT",
-  "description": "Accessible Puppertino React tables backed by TanStack Table sizing, sorting and selection.",
+  "description": "Composable Finder-style React components and accessible TanStack tables, styled with Puppertino.",
   "repository": {
     "type": "git",
     "url": "https://github.com/kahwee/puppertino-table.git"
@@ -55,7 +55,6 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
     "@codedgar/puppertino": "2.0.0",
-    "@phosphor-icons/react": "2.1.10",
     "@storybook/addon-a11y": "10.6.1",
     "@storybook/addon-docs": "10.6.1",
     "@storybook/react-vite": "10.6.1",
@@ -65,6 +64,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "axe-core": "4.14.0",
+    "lucide-react": "^1.55.0",
     "playwright": "^1.64.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",

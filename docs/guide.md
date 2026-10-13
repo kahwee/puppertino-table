@@ -435,3 +435,92 @@ Puppertino owns separated borders, rounded row stripes, numeric alignment and ac
 - Checkbox Shift ranges now extend and shrink from the same fixed anchor as row gestures. A plain checkbox click toggles; Shift replaces the range; Command/Ctrl+Shift adds a range. Header select-all remains scoped to visible rows and preserves other-page selection.
 - A standalone `onColumnSizingChange` now observes internally owned width changes. Remove it if you previously supplied an unused callback. Table change callbacks accept values or functional updaters; browser width changes and all commit callbacks receive snapshots.
 - Use `onColumnSizingCommit` on complete tables for persistence or analytics after a completed gesture. It works with internal, controlled and atom-owned widths. Previews, Escape, pointer cancellation and unmount never commit.
+
+## Compose a Finder
+
+Finder is a set of public components, not a file-management service. Import every
+piece from `puppertino-table`; the complete Finder demo uses the same exports.
+Your application owns files, navigation history, selection, permissions, tags,
+previews, drag/drop and mutation callbacks.
+
+Import Puppertino's stylesheet before the library stylesheet. For a smaller
+stylesheet, use its individual colors, typography, buttons, forms, windows,
+toolbars, sidebars, popovers, lists and dark-mode exports instead.
+
+```tsx
+import '@codedgar/puppertino';
+import 'puppertino-table/style.css';
+```
+
+| Area | Public pieces | State and content |
+| --- | --- | --- |
+| Window | `FinderWindow`, `FinderBody`, `FinderContent` | Native attributes, children and refs. Body accepts the shared density props. |
+| Toolbar | `FinderToolbar`, `FinderToolbarGroup`, `FinderToolbarButton`, `FinderTitle` | Compose children in your desired order. Title supports h1–h3. |
+| Window controls | `FinderWindowControls` | Optional close/minimize/zoom callbacks; decorative without handlers. Pass custom controls through `FinderToolbar.windowControls`. |
+| Navigation | `FinderHistory`, `FinderViewSwitcher`, `FinderSearch` | History callbacks are optional; missing ones disable their buttons. View and search use `value`/`onValueChange`. Supply icons as React nodes. |
+| Commands | `FinderActions`, `ContextMenu` | Both accept the same typed `actions` entries. Your callbacks perform operations; the components handle menu interaction. |
+| Sidebar | `FinderSidebar`, `FinderSidebarGroup`, `FinderSidebarItem` | Group labels, item icons, controlled `selected` and native button handlers. |
+| Icons | `FinderIconGrid`, `FinderIconItem` | Supply artwork, label children, optional description and controlled `selected`. |
+| Gallery | `FinderGallery`, `FinderFilmstrip`, `FinderGalleryItem` | Supply preview and thumbnail children; selection remains controlled. |
+| Preview and inspector | `FinderPreview`, `FinderDetails`, `FinderEmptyState` | Preview artwork/heading/description slots and arbitrary metadata children; no required file schema. |
+| Location and status | `FinderPathBar`, `FinderStatusBar` | Compose router links, separators, counts and live announcements as children. |
+| Tags | `TagPicker` | Controlled tag IDs, mixed selections and application-owned creation. |
+| List and columns | `PuppertinoTable`, `ColumnBrowser`, `ColumnBrowserItem` | Existing table/browser contracts; share your selection state between views. |
+
+```tsx
+import { useState } from 'react';
+import { FileText, Folder } from 'lucide-react'; // Optional; any React icon works.
+import {
+  FinderWindow, FinderToolbar, FinderTitle, FinderBody, FinderSidebar,
+  FinderSidebarGroup, FinderSidebarItem, FinderContent, FinderIconGrid,
+  FinderIconItem, FinderPathBar, FinderStatusBar,
+} from 'puppertino-table';
+
+export function Documents() {
+  const [selected, setSelected] = useState(false);
+  return (
+    <FinderWindow aria-label="Documents">
+      <FinderToolbar><FinderTitle>Documents</FinderTitle></FinderToolbar>
+      <FinderBody density="comfortable" style={{ height: 420 }}>
+        <FinderSidebar aria-label="Locations">
+          <FinderSidebarGroup label="Favorites">
+            <FinderSidebarItem selected icon={<Folder aria-hidden="true" />}>
+              Documents
+            </FinderSidebarItem>
+          </FinderSidebarGroup>
+        </FinderSidebar>
+        <FinderContent>
+          <FinderIconGrid aria-label="Files">
+            <FinderIconItem
+              selected={selected}
+              onClick={() => setSelected(!selected)}
+              artwork={<FileText aria-hidden="true" />}
+              description="PDF document"
+            >
+              Brief.pdf
+            </FinderIconItem>
+          </FinderIconGrid>
+        </FinderContent>
+      </FinderBody>
+      <FinderPathBar><span>Documents</span></FinderPathBar>
+      <FinderStatusBar>{selected ? '1 of 1 selected' : '1 item'}</FinderStatusBar>
+    </FinderWindow>
+  );
+}
+```
+
+The layout primitives forward native HTML attributes and React refs. Selection
+components reserve their ARIA selection attribute and derive it from `selected`,
+so there is one source of truth. Use `applySelectionGesture` and
+`useRowSelectionGestures` when composing range selection across views. Keep the
+same IDs and selection anchor when switching views.
+
+Constrain the window's width with its parent or native `style` prop; it creates
+its own size-query container. Add `p-dark-mode` to the window or an ancestor for
+dark mode. Customize `--finder-sidebar-width`, `--finder-radius`,
+`--finder-sidebar`, `--finder-toolbar` and `--finder-line` through CSS; the
+window, sidebar and bottom bars share those metrics. No private demo stylesheet,
+icon package, fictional artwork or file reducer is required.
+
+See [the live composition example](https://kahwee.github.io/puppertino-table/?path=/docs/puppertino-finder-composition--docs)
+for controlled view/search args and all four views.

@@ -9,6 +9,7 @@
 @import "@codedgar/puppertino/lists";
 @import "@codedgar/puppertino/dark-mode";
 @import "../src/style.css";
+@import "../src/finder.css";
 * {
   box-sizing: border-box;
 }

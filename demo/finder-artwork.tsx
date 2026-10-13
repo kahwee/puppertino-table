@@ -1,21 +1,22 @@
 import {
   ArchiveIcon,
-  ArrowUUpLeftIcon,
-  CaretLeftIcon,
-  CaretRightIcon,
+  ChevronLeft,
+  ChevronRight,
   CircleIcon,
-  ColumnsIcon,
-  DesktopIcon,
-  DotsThreeIcon,
+  Columns3,
+  Ellipsis,
   EyeIcon,
   FolderIcon,
+  GalleryThumbnails,
+  Grid2X2,
   InfoIcon,
-  ListBulletsIcon,
-  MagnifyingGlassIcon,
-  SlideshowIcon,
-  SquaresFourIcon,
+  List,
+  Monitor,
+  Search,
   TrashIcon,
-} from '@phosphor-icons/react';
+  Undo2,
+} from 'lucide-react';
+import { FinderEmptyState, FinderPreview } from '../src/index.js';
 
 interface FinderFile {
   name: string;
@@ -24,28 +25,28 @@ interface FinderFile {
   modified: string;
   folder: string;
 }
-export type FinderView = 'icons' | 'list' | 'columns' | 'gallery';
+
 const viewIcons = {
-  icons: SquaresFourIcon,
-  list: ListBulletsIcon,
-  columns: ColumnsIcon,
-  gallery: SlideshowIcon,
-  search: MagnifyingGlassIcon,
-  back: CaretLeftIcon,
-  forward: CaretRightIcon,
+  icons: Grid2X2,
+  list: List,
+  columns: Columns3,
+  gallery: GalleryThumbnails,
+  search: Search,
+  back: ChevronLeft,
+  forward: ChevronRight,
   info: InfoIcon,
   trash: TrashIcon,
-  restore: ArrowUUpLeftIcon,
-  actions: DotsThreeIcon,
+  restore: Undo2,
+  actions: Ellipsis,
   preview: EyeIcon,
   folder: FolderIcon,
   archive: ArchiveIcon,
-  desktop: DesktopIcon,
+  desktop: Monitor,
   tag: CircleIcon,
 };
 export function ViewGlyph({ view }: { view: keyof typeof viewIcons }) {
   const Icon = viewIcons[view];
-  return <Icon size={20} weight="regular" aria-hidden="true" />;
+  return <Icon size={20} strokeWidth={1.5} aria-hidden="true" />;
 }
 export function Glyph({
   folder = false,
@@ -84,59 +85,60 @@ export function Glyph({
 export function FilePreview({ file }: { file?: FinderFile }) {
   if (!file)
     return (
-      <div className="finder-demo-empty">
+      <FinderEmptyState>
         <Glyph folder />
         <strong>No file selected</strong>
         <span>Select a file to see its preview.</span>
-      </div>
+      </FinderEmptyState>
     );
   return (
-    <div className="finder-demo-preview">
-      <div
-        className={`finder-demo-paper finder-demo-paper-${file.kind === 'PNG image' ? 'image' : file.kind === 'Spreadsheet' ? 'sheet' : 'document'}`}
-        role="img"
-        aria-label={`Fictional preview of ${file.name}`}
-      >
-        <span className="finder-demo-paper-kicker">ALPINE / DESIGN STUDIO</span>
-        <strong>
-          {file.kind === 'PNG image'
-            ? 'Higher ground.'
-            : file.kind === 'Spreadsheet'
-              ? 'Project budget'
-              : file.kind === 'Text document'
-                ? 'Notes & ideas'
-                : 'A fresh perspective.'}
-        </strong>
-        <div className="finder-demo-paper-landscape" aria-hidden="true">
-          <i />
-          <i />
-          <i />
+    <FinderPreview
+      heading={file.name}
+      description={`${file.kind} · ${file.size}`}
+      artwork={
+        <div
+          className={`finder-demo-paper finder-demo-paper-${file.kind === 'PNG image' ? 'image' : file.kind === 'Spreadsheet' ? 'sheet' : 'document'}`}
+          role="img"
+          aria-label={`Fictional preview of ${file.name}`}
+        >
+          <span className="finder-demo-paper-kicker">ALPINE / DESIGN STUDIO</span>
+          <strong>
+            {file.kind === 'PNG image'
+              ? 'Higher ground.'
+              : file.kind === 'Spreadsheet'
+                ? 'Project budget'
+                : file.kind === 'Text document'
+                  ? 'Notes & ideas'
+                  : 'A fresh perspective.'}
+          </strong>
+          <div className="finder-demo-paper-landscape" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </div>
+          <span className="finder-demo-paper-caption">
+            {file.kind === 'Spreadsheet'
+              ? 'Planning · Production · Delivery'
+              : 'Thoughtful work. Clear direction.'}
+          </span>
+          <div className="finder-demo-paper-lines" aria-hidden="true">
+            <hr />
+            <hr />
+            <hr />
+          </div>
+          <span className="finder-demo-paper-foot">
+            PROJECT ALPINE <span>01 / 06</span>
+          </span>
         </div>
-        <span className="finder-demo-paper-caption">
-          {file.kind === 'Spreadsheet'
-            ? 'Planning · Production · Delivery'
-            : 'Thoughtful work. Clear direction.'}
-        </span>
-        <div className="finder-demo-paper-lines" aria-hidden="true">
-          <hr />
-          <hr />
-          <hr />
-        </div>
-        <span className="finder-demo-paper-foot">
-          PROJECT ALPINE <span>01 / 06</span>
-        </span>
-      </div>
-      <h2>{file.name}</h2>
-      <p>
-        {file.kind} · {file.size}
-      </p>
+      }
+    >
       <dl>
         <dt>Modified</dt>
         <dd>{file.modified}</dd>
         <dt>Location</dt>
         <dd>{file.folder}</dd>
       </dl>
-    </div>
+    </FinderPreview>
   );
 }
 

@@ -3,14 +3,8 @@ import type { RowSelectionState } from '@tanstack/react-table';
 import type { DragEvent, MouseEvent } from 'react';
 import { useReducer, useRef, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
-import {
-  FileArtwork,
-  FilePreview,
-  type FinderView,
-  Glyph,
-  ViewGlyph,
-} from '../demo/finder-artwork.js';
-import { FinderToolbar } from '../demo/finder-chrome.js';
+import { FileArtwork, FilePreview, Glyph, ViewGlyph } from '../demo/finder-artwork.js';
+import { DemoToolbar } from '../demo/finder-chrome.js';
 import { type FileItem, finderFilesReducer, initialFinderFiles } from '../demo/finder-files.js';
 import { FinderTags } from '../demo/finder-tags.js';
 import {
@@ -19,7 +13,21 @@ import {
   ColumnBrowserItem,
   ContextMenu,
   createPuppertinoColumnHelper,
-  DensityScope,
+  FinderBody,
+  FinderContent,
+  FinderDetails,
+  FinderFilmstrip,
+  FinderGallery,
+  FinderGalleryItem,
+  FinderIconGrid,
+  FinderIconItem,
+  FinderPathBar,
+  FinderSidebar,
+  FinderSidebarGroup,
+  FinderSidebarItem,
+  FinderStatusBar,
+  type FinderView,
+  FinderWindow,
   PuppertinoTable,
   type TableDensity,
   useContextMenu,
@@ -129,11 +137,23 @@ function FinderDemo({
     setInfoOpen(false);
     setMessage(text);
   };
+  const focusAfterMutation = () => {
+    const previousFocus = document.activeElement;
+    requestAnimationFrame(() => {
+      const focused = document.activeElement;
+      if (
+        focused === previousFocus ||
+        focused === document.body ||
+        focused?.getAttribute('aria-haspopup') === 'menu'
+      )
+        selectionSummary.current?.focus();
+    });
+  };
   const deleteFiles = (targets: FileItem[]) => {
     if (!canAct || inTrash || !targets.length) return;
     dispatchFiles({ type: 'delete', ids: targets.map((file) => file.id) });
     finishAction(`Moved ${targets.length} ${targets.length === 1 ? 'file' : 'files'} to Trash.`);
-    requestAnimationFrame(() => selectionSummary.current?.focus());
+    focusAfterMutation();
   };
   const restoreFiles = (targets: FileItem[]) => {
     if (!canAct || !targets.length) return;
@@ -141,7 +161,7 @@ function FinderDemo({
     finishAction(
       `Restored ${targets.length} ${targets.length === 1 ? 'file' : 'files'} to their original folders.`,
     );
-    requestAnimationFrame(() => selectionSummary.current?.focus());
+    focusAfterMutation();
   };
   const moveFiles = (targets: FileItem[], target: 'Projects' | 'Archive') => {
     if (!canAct || inTrash || !targets.length) return;
@@ -231,7 +251,7 @@ function FinderDemo({
     if (disabled || !lastDeletedIds.length) return;
     dispatchFiles({ type: 'undo' });
     finishAction('Deletion undone. Files restored to their original folders.');
-    requestAnimationFrame(() => selectionSummary.current?.focus());
+    focusAfterMutation();
   };
   const toolbarActions = [
     {
@@ -283,25 +303,24 @@ function FinderDemo({
     },
   ];
   const folderButton = (name: string) => (
-    <button
-      type="button"
+    <FinderSidebarItem
       key={name}
       data-folder={name}
-      className={`p-sidebar-row finder-demo-folder ${folder === name ? 'p-selected' : ''} ${over === name ? 'finder-demo-drop' : ''}`}
-      aria-current={folder === name ? 'page' : undefined}
+      className={over === name ? 'finder-demo-drop' : ''}
+      selected={folder === name}
+      iconTone={name === 'Trash' ? 'secondary' : 'accent'}
+      icon={
+        <ViewGlyph view={name === 'Trash' ? 'trash' : name === 'Archive' ? 'archive' : 'folder'} />
+      }
       onClick={() => navigate(name)}
       {...dropProps(name)}
     >
-      <span className="p-sidebar-icon">
-        <ViewGlyph view={name === 'Trash' ? 'trash' : name === 'Archive' ? 'archive' : 'folder'} />
-      </span>
-      <span>{name}</span>
-    </button>
+      {name}
+    </FinderSidebarItem>
   );
   return (
     <main className={`finder-demo-stage ${dark ? 'p-dark-mode' : ''}`}>
-      <section
-        className="p-window finder-demo-window"
+      <FinderWindow
         aria-label="Finder-style demo"
         onKeyDown={(event) => {
           if (
@@ -324,7 +343,7 @@ function FinderDemo({
           }
         }}
       >
-        <FinderToolbar
+        <DemoToolbar
           folder={folderTitle}
           tags={
             <FinderTags
@@ -370,35 +389,35 @@ function FinderDemo({
             setInfoOpen(true);
           }}
         />
-        <DensityScope density={density} className="finder-demo-workspace">
-          <nav className="p-sidebar p-sidebar-medium finder-demo-sidebar" aria-label="Favorites">
-            <h2 className="p-sidebar-header">Favorites</h2>
-            {['Projects', 'Archive'].map(folderButton)}
-            <h2 className="p-sidebar-header">Locations</h2>
-            <div className="p-sidebar-row">
-              <span className="p-sidebar-icon finder-demo-location">
-                <ViewGlyph view="desktop" />
-              </span>
-              Design studio
-            </div>
-            {folderButton('Trash')}
-            <h2 className="p-sidebar-header">Tags</h2>
-            {availableTags.map((tag) => (
-              <button
-                type="button"
-                key={tag}
-                className={`p-sidebar-row ${activeTag === tag ? 'p-selected' : ''}`}
-                aria-current={activeTag === tag ? 'page' : undefined}
-                onClick={() => navigate(`tag:${tag}`)}
-              >
-                <span className="p-sidebar-icon finder-demo-tag">
-                  <ViewGlyph view="tag" />
+        <FinderBody density={density}>
+          <FinderSidebar aria-label="Favorites">
+            <FinderSidebarGroup label="Favorites">
+              {['Projects', 'Archive'].map(folderButton)}
+            </FinderSidebarGroup>
+            <FinderSidebarGroup label="Locations">
+              <div className="p-sidebar-row">
+                <span className="p-sidebar-icon finder-demo-location">
+                  <ViewGlyph view="desktop" />
                 </span>
-                {tag}
-              </button>
-            ))}
-          </nav>
-          <div className="finder-demo-content">
+                Design studio
+              </div>
+              {folderButton('Trash')}
+            </FinderSidebarGroup>
+            <FinderSidebarGroup label="Tags">
+              {availableTags.map((tag) => (
+                <FinderSidebarItem
+                  key={tag}
+                  selected={activeTag === tag}
+                  icon={<ViewGlyph view="tag" />}
+                  iconTone="secondary"
+                  onClick={() => navigate(`tag:${tag}`)}
+                >
+                  {tag}
+                </FinderSidebarItem>
+              ))}
+            </FinderSidebarGroup>
+          </FinderSidebar>
+          <FinderContent>
             {view === 'list' ? (
               <PuppertinoTable
                 key={revision}
@@ -493,50 +512,47 @@ function FinderDemo({
                 ]}
               />
             ) : view === 'icons' ? (
-              <section className="finder-demo-icon-grid" aria-label="Project file icons">
+              <FinderIconGrid aria-label="Project file icons">
                 {visible.map((file) => (
-                  <button
-                    type="button"
+                  <FinderIconItem
                     key={file.id}
-                    aria-pressed={!!selection[file.id]}
+                    selected={!!selection[file.id]}
                     disabled={disabled}
-                    className="finder-demo-icon-item"
+                    artwork={<FileArtwork file={file} />}
+                    description={file.kind}
                     {...menu.getTriggerProps(file.id)}
                     {...dragProps(file)}
                     onClick={(event) => selectFile(file.id, event)}
                   >
-                    <FileArtwork file={file} />
-                    <span>{file.name}</span>
-                    <small>{file.kind}</small>
-                  </button>
+                    {file.name}
+                  </FinderIconItem>
                 ))}
                 {!visible.length && <p className="finder-demo-no-results">{emptyMessage}</p>}
-              </section>
+              </FinderIconGrid>
             ) : (
-              <section className="finder-demo-gallery" aria-label="Project file gallery">
+              <FinderGallery aria-label="Project file gallery">
                 <FilePreview file={active ?? visible[0]} />
-                <section className="finder-demo-filmstrip" aria-label="Gallery files">
+                <FinderFilmstrip aria-label="Gallery files">
                   {!visible.length && <p className="finder-demo-no-results">{emptyMessage}</p>}
                   {visible.map((file) => (
-                    <button
-                      type="button"
+                    <FinderGalleryItem
                       key={file.id}
                       aria-label={file.name}
                       disabled={disabled}
-                      aria-pressed={!!selection[file.id]}
+                      selected={!!selection[file.id]}
                       {...menu.getTriggerProps(file.id)}
                       {...dragProps(file)}
                       onClick={(event) => selectFile(file.id, event)}
                     >
                       <FileArtwork file={file} />
-                    </button>
+                    </FinderGalleryItem>
                   ))}
-                </section>
-              </section>
+                </FinderFilmstrip>
+              </FinderGallery>
             )}
-          </div>
+          </FinderContent>
           {active && infoOpen && (
-            <aside className="finder-demo-details" aria-label="File details">
+            <FinderDetails aria-label="File details">
               <span className="finder-demo-detail-icon">
                 <Glyph kind={active.kind} />
               </span>
@@ -553,10 +569,10 @@ function FinderDemo({
               <button type="button" onClick={() => setInfoOpen(false)}>
                 Close details
               </button>
-            </aside>
+            </FinderDetails>
           )}
-        </DensityScope>
-        <nav className="finder-demo-path" aria-label="Current location">
+        </FinderBody>
+        <FinderPathBar>
           <Glyph folder />
           <span>Design studio</span>
           <span aria-hidden="true">›</span>
@@ -566,18 +582,18 @@ function FinderDemo({
           {active && (
             <>
               <span aria-hidden="true">›</span>
-              <span className="finder-demo-path-file">{active.name}</span>
+              <span>{active.name}</span>
             </>
           )}
-        </nav>
-        <footer className="finder-demo-status">
+        </FinderPathBar>
+        <FinderStatusBar>
           <output ref={selectionSummary} tabIndex={-1} aria-label="Selection summary">
             {selectedFiles.length
               ? `${selectedFiles.length} of ${visible.length} selected`
               : `${visible.length} ${visible.length === 1 ? 'item' : 'items'}`}
           </output>
-        </footer>
-        <span className="finder-demo-announcement" role="status">
+        </FinderStatusBar>
+        <span className="pt-sr-only" role="status">
           {message}
         </span>
         <ContextMenu
@@ -641,7 +657,7 @@ function FinderDemo({
               : []
           }
         />
-      </section>
+      </FinderWindow>
       <fieldset className="finder-demo-controls" aria-label="Demo settings">
         <span>Try the shared components</span>
         <label>
@@ -836,7 +852,7 @@ export function Workspace() {
       { id: 'files', label: 'Files', content: <ColumnBrowserItem href="#brief">Project brief.pdf</ColumnBrowserItem> },
       { id: 'preview', label: 'Preview', content: <p>Your app-owned preview</p> },
     ]} />
-  </DensityScope>;
+  </FinderBody>;
 }`,
       },
       description: {
@@ -956,8 +972,8 @@ export const Tags: Story = {
     await userEvent.click(canvas.getByRole('row', { name: /Project brief.pdf/ }));
     await userEvent.click(canvas.getByRole('button', { name: 'Tags' }));
     const popover = within(canvas.getByRole('dialog', { name: 'Assign tags' }));
-    await userEvent.click(popover.getByRole('button', { name: 'Review' }));
+    await userEvent.click(popover.getByRole('option', { name: 'Review' }));
     await expect(popover.getByRole('button', { name: 'Remove tag Review' })).toBeVisible();
-    await expect(popover.queryByRole('button', { name: 'Review' })).toBeNull();
+    await expect(popover.queryByRole('option', { name: 'Review' })).toBeNull();
   },
 };

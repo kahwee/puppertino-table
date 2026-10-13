@@ -178,7 +178,7 @@ try {
   await page.getByRole('button', { name: 'Tags', exact: true }).click();
   await page
     .getByRole('dialog', { name: 'Assign tags' })
-    .getByRole('button', { name: 'Review', exact: true })
+    .getByRole('option', { name: 'Review', exact: true })
     .click();
   await accessibility(page);
   await page.screenshot({ path: path.join(media, 'tags.png') });

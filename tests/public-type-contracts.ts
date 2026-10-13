@@ -2,7 +2,11 @@ import type {
   ContextMenuAction,
   ContextMenuItem,
   ContextMenuState,
+  FinderIconItemProps,
+  FinderViewSwitcherProps,
   PuppertinoRowProps,
+  TagOption,
+  TagPickerProps,
 } from '../src/index.js';
 
 // Compile-time coverage: conflicting menu variants must fail at the public entry point.
@@ -140,3 +144,26 @@ void [
   conflictingSizingCallback,
   committedAtoms,
 ];
+
+// Tag values use stable IDs independently of application records.
+const tagOptions = [{ id: 'review', label: 'Review' }] as const satisfies readonly TagOption[];
+const tagPicker = {
+  options: tagOptions,
+  value: ['review'],
+  onValueChange: (_value: string[]) => {},
+} satisfies TagPickerProps;
+// @ts-expect-error Controlled values require an update callback.
+const missingTagCallback: TagPickerProps = { options: tagOptions, value: [] };
+void [tagPicker, missingTagCallback];
+
+const viewIcons = { icons: null, list: null, columns: null, gallery: null };
+const finderSwitcher = {
+  value: 'list',
+  onValueChange: (_view: 'icons' | 'list' | 'columns' | 'gallery') => {},
+  icons: viewIcons,
+} satisfies FinderViewSwitcherProps;
+// @ts-expect-error Controlled view switching requires its callback.
+const missingViewCallback: FinderViewSwitcherProps = { value: 'list', icons: viewIcons };
+// @ts-expect-error Selection has one owner; use selected rather than overriding aria-pressed.
+const conflictingIconSelection: FinderIconItemProps = { selected: true, 'aria-pressed': false };
+void [finderSwitcher, missingViewCallback, conflictingIconSelection];
