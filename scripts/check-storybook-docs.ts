@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import type { Page } from 'playwright';
+import { checkDataPresets } from './check-data-presets.js';
 import { checkPlaygroundControls } from './check-storybook-controls.js';
 import { checkStorybookQuality } from './check-storybook-quality.js';
 
@@ -129,6 +130,7 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   await checkThemeToolbar(page, base);
   await checkPlaygroundControls(page, base, evidence);
   await checkStorybookQuality(page, base, evidence);
+  await checkDataPresets(page, base, evidence);
   console.log(
     'Storybook docs passed: media playback, readable source, live args, reset and manager navigation.',
   );

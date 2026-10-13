@@ -1,6 +1,15 @@
-import { Controls, Primary, Stories, Subtitle, Title, useOf } from '@storybook/addon-docs/blocks';
+import {
+  Controls,
+  Primary,
+  Source,
+  Stories,
+  Subtitle,
+  Title,
+  useOf,
+} from '@storybook/addon-docs/blocks';
 import { componentGuides } from './component-guides.js';
 import { scenarioGroups, scenarioHref } from './scenarios.js';
+import { supportingSources } from './supporting-sources.js';
 import { workflows } from './workflows.js';
 
 /** One primary canvas; additional docs stories show distinct recipes only. */
@@ -12,6 +21,8 @@ export function ComponentDocs() {
       ? scenarioGroups[resolved.preparedMeta.title as keyof typeof scenarioGroups]
       : undefined;
   const checks = resolved.type === 'meta' ? workflows[resolved.preparedMeta.title] : undefined;
+  const supporting =
+    resolved.type === 'meta' ? supportingSources[resolved.preparedMeta.title] : undefined;
   return (
     <>
       <Title />
@@ -22,6 +33,17 @@ export function ComponentDocs() {
           'Use Controls to explore this component. Use the shared Theme and Viewport toolbars for appearance and responsive layouts.'}
       </p>
       <Primary />
+      {supporting && (
+        <details className="storybook-supporting">
+          <summary>Supporting code: {supporting.filename}</summary>
+          <p>
+            {supporting.filename.endsWith('.tsx')
+              ? 'Copy this file alongside the short integration above.'
+              : 'Full default recipe with the original fixtures and cells.'}
+          </p>
+          <Source language="tsx" code={supporting.code} />
+        </details>
+      )}
       {scenarios && (
         <>
           <h2 id="open-a-scenario">Open a scenario</h2>

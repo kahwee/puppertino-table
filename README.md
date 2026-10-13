@@ -227,6 +227,8 @@ Checkboxes and row gestures share a fixed range anchor. Pass `selectionAnchor` t
 
 ## Storybook playgrounds
 
+Code starts with a short integration; expand Supporting code in Docs for the complete files. Try empty, long-name, large and read-only datasets through args in Table and the composed workspace. Selection counts, command results and empty-state recovery stay visible in the workspace.
+
 Choose flat rows (Table), a tree (Outline), a folder path (Column view), or adjacent panes (Split view). Internal state stays local; React owns values/callbacks; atoms share state. Set `manualSorting` for server-owned order.
 
 Open named scenarios from the component docs to start with typed args presets. Table Controls group appearance, selection, sorting, sizing and accessibility; State ownership compares React and atoms with matching recipes. The composed document workspace combines locations, resizable panes, previews, tags and Trash/undo. Named Interactions steps explain each workflow; Reset example restores local data and argument defaults.

@@ -85,6 +85,26 @@ const sidebar = [
 
 const composition = [
   {
+    name: 'Empty collection',
+    args: { dataPreset: 'empty' },
+    observe: 'Inspect the empty state and disabled document commands.',
+  },
+  {
+    name: 'Long filenames',
+    args: { dataPreset: 'longNames' },
+    observe: 'Check clipping, wrapping and accessible full labels across views.',
+  },
+  {
+    name: '250 documents',
+    args: { dataPreset: 'large' },
+    observe: 'Browse 200 current documents and 50 archived records.',
+  },
+  {
+    name: 'Read-only document',
+    args: { dataPreset: 'readOnly' },
+    observe: 'Preview Brief.pdf; tagging and Trash stay unavailable for that record.',
+  },
+  {
     name: 'Browse archived documents',
     args: { section: 'Archive' },
     observe: 'Select the launch report and inspect its app-owned preview.',

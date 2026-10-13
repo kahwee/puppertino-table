@@ -229,7 +229,7 @@ export async function checkPlaygroundControls(page: Page, base: string, evidence
     .first()
     .waitFor();
   await page.getByRole('tab', { name: 'Code', exact: true }).click();
-  await page.waitForFunction(() => document.body.textContent?.includes('loadChildren'));
+  await page.waitForFunction(() => document.body.textContent?.includes("from './outline-example'"));
   assert.ok((await page.locator('body').innerText()).includes("from 'puppertino-table'"));
   await page.getByRole('tab', { name: /^Controls/ }).click();
   await page.screenshot({ path: `${evidence}/outline-playground-controls.png` });

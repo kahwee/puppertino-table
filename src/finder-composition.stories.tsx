@@ -2,15 +2,15 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useArgs } from 'storybook/preview-api';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { ResettableExample } from '../.storybook/resettable-example.js';
-import { documentWorkspaceRecipe } from '../.storybook/workspace-recipe.js';
-import { Composition } from '../demo/document-workspace-example.js';
-import workspaceSource from '../demo/document-workspace-example.tsx?raw';
+import { shortWorkspaceRecipe } from '../.storybook/workspace-recipe.js';
+import { Composition, type CompositionProps } from '../demo/document-workspace-example.js';
 import { finderViews } from './index.js';
 
 const meta = {
   title: 'Puppertino/Finder composition',
   component: Composition,
   args: {
+    dataPreset: 'standard',
     view: 'list',
     query: '',
     section: 'Documents',
@@ -26,6 +26,21 @@ const meta = {
     onSizesCommit: fn(),
   },
   argTypes: {
+    dataPreset: {
+      control: {
+        type: 'select',
+        labels: {
+          standard: 'Standard',
+          empty: 'Empty',
+          longNames: 'Long filenames',
+          large: '250 documents',
+          readOnly: 'Read-only record',
+        },
+      },
+      options: ['standard', 'empty', 'longNames', 'large', 'readOnly'],
+      description: 'Changing data starts a fresh workspace. View and search remain configurable.',
+      table: { category: 'Example data' },
+    },
     section: {
       control: 'inline-radio',
       options: ['Documents', 'Archive'],
@@ -76,8 +91,9 @@ const meta = {
     docs: {
       source: {
         language: 'tsx',
-        type: 'code',
-        code: documentWorkspaceRecipe(workspaceSource),
+        type: 'dynamic',
+        transform: (_code: string, context: { args: CompositionProps }) =>
+          shortWorkspaceRecipe(context.args),
       },
       description: {
         component:
@@ -90,6 +106,7 @@ const meta = {
     return (
       <ResettableExample onReset={resetArgs}>
         <Composition
+          key={args.dataPreset}
           {...args}
           onSectionChange={(section) => {
             args.onSectionChange(section);

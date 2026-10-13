@@ -383,7 +383,7 @@ async function checkStories() {
       await score.click();
       assert.match((await table.locator('tbody tr').first().textContent()) ?? '', /86/);
       await score.click();
-      assert.match((await table.locator('tbody tr').first().textContent()) ?? '', /Person 001/);
+      assert.match((await table.locator('tbody tr').first().textContent()) ?? '', /Maya Chen/);
     }
     if (story === 'grouped-headers') {
       assert.ok((await page.locator('thead tr').count()) >= 2);

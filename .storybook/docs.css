@@ -108,3 +108,18 @@
 .sbdocs-content a.storybook-choice {
   text-decoration: none;
 }
+
+.storybook-supporting {
+  margin: 16px 0 24px;
+  border: 1px solid #dce1e8;
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+.storybook-supporting summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.storybook-supporting > p {
+  font-size: 13px;
+  color: #515963;
+}

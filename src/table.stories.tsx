@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useCreateAtom } from '@tanstack/react-store';
 import type { RowSelectionState, SortingState } from '@tanstack/react-table';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useArgs } from 'storybook/preview-api';
 import { expect, userEvent, within } from 'storybook/test';
 import { tablePlaygroundSource } from '../.storybook/playground-source.js';
@@ -10,6 +10,7 @@ import { tableRecipes } from '../.storybook/table-sources.js';
 import { DateTableExample } from '../demo/date-table-example.js';
 import { type Person, people, personColumns, productColumns, products } from '../demo/fixtures.js';
 import { KeyboardNavigationExample } from '../demo/keyboard-navigation-example.js';
+import { type TableDataPreset, tableData } from '../demo/table-data-presets.js';
 import {
   AtomOwnershipExample,
   ControlledSizingExample,
@@ -81,6 +82,7 @@ const meta = {
     },
   },
   args: {
+    dataPreset: 'standard',
     gestureOwnership: 'controlled',
     stateOwner: 'react',
     ...tableDefaults,
@@ -145,6 +147,7 @@ const meta = {
   PuppertinoTableProps<Person> & {
     gestureOwnership?: 'controlled' | 'local' | 'atom';
     stateOwner?: 'react' | 'atoms';
+    dataPreset?: TableDataPreset;
   }
 >;
 export default meta;
@@ -152,20 +155,60 @@ export type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   name: 'Playground',
+  argTypes: {
+    dataPreset: {
+      control: {
+        type: 'select',
+        labels: {
+          standard: 'Standard',
+          empty: 'Empty',
+          longNames: 'Long values',
+          large: '1,000 rows',
+          readOnly: 'Read-only rows',
+        },
+      },
+      options: ['standard', 'empty', 'longNames', 'large', 'readOnly'],
+      description:
+        'Data variants. Read-only rows opt out of selection; sorting and resizing remain available.',
+      table: { category: 'Example data' },
+    },
+  },
   parameters: {
+    controls: {
+      include: [
+        'dataPreset',
+        'disabled',
+        'selectable',
+        'selectionCheckboxes',
+        'resizable',
+        'manualSorting',
+        'density',
+        'ariaLabel',
+      ],
+    },
     docs: {
       source: {
         type: 'dynamic',
-        transform: (_code: string, context: { args: Partial<PuppertinoTableProps<Person>> }) =>
-          tablePlaygroundSource(tableRecipes.uncontrolled, context.args),
+        transform: (
+          _code: string,
+          context: {
+            args: Partial<PuppertinoTableProps<Person>> & { dataPreset?: TableDataPreset };
+          },
+        ) => tablePlaygroundSource(tableRecipes.uncontrolled, context.args),
       },
     },
   },
   render: function Playground(args) {
     const [, , resetArgs] = useArgs<typeof args>();
+    const data = useMemo(() => tableData(args.dataPreset ?? 'standard'), [args.dataPreset]);
     return (
       <ResettableExample onReset={resetArgs}>
-        <PeopleTable {...args} />
+        <PeopleTable
+          {...args}
+          key={args.dataPreset}
+          data={data}
+          isRowSelectable={args.dataPreset === 'readOnly' ? () => false : args.isRowSelectable}
+        />
       </ResettableExample>
     );
   },

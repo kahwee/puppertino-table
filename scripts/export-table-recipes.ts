@@ -8,7 +8,7 @@ import {
 } from '../.storybook/playground-source.js';
 import { createTableRecipes } from '../.storybook/table-recipes.js';
 import { tagPickerRecipe, tagPickerSource } from '../.storybook/tag-picker-recipe.js';
-import { documentWorkspaceRecipe } from '../.storybook/workspace-recipe.js';
+import { documentWorkspaceRecipe, shortWorkspaceRecipe } from '../.storybook/workspace-recipe.js';
 
 const [
   fixtures,
@@ -55,7 +55,18 @@ if (!directory) throw new Error('Provide the installed consumer directory.');
 const workspace = documentWorkspaceRecipe(
   await readFile('demo/document-workspace-example.tsx', 'utf8'),
 );
+await Promise.all([
+  writeFile(path.join(directory, 'outline-example.tsx'), recipes.outline),
+  writeFile(path.join(directory, 'split-example.tsx'), recipes.split),
+  writeFile(path.join(directory, 'document-workspace.tsx'), workspace),
+]);
 const files = Object.entries({
+  'workspace-short': shortWorkspaceRecipe(),
+  'workspace-read-only': shortWorkspaceRecipe({ dataPreset: 'readOnly', view: 'icons' }),
+  'table-empty': tablePlaygroundSource(recipes.uncontrolled, { dataPreset: 'empty' }),
+  'table-long-names': tablePlaygroundSource(recipes.uncontrolled, { dataPreset: 'longNames' }),
+  'table-large': tablePlaygroundSource(recipes.uncontrolled, { dataPreset: 'large' }),
+  'table-read-only': tablePlaygroundSource(recipes.uncontrolled, { dataPreset: 'readOnly' }),
   'document-workspace': workspace,
   'outline-live': outlinePlaygroundSource(recipes.outline, {
     loadingDelay: 1200,

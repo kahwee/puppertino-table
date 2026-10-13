@@ -10,8 +10,10 @@ import {
   TagIcon,
   TreeStructureIcon,
 } from '@phosphor-icons/react';
-import { useState } from 'react';
+import type { RowSelectionState } from '@tanstack/react-table';
+import { useMemo, useRef, useState } from 'react';
 import {
+  applySelectionGesture,
   ColumnView,
   ColumnViewItem,
   createPuppertinoColumnHelper,
@@ -45,47 +47,17 @@ import {
   TagPicker,
 } from '../src/index.js';
 
+export type WorkspaceDataPreset = 'standard' | 'empty' | 'longNames' | 'large' | 'readOnly';
 interface Document {
+  readOnly?: boolean;
   location: 'Documents' | 'Archive';
   summary: string;
   id: string;
   name: string;
   children?: readonly Document[];
 }
-const helper = createPuppertinoColumnHelper<Document>();
-const columns = helper.columns([helper.accessor('name', { header: 'Name', size: 340 })]);
-export interface CompositionProps {
-  section: 'Documents' | 'Archive';
-  activePaneId: 'sidebar' | 'content' | 'detail';
-  previewHidden: boolean;
-  artwork: 'symbol' | 'thumbnail';
-  onSizesCommit?: SplitViewProps['onSizesCommit'];
-  onSectionChange(value: 'Documents' | 'Archive'): void;
-  onActivePaneChange(value: 'sidebar' | 'content' | 'detail'): void;
-  onPreviewHiddenChange(value: boolean): void;
-  onDocumentAction(value: 'trash' | 'undo', ids: string[]): void;
-  view: FinderView;
-  query: string;
-  onViewChange(value: FinderView): void;
-  onQueryChange(value: string): void;
-}
-/** Consumer-owned data and behavior, using only public library imports. */
-export function Composition({
-  view,
-  query,
-  section,
-  activePaneId,
-  previewHidden,
-  artwork,
-  onViewChange,
-  onQueryChange,
-  onSectionChange,
-  onActivePaneChange,
-  onPreviewHiddenChange,
-  onDocumentAction,
-  onSizesCommit,
-}: CompositionProps) {
-  const [documents, setDocuments] = useState<Document[]>([
+export function workspaceDocuments(preset: WorkspaceDataPreset): Document[] {
+  const initial: Document[] = [
     {
       id: 'brief',
       name: 'Brief.pdf',
@@ -104,20 +76,111 @@ export function Composition({
       location: 'Archive',
       summary: 'The completed launch report, retained in Archive.',
     },
-  ]);
+  ];
+
+  if (preset === 'empty') return [];
+  if (preset === 'large')
+    return Array.from({ length: 250 }, (_, index) => ({
+      id: `document-${index}`,
+      name: `Project review ${String(index + 1).padStart(3, '0')}.pdf`,
+      location: index < 200 ? 'Documents' : 'Archive',
+      summary: `Review ${index + 1}: milestones, decisions and owners.`,
+    }));
+  return initial.map((item) => ({
+    ...item,
+    readOnly: preset === 'readOnly' && item.id === 'brief',
+    name:
+      preset === 'longNames'
+        ? `Alpine — final review notes and project decisions for the international launch — ${item.name}`
+        : item.name,
+  }));
+}
+
+const helper = createPuppertinoColumnHelper<Document>();
+const columns = helper.columns([helper.accessor('name', { header: 'Name', size: 340 })]);
+export interface CompositionProps {
+  dataPreset: WorkspaceDataPreset;
+  section: 'Documents' | 'Archive';
+  activePaneId: 'sidebar' | 'content' | 'detail';
+  previewHidden: boolean;
+  artwork: 'symbol' | 'thumbnail';
+  onSizesCommit?: SplitViewProps['onSizesCommit'];
+  onSectionChange(value: 'Documents' | 'Archive'): void;
+  onActivePaneChange(value: 'sidebar' | 'content' | 'detail'): void;
+  onPreviewHiddenChange(value: boolean): void;
+  onDocumentAction(value: 'trash' | 'undo', ids: string[]): void;
+  view: FinderView;
+  query: string;
+  onViewChange(value: FinderView): void;
+  onQueryChange(value: string): void;
+}
+/** Consumer-owned data and behavior, using only public library imports. */
+export function Composition({
+  dataPreset,
+  view,
+  query,
+  section,
+  activePaneId,
+  previewHidden,
+  artwork,
+  onViewChange,
+  onQueryChange,
+  onSectionChange,
+  onActivePaneChange,
+  onPreviewHiddenChange,
+  onDocumentAction,
+  onSizesCommit,
+}: CompositionProps) {
+  const [documents, setDocuments] = useState(() => workspaceDocuments(dataPreset));
+  const collection = useRef<HTMLDivElement>(null);
+  const anchor = useRef<string | null>(null);
+  const [result, setResult] = useState('Select a document to preview it.');
+  const focusCollection = () => {
+    onActivePaneChange('content');
+    requestAnimationFrame(() => collection.current?.focus());
+  };
   const [trashed, setTrashed] = useState<Document[]>([]);
   const [expanded, setExpanded] = useState<OutlineExpandedState>({ 'collection:documents': true });
-  const [selected, setSelected] = useState<Record<string, true>>({});
+  const [selected, setSelected] = useState<RowSelectionState>({});
   const [tags, setTags] = useState<Record<string, string[]>>({});
-  const visible = documents.filter(
-    (item) => item.location === section && item.name.toLowerCase().includes(query.toLowerCase()),
+  const visible = useMemo(
+    () =>
+      documents.filter(
+        (item) =>
+          item.location === section && item.name.toLowerCase().includes(query.toLowerCase()),
+      ),
+    [documents, section, query],
   );
   const chosen = visible.filter((item) => selected[item.id]);
   const active = chosen[0];
   const CollectionView = view === 'outline' ? OutlineView<Document> : TableView<Document>;
-  const choose = (id: string) => setSelected({ [id]: true });
+  const choose = (
+    id: string,
+    event: { shiftKey?: boolean; metaKey?: boolean; ctrlKey?: boolean } = {},
+    ids = visible.map((item) => item.id),
+  ) => {
+    const previousAnchor = anchor.current;
+    const modifiers = {
+      shift: event.shiftKey ?? false,
+      toggle: Boolean(event.metaKey || event.ctrlKey),
+    };
+    anchor.current = applySelectionGesture(ids, {}, previousAnchor, id, modifiers).anchor;
+    setSelected(
+      (previous) => applySelectionGesture(ids, previous, previousAnchor, id, modifiers).selection,
+    );
+    const item = visible.find((item) => item.id === id);
+    const chosen = applySelectionGesture(ids, selected, previousAnchor, id, modifiers).selection[
+      id
+    ];
+    setResult(
+      item?.readOnly
+        ? `${item.name} is read only.`
+        : `${chosen ? 'Selected' : 'Deselected'} ${item?.name ?? 'document'}.`,
+    );
+  };
   const navigate = (location: 'Documents' | 'Archive') => {
     setSelected({});
+    anchor.current = null;
     onQueryChange('');
     onSectionChange(location);
     onActivePaneChange('content');
@@ -132,7 +195,11 @@ export function Composition({
         )
       }
       heading={active?.name ?? 'Select a document'}
-      description={active?.summary ?? 'Select an item to inspect its contents and assigned tags.'}
+      description={
+        active
+          ? `${active.summary}${active.readOnly ? ' Read only: tags and Trash are unavailable.' : ''}`
+          : 'Select an item to inspect its contents and assigned tags.'
+      }
     />
   );
   return (
@@ -187,9 +254,12 @@ export function Composition({
             ]}
             value={active ? (tags[active.id] ?? []) : []}
             onValueChange={(value) => {
-              if (active) setTags((previous) => ({ ...previous, [active.id]: value }));
+              if (active && !active.readOnly) {
+                setResult(`Updated tags for ${active.name}.`);
+                setTags((previous) => ({ ...previous, [active.id]: value }));
+              }
             }}
-            disabled={chosen.length !== 1}
+            disabled={chosen.length !== 1 || Boolean(active?.readOnly)}
             trigger={<TagIcon weight="regular" aria-hidden="true" />}
             triggerClassName="p-toolbar-btn"
           />
@@ -199,8 +269,12 @@ export function Composition({
               {
                 id: 'trash',
                 label: 'Move to Trash',
-                disabled: !active,
+                disabled: !active || chosen.some((item) => item.readOnly),
                 onSelect: () => {
+                  if (!chosen.length || chosen.some((item) => item.readOnly)) return;
+                  setResult(
+                    `Moved ${chosen.length} ${chosen.length === 1 ? 'document' : 'documents'} to Trash. Undo is available.`,
+                  );
                   setTrashed(chosen);
                   onDocumentAction(
                     'trash',
@@ -210,6 +284,8 @@ export function Composition({
                     items.filter((item) => !chosen.some((target) => target.id === item.id)),
                   );
                   setSelected({});
+                  anchor.current = null;
+                  focusCollection();
                 },
               },
             ]}
@@ -219,6 +295,7 @@ export function Composition({
           value={query}
           onValueChange={(value) => {
             setSelected({});
+            anchor.current = null;
             onQueryChange(value);
           }}
           icon={<MagnifyingGlassIcon weight="regular" aria-hidden="true" />}
@@ -246,7 +323,10 @@ export function Composition({
           type="button"
           className="p-button"
           aria-pressed={previewHidden}
-          onClick={() => onPreviewHiddenChange(!previewHidden)}
+          onClick={() => {
+            onPreviewHiddenChange(!previewHidden);
+            if (!previewHidden) focusCollection();
+          }}
         >
           Hide preview
         </button>
@@ -260,7 +340,12 @@ export function Composition({
               'undo',
               trashed.map((item) => item.id),
             );
+            setSelected(Object.fromEntries(trashed.map((item) => [item.id, true])));
+            setResult(
+              `Restored ${trashed.length} ${trashed.length === 1 ? 'document' : 'documents'}.`,
+            );
             setTrashed([]);
+            focusCollection();
           }}
         >
           Undo Trash
@@ -304,10 +389,32 @@ export function Composition({
               minSize: 260,
               maxSize: 760,
               content: (
-                <FinderContent>
+                <FinderContent
+                  ref={collection}
+                  tabIndex={-1}
+                  role="region"
+                  aria-label="Document list"
+                >
                   {visible.length === 0 ? (
                     <FinderEmptyState role="status">
-                      {query ? 'No matching documents' : 'No documents'}
+                      <h2>{query ? 'No matching documents' : 'No documents here'}</h2>
+                      <p>
+                        {query
+                          ? 'Try a different filename or clear the search.'
+                          : 'Choose another location or reset the example.'}
+                      </p>
+                      {query && (
+                        <button
+                          type="button"
+                          className="p-button"
+                          onClick={() => {
+                            onQueryChange('');
+                            focusCollection();
+                          }}
+                        >
+                          Clear search
+                        </button>
+                      )}
                     </FinderEmptyState>
                   ) : view === 'list' || view === 'outline' ? (
                     <CollectionView
@@ -340,13 +447,21 @@ export function Composition({
                       selectionCheckboxes={false}
                       rowSelection={selected}
                       onRowSelectionChange={setSelected}
-                      getRowProps={(row) =>
+                      getRowProps={(row, context) =>
                         row.original.children
                           ? undefined
                           : {
                               onClick: (event) => {
                                 event.preventDefault();
-                                choose(row.id);
+                                event.currentTarget.focus();
+                                choose(
+                                  row.id,
+                                  event,
+                                  context.table
+                                    .getRowModel()
+                                    .rows.filter((item) => !item.original.children)
+                                    .map((item) => item.id),
+                                );
                               },
                             }
                       }
@@ -364,7 +479,10 @@ export function Composition({
                               <FileTextIcon weight="light" aria-hidden="true" />
                             )
                           }
-                          onClick={() => choose(item.id)}
+                          onClick={(event) => {
+                            event.currentTarget.focus();
+                            choose(item.id, event);
+                          }}
                         >
                           {item.name}
                         </FinderIconItem>
@@ -381,7 +499,10 @@ export function Composition({
                             <ColumnViewItem
                               key={item.id}
                               selected={selected[item.id]}
-                              onClick={() => choose(item.id)}
+                              onClick={(event) => {
+                                event.currentTarget.focus();
+                                choose(item.id, event);
+                              }}
                             >
                               {item.name}
                             </ColumnViewItem>
@@ -398,7 +519,10 @@ export function Composition({
                             key={item.id}
                             aria-label={item.name}
                             selected={selected[item.id]}
-                            onClick={() => choose(item.id)}
+                            onClick={(event) => {
+                              event.currentTarget.focus();
+                              choose(item.id, event);
+                            }}
                           >
                             <FileTextIcon aria-hidden="true" />
                           </FinderGalleryItem>
@@ -432,7 +556,21 @@ export function Composition({
         <FolderIcon size={14} aria-hidden="true" />
         <span>{section}</span>
       </FinderPathBar>
-      <FinderStatusBar>
+      <FinderStatusBar
+        style={{ height: 'auto', minHeight: 30, flexWrap: 'wrap', gap: 8, padding: '8px 12px' }}
+      >
+        <output aria-label="Workspace selection">
+          {chosen.length} of {visible.length} selected
+          {chosen.some((item) => item.readOnly) ? ' · Read only' : ''}
+        </output>
+        <span
+          role="status"
+          aria-live="polite"
+          aria-label="Workspace activity"
+          style={{ flex: 1, minWidth: 0, textAlign: 'left', overflowWrap: 'anywhere' }}
+        >
+          {result}
+        </span>
         <output aria-label="Document count">
           {visible.length} {visible.length === 1 ? 'item' : 'items'}
         </output>
