@@ -2,13 +2,12 @@
 
 ## Unreleased
 
-- Extend live, typed Code recipes to Tag picker, Outline and Split view. Simplify component decisions, ownership guidance and scenario cards; link existing workflows directly to Interactions.
-- Move cross-page checkbox and keyboard resize/reset assertions into named Storybook steps; retain pointer checks in the browser suite and compile live recipe variants against the installed package.
+## 0.12.1 — 2026-10-13
 
-- Improve Storybook with typed, shareable scenario presets, organized Table Controls and live configuration code. Combine React/atom ownership and artwork variants into existing stories.
-- Add a public-component document workspace with resizable locations/collection/preview panes, archive navigation, shared views, tags and reversible Trash. Provide named interaction steps and full example resets, and typecheck the workspace and generated preset recipes against the installed package.
-
-- Improve Storybook around reliable typed Playgrounds, synchronized Outline disclosure/selection and Split pane state, callback spies, named interaction steps, conditional controls, native Code/Viewport tools, component scenario/integration/keyboard guidance, and complete typed Finder/Tag Picker recipes. Consolidate visual and data variants into args while preserving hidden regression coverage.
+- Consolidate Storybook variants into typed playgrounds and shareable scenarios. Group Table controls and compare React/atom ownership in one example.
+- Make Code follow live args for Table, Tag picker, Outline and Split view, with complete typed callbacks and state wiring.
+- Strengthen the composed document workspace with resizable panes, Archive navigation, shared selection, previews, tags and Trash/undo. Reset example restores args and local state.
+- Simplify integration guidance with component choices, ownership cards and concise scenario cards. Link named workflows to Interactions and verify 42 public recipes against the installed package.
 
 ## 0.12.0 — 2026-10-13
 
