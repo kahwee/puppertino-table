@@ -8,7 +8,7 @@ import { validateAtomIdentity, validateAtomOwnership } from './state-ownership.j
 import { tableDefaults } from './table-behavior.js';
 import { useColumnSizingPersistence } from './use-column-sizing-persistence.js';
 /** Shared state wiring for complete tables and custom semantic layouts. */
-export function usePuppertinoTable({ data, columns, atoms, getRowId, sorting: controlledSorting, onSortingChange, initialSorting = [], initialRowSelection = {}, manualSorting = tableDefaults.manualSorting, rowSelection: controlledSelection, onRowSelectionChange, selectable = tableDefaults.selectable, selectionAnchor, disabled = tableDefaults.disabled, columnSizing, onColumnSizingChange, selectionCheckboxes = tableDefaults.selectionCheckboxes, resizable = tableDefaults.resizable, storageKey, storage, }) {
+export function usePuppertinoTable({ data, columns, atoms, getRowId, getSubRows, sorting: controlledSorting, onSortingChange, initialSorting = [], initialRowSelection = {}, manualSorting = tableDefaults.manualSorting, rowSelection: controlledSelection, onRowSelectionChange, selectable = tableDefaults.selectable, selectionAnchor, disabled = tableDefaults.disabled, columnSizing, onColumnSizingChange, selectionCheckboxes = tableDefaults.selectionCheckboxes, resizable = tableDefaults.resizable, storageKey, storage, }) {
     const mountedAtoms = useRef(atoms ? { ...atoms } : undefined);
     validateAtomIdentity(mountedAtoms.current, atoms);
     validateAtomOwnership({
@@ -43,6 +43,7 @@ export function usePuppertinoTable({ data, columns, atoms, getRowId, sorting: co
         columns: sizedColumns,
         data,
         getRowId,
+        getSubRows,
         manualSorting,
         enableSorting: !disabled && (atomSorting || controlledSorting === undefined || !!onSortingChange),
         meta: {

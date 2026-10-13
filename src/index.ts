@@ -10,6 +10,13 @@ export {
 } from './column-browser.js';
 export { type ColumnBrowserLayoutOptions, fitColumnBrowser } from './column-browser-layout.js';
 export {
+  ColumnView,
+  type ColumnViewColumn,
+  ColumnViewItem,
+  type ColumnViewProps,
+  type ColumnViewWidths,
+} from './column-view.js';
+export {
   ContextMenu,
   type ContextMenuAction,
   type ContextMenuItem,
@@ -81,6 +88,7 @@ export {
   type PuppertinoTableInstance,
   puppertinoTableFeatures,
 } from './model.js';
+export { OutlineView, type OutlineViewProps } from './outline-view.js';
 export { ColumnResizeHandle } from './resize-handle.js';
 export type { ColumnResizeHandleProps, ColumnResizeOptions } from './resize-types.js';
 export { RowSelectionCheckbox } from './row-selection-checkbox.js';
@@ -90,7 +98,13 @@ export {
   type SelectionModifiers,
 } from './selection-gestures.js';
 export { type ColumnSizeBounds, clampSize, columnSizeBounds, readColumnSizing } from './sizing.js';
-export { PuppertinoTable } from './table.js';
+export {
+  SplitView,
+  type SplitViewPane,
+  type SplitViewProps,
+  type SplitViewSizes,
+} from './split-view.js';
+export { PuppertinoTable, PuppertinoTable as TableView } from './table.js';
 export { TableBody } from './table-body.js';
 export { TableHeader } from './table-header.js';
 export type { PuppertinoTableAtoms, PuppertinoTableOptions } from './table-options.js';
@@ -103,6 +117,7 @@ export type {
   PuppertinoRow,
   PuppertinoRowProps,
   PuppertinoTableProps,
+  PuppertinoTableProps as TableViewProps,
   RowSelectionCheckboxProps,
   TableBodyProps,
   TableHeaderProps,
@@ -111,6 +126,12 @@ export type {
 export { type TagOption, TagPicker, type TagPickerProps } from './tag-picker.js';
 export { useColumnResize } from './use-column-resize.js';
 export { type ItemNavigationHookOptions, useItemNavigation } from './use-item-navigation.js';
+export {
+  type OutlineExpandedState,
+  type OutlineLoadState,
+  type OutlineOptions,
+  useOutline,
+} from './use-outline.js';
 export { usePuppertinoTable } from './use-puppertino-table.js';
 export {
   type RowSelectionGestureOptions,

@@ -8,8 +8,9 @@ export function RowSelectionCheckbox<T extends RowData>({
   row,
   label,
   disabled = false,
+  orderedIds,
 }: RowSelectionCheckboxProps<T>) {
-  const { select } = useRowSelectionGestures(row.table, { disabled });
+  const { select } = useRowSelectionGestures(row.table, { disabled, orderedIds });
   return (
     <Subscribe source={row.table.atoms.rowSelection} selector={(selection) => !!selection[row.id]}>
       {(selected) => (

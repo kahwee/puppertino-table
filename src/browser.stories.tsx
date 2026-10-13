@@ -5,10 +5,10 @@ import { type CSSProperties, useState } from 'react';
 import { useArgs } from 'storybook/preview-api';
 import { fn } from 'storybook/test';
 import {
-  ColumnBrowser,
-  ColumnBrowserItem,
-  type ColumnBrowserPanel,
-  type ColumnBrowserWidths,
+  ColumnView,
+  type ColumnViewColumn,
+  ColumnViewItem,
+  type ColumnViewWidths,
   ContextMenu,
   createPuppertinoColumnHelper,
   DensityScope,
@@ -82,9 +82,9 @@ function ResourceBrowser({
   const delegated = menuMode === 'delegated';
   const [inspect, setInspect] = useState<string | null>(null);
   const [selection, setSelection] = useState<RowSelectionState>({ 'resource-0': true });
-  const [widths, setWidths] = useState<ColumnBrowserWidths>({ workspace: 224, projects: 224 });
+  const [widths, setWidths] = useState<ColumnViewWidths>({ workspace: 224, projects: 224 });
   const [commits, setCommits] = useState(0);
-  const [committedWidths, setCommittedWidths] = useState<ColumnBrowserWidths>({});
+  const [committedWidths, setCommittedWidths] = useState<ColumnViewWidths>({});
   const [project, setProject] = useState('Alpine');
   const [rootOnly, setRootOnly] = useState(false);
   const menu = useContextMenu<string>();
@@ -97,31 +97,31 @@ function ResourceBrowser({
     onRowSelectionChange: setSelection,
   });
   const { select, clearSelection } = useRowSelectionGestures(table);
-  const panels: ColumnBrowserPanel[] = [
+  const panels: ColumnViewColumn[] = [
     {
       id: 'workspace',
       label: 'Workspace',
       content: (
         <>
-          <ColumnBrowserItem
+          <ColumnViewItem
             icon={<ResourceIcon folder />}
             pathSelected
             trailing="›"
             onClick={() => setRootOnly(!rootOnly)}
           >
             Projects
-          </ColumnBrowserItem>
-          <ColumnBrowserItem
+          </ColumnViewItem>
+          <ColumnViewItem
             href="#workspace-guide"
             target="_blank"
             rel="noopener noreferrer"
             icon={<ResourceIcon />}
           >
             Workspace guide
-          </ColumnBrowserItem>
-          <ColumnBrowserItem href="#unavailable-guide" disabled>
+          </ColumnViewItem>
+          <ColumnViewItem href="#unavailable-guide" disabled>
             Unavailable guide
-          </ColumnBrowserItem>
+          </ColumnViewItem>
         </>
       ),
     },
@@ -129,7 +129,7 @@ function ResourceBrowser({
       id: 'projects',
       label: 'Projects',
       content: ['Alpine', 'Brook', 'Cedar'].map((name) => (
-        <ColumnBrowserItem
+        <ColumnViewItem
           key={name}
           icon={<ResourceIcon folder />}
           pathSelected={name === project}
@@ -140,14 +140,14 @@ function ResourceBrowser({
           }}
         >
           {name}
-        </ColumnBrowserItem>
+        </ColumnViewItem>
       )),
     },
     {
       id: 'resources',
       label: project,
       content: resources.map((resource) => (
-        <ColumnBrowserItem
+        <ColumnViewItem
           key={resource.id}
           icon={<ResourceIcon />}
           title={resource.name}
@@ -159,7 +159,7 @@ function ResourceBrowser({
           }
         >
           {resource.name}
-        </ColumnBrowserItem>
+        </ColumnViewItem>
       )),
     },
   ];
@@ -244,8 +244,8 @@ function ResourceBrowser({
               })}
             />
           ) : (
-            <ColumnBrowser
-              panels={rootOnly ? panels.slice(0, 1) : panels}
+            <ColumnView
+              columns={rootOnly ? panels.slice(0, 1) : panels}
               ariaLabel="Project folders"
               resizeDisabled={resizeDisabled}
               storageKey={persistent ? 'puppertino.stories.panels.v1' : undefined}
@@ -348,7 +348,7 @@ function ResourceBrowser({
   );
 }
 const meta = {
-  title: 'Puppertino/Resource browser',
+  title: 'Puppertino/Column view',
   component: ResourceBrowser,
   args: {
     view: 'columns',
@@ -473,16 +473,16 @@ export const CustomStyling: StoryObj = {
         } as CSSProperties
       }
     >
-      <ColumnBrowser
+      <ColumnView
         ariaLabel="Styled workspace"
-        panels={[
+        columns={[
           {
             id: 'folders',
             label: 'Folders',
             content: (
-              <ColumnBrowserItem href="#projects" pathSelected icon={<ResourceIcon folder />}>
+              <ColumnViewItem href="#projects" pathSelected icon={<ResourceIcon folder />}>
                 Projects
-              </ColumnBrowserItem>
+              </ColumnViewItem>
             ),
           },
           {
@@ -490,12 +490,12 @@ export const CustomStyling: StoryObj = {
             label: 'Files',
             content: (
               <>
-                <ColumnBrowserItem href="#brief" selected icon={<ResourceIcon />}>
+                <ColumnViewItem href="#brief" selected icon={<ResourceIcon />}>
                   Project brief.pdf<span className="pt-item-secondary">PDF · Updated today</span>
-                </ColumnBrowserItem>
-                <ColumnBrowserItem href="#notes" icon={<ResourceIcon />}>
+                </ColumnViewItem>
+                <ColumnViewItem href="#notes" icon={<ResourceIcon />}>
                   Research notes.txt<span className="pt-item-secondary">Text · Engineering</span>
-                </ColumnBrowserItem>
+                </ColumnViewItem>
               </>
             ),
           },
@@ -516,7 +516,7 @@ export const CustomStyling: StoryObj = {
 
 function DensityInheritanceExample() {
   const [density, setDensity] = useState<TableDensity>('comfortable');
-  const item = <ColumnBrowserItem icon={<ResourceIcon />}>Inherited resource</ColumnBrowserItem>;
+  const item = <ColumnViewItem icon={<ResourceIcon />}>Inherited resource</ColumnViewItem>;
   return (
     <main className="demo-shell">
       <label>
@@ -541,8 +541,8 @@ function DensityInheritanceExample() {
         />
         <h2>Inherited browser</h2>
         <div style={{ height: 100 }}>
-          <ColumnBrowser
-            panels={[{ id: 'items', label: 'Inherited items', content: item }]}
+          <ColumnView
+            columns={[{ id: 'items', label: 'Inherited items', content: item }]}
             ariaLabel="Inherited browser"
           />
         </div>
@@ -556,9 +556,9 @@ function DensityInheritanceExample() {
         />
         <h2>Explicit compact browser</h2>
         <div style={{ height: 100 }}>
-          <ColumnBrowser
+          <ColumnView
             density="compact"
-            panels={[{ id: 'compact', label: 'Compact items', content: item }]}
+            columns={[{ id: 'compact', label: 'Compact items', content: item }]}
             ariaLabel="Compact override"
           />
         </div>
@@ -580,8 +580,8 @@ function DensityInheritanceExample() {
         ariaLabel="Standalone table"
       />
       <div style={{ height: 100 }}>
-        <ColumnBrowser
-          panels={[{ id: 'standalone', label: 'Standalone items', content: item }]}
+        <ColumnView
+          columns={[{ id: 'standalone', label: 'Standalone items', content: item }]}
           ariaLabel="Standalone browser"
         />
       </div>

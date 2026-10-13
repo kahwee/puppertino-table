@@ -36,6 +36,7 @@ export function useResizeGesture(
   }, [
     controller,
     options.enabled,
+    options.axis,
     options.storageKey,
     options.storage,
     options.cancelMediaQuery,
@@ -53,7 +54,7 @@ export function useResizeGesture(
           controller.begin(
             member.current,
             id,
-            event.clientX,
+            options.axis === 'y' ? event.clientY : event.clientX,
             event.pointerId,
             event.currentTarget,
             event.button,
@@ -62,7 +63,11 @@ export function useResizeGesture(
           consume(event);
       },
       onPointerMove: (event: PointerEvent<HTMLElement>) =>
-        controller.move(member.current, event.pointerId, event.clientX),
+        controller.move(
+          member.current,
+          event.pointerId,
+          options.axis === 'y' ? event.clientY : event.clientX,
+        ),
       onPointerUp: (event: PointerEvent<HTMLElement>) =>
         controller.end(member.current, event.pointerId),
       onPointerCancel: (event: PointerEvent<HTMLElement>) =>
@@ -73,7 +78,17 @@ export function useResizeGesture(
         controller.reset(member.current, id);
       },
       onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
-        if (controller.key(member.current, id, event.key, event.shiftKey)) consume(event);
+        if (
+          controller.key(
+            member.current,
+            id,
+            options.axis === 'y'
+              ? ({ ArrowUp: 'ArrowLeft', ArrowDown: 'ArrowRight' }[event.key] ?? event.key)
+              : event.key,
+            event.shiftKey,
+          )
+        )
+          consume(event);
       },
     }),
   };

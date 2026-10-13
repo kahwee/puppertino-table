@@ -2,10 +2,14 @@ import type { ColumnResizeOptions } from './resize-types.js';
 import { type ColumnSizeBounds, clampSize } from './sizing.js';
 export type ResizeWidths = Record<string, number>;
 export interface ResizeAdapter {
+  /** Coupled panes may normalize multiple sizes in one gesture. */
+  coupled?: boolean;
   snapshot(): ResizeWidths;
   bounds(id: string): ColumnSizeBounds;
-  apply(widths: ResizeWidths): void;
-  reset(id: string): void;
+  // biome-ignore lint/suspicious/noConfusingVoidType: Independent adapters return void; coupled adapters can return normalized intent.
+  apply(widths: ResizeWidths): ResizeWidths | void;
+  // biome-ignore lint/suspicious/noConfusingVoidType: Preserve the existing reset contract while allowing coupled layouts to report normalized intent.
+  reset(id: string): ResizeWidths | void;
 }
 export interface ResizeMember {
   adapter: ResizeAdapter;
@@ -53,16 +57,25 @@ export function createResizeController(
     drag = null;
     active.cleanup();
     if (cancel) {
-      active.member.adapter.apply({
-        ...active.before,
-        ...active.member.adapter.snapshot(),
-        [active.id]: active.before[active.id],
-      });
+      active.member.adapter.apply(
+        active.member.adapter.coupled
+          ? active.before
+          : {
+              ...active.before,
+              ...active.member.adapter.snapshot(),
+              [active.id]: active.before[active.id],
+            },
+      );
     } else
-      persist(active.member, {
-        ...active.member.adapter.snapshot(),
-        [active.id]: active.latest[active.id],
-      });
+      persist(
+        active.member,
+        active.member.adapter.coupled
+          ? active.latest
+          : {
+              ...active.member.adapter.snapshot(),
+              [active.id]: active.latest[active.id],
+            },
+      );
     return true;
   };
   const owns = (member: ResizeMember, pointer: number) =>
@@ -74,8 +87,13 @@ export function createResizeController(
     if (!members.has(member) || member.options.enabled === false || drag) return false;
     const widths = member.adapter.snapshot();
     const bounds = member.adapter.bounds(id);
-    member.adapter.reset(id);
-    persist(member, { ...widths, [id]: clampSize(bounds.size, bounds) });
+    const applied = member.adapter.reset(id);
+    persist(
+      member,
+      member.adapter.coupled
+        ? (applied ?? member.adapter.snapshot())
+        : { ...widths, [id]: clampSize(bounds.size, bounds) },
+    );
     return true;
   };
   return {
@@ -145,7 +163,8 @@ export function createResizeController(
         ...member.adapter.snapshot(),
         [drag.id]: clampSize(drag.width + x - drag.x, member.adapter.bounds(drag.id)),
       };
-      member.adapter.apply(drag.latest);
+      const applied = member.adapter.apply(drag.latest);
+      if (member.adapter.coupled) drag.latest = { ...(applied ?? member.adapter.snapshot()) };
     },
     end(member: ResizeMember, pointer: number) {
       if (owns(member, pointer))
@@ -175,8 +194,8 @@ export function createResizeController(
                 : undefined;
       if (next === undefined) return false;
       const committed = { ...widths, [id]: clampSize(next, bounds) };
-      member.adapter.apply(committed);
-      persist(member, committed);
+      const applied = member.adapter.apply(committed);
+      persist(member, member.adapter.coupled ? (applied ?? member.adapter.snapshot()) : committed);
       return true;
     },
   };

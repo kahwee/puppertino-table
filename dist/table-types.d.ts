@@ -55,6 +55,8 @@ export interface TableHeaderProps<T extends RowData> {
     disabled?: boolean;
     resizable?: boolean;
     resizeOptions?: ColumnResizeOptions;
+    /** Override bulk-selection scope with the visible outline rows. */
+    selectionRows?: readonly PuppertinoRow<T>[];
 }
 export interface TableBodyProps<T extends RowData> extends PuppertinoBodyOptions<T> {
     table: PuppertinoTableInstance<T>;
@@ -63,5 +65,7 @@ export interface RowSelectionCheckboxProps<T extends RowData> {
     row: PuppertinoRow<T>;
     /** Row description without the "Select" prefix. Defaults to the stable ID. */
     label?: string;
+    /** Visible outline order for Shift ranges. */
+    orderedIds?: readonly string[];
     disabled?: boolean;
 }

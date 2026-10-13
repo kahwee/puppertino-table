@@ -2,10 +2,12 @@ import type { ColumnResizeOptions } from './resize-types.js';
 import { type ColumnSizeBounds } from './sizing.js';
 export type ResizeWidths = Record<string, number>;
 export interface ResizeAdapter {
+    /** Coupled panes may normalize multiple sizes in one gesture. */
+    coupled?: boolean;
     snapshot(): ResizeWidths;
     bounds(id: string): ColumnSizeBounds;
-    apply(widths: ResizeWidths): void;
-    reset(id: string): void;
+    apply(widths: ResizeWidths): ResizeWidths | void;
+    reset(id: string): ResizeWidths | void;
 }
 export interface ResizeMember {
     adapter: ResizeAdapter;

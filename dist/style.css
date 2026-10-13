@@ -600,6 +600,129 @@
   }
 }
 
+/* Outline hierarchy occupies the first data column only. */
+.pt-outline-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.pt-outline-disclosure,
+.pt-outline-spacer {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+}
+.pt-outline-disclosure {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.pt-outline-triangle {
+  width: 0;
+  height: 0;
+  border-block: 4px solid transparent;
+  border-inline-start: 6px solid currentColor;
+}
+.pt-outline-triangle[data-expanded="true"] {
+  transform: rotate(90deg);
+}
+.pt-outline-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pt-outline-status {
+  font-size: 11px;
+}
+.pt-outline-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+}
+.pt-outline tr:focus-visible {
+  outline: 2px solid var(--p-control-accent);
+  outline-offset: -2px;
+}
+.pt-outline-disclosure:focus-visible {
+  outline: 2px solid var(--p-control-accent);
+  border-radius: 3px;
+}
+.pt-split-view {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--p-window-bg, Canvas);
+  color: var(--p-list-text, CanvasText);
+}
+.pt-split-view[data-orientation="vertical"] {
+  flex-direction: column;
+}
+.pt-split-pane {
+  position: relative;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  min-width: 0;
+  min-height: 0;
+  border-inline-end: 1px solid var(--p-table-divider, #8885);
+}
+.pt-split-pane:last-child,
+.pt-split-view[data-compact="true"] > .pt-split-pane {
+  border: 0;
+}
+.pt-split-pane[hidden] {
+  display: none;
+}
+.pt-split-pane-content {
+  height: 100%;
+  overflow: auto;
+}
+.pt-split-view[data-orientation="vertical"] > .pt-split-pane {
+  border-inline-end: 0;
+  border-block-end: 1px solid var(--p-table-divider, #8885);
+}
+.pt-split-view[data-orientation="vertical"] > .pt-split-pane:last-child {
+  border-block-end: 0;
+}
+.pt-split-divider {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: -4px;
+  width: 9px;
+  z-index: 2;
+  cursor: col-resize;
+  touch-action: none;
+}
+.pt-split-view[data-orientation="vertical"] .pt-split-divider {
+  inset-inline: 0;
+  inset-block: auto -4px;
+  width: auto;
+  height: 9px;
+  cursor: row-resize;
+}
+.pt-split-divider:focus-visible,
+.pt-split-divider:hover {
+  outline: 1px solid var(--p-control-accent);
+  outline-offset: -1px;
+  background: color-mix(in srgb, var(--p-control-accent) 20%, transparent);
+}
+.pt-vertical-resizing,
+.pt-vertical-resizing * {
+  /* biome-ignore lint/complexity/noImportantStyles: Active pointer drags override descendant control cursors until completion/cancellation. */
+  cursor: row-resize !important;
+  /* biome-ignore lint/complexity/noImportantStyles: Prevent descendant text selection during the active pointer gesture. */
+  user-select: none !important;
+}
+
 .pt-finder-container,
 .pt-finder-container * {
   box-sizing: border-box;

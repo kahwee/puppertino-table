@@ -86,15 +86,13 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   await page.waitForFunction(() => {
     const sources = Array.from(document.querySelectorAll('pre'), (node) => node.textContent ?? '');
     return [
-      'satisfies PuppertinoTableProps<Asset>',
+      'satisfies TableViewProps<Asset>',
       'satisfies Meta<typeof AssetTable>',
       'StoryObj<typeof meta>',
     ].every((marker) => sources.some((source) => source.includes(marker)));
   });
   const typedSources = await page.locator('pre').allTextContents();
-  assert.ok(
-    typedSources.some((source) => source.includes('satisfies PuppertinoTableProps<Asset>')),
-  );
+  assert.ok(typedSources.some((source) => source.includes('satisfies TableViewProps<Asset>')));
   assert.ok(typedSources.some((source) => source.includes('satisfies Meta<typeof AssetTable>')));
   assert.ok(typedSources.some((source) => source.includes('StoryObj<typeof meta>')));
   assert.ok(typedSources.every((source) => !source.includes('../src/')));
@@ -103,7 +101,7 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   await checkOverviewInstallation(page, base);
   assert.equal(
     await page.getByRole('table', { name: 'Choose a Storybook example' }).getByRole('row').count(),
-    5,
+    7,
   );
   assert.equal(
     await page.getByRole('link', { name: 'Finder primitives', exact: true }).getAttribute('href'),

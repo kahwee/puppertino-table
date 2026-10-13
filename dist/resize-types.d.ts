@@ -2,6 +2,8 @@ import type { Header, RowData } from '@tanstack/react-table';
 import type { PuppertinoTableInstance, puppertinoTableFeatures } from './model.js';
 export interface ColumnResizeOptions {
     enabled?: boolean;
+    /** Shared split-pane gestures may measure vertical movement. Tables use x. */
+    axis?: 'x' | 'y';
     storageKey?: string;
     storage?: Pick<Storage, 'setItem'>;
     cancelMediaQuery?: string;

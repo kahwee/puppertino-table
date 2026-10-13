@@ -167,3 +167,44 @@ const missingViewCallback: FinderViewSwitcherProps = { value: 'list', icons: vie
 // @ts-expect-error Selection has one owner; use selected rather than overriding aria-pressed.
 const conflictingIconSelection: FinderIconItemProps = { selected: true, 'aria-pressed': false };
 void [finderSwitcher, missingViewCallback, conflictingIconSelection];
+
+import type { OutlineViewProps, SplitViewProps } from '../src/index.js';
+
+type OutlineItem = { id: string; name: string; children?: OutlineItem[] };
+const outlineProps = {
+  data: [{ id: 'root', name: 'Root' }],
+  columns: [],
+  getRowId: (item) => item.id,
+  getRowLabel: (item) => item.name,
+  getChildren: (item) => item.children,
+  hasChildren: (item) => item.name === 'Root',
+  ariaLabel: 'Outline',
+  loadChildren: async (_item, { signal }) => {
+    const abort: AbortSignal = signal;
+    void abort;
+    return [{ id: 'child', name: 'Child' }];
+  },
+} satisfies OutlineViewProps<OutlineItem>;
+const badOutlineLoader: OutlineViewProps<OutlineItem> = {
+  ...outlineProps,
+  // @ts-expect-error Children must use the same typed row model.
+  loadChildren: async () => [{ id: 'child' }],
+};
+const splitProps = {
+  ariaLabel: 'Split',
+  orientation: 'vertical',
+  panes: [{ id: 'sidebar', label: 'Sidebar', content: null }],
+} satisfies SplitViewProps;
+// @ts-expect-error Apple split views support horizontal or vertical arrangements.
+const invalidSplit: SplitViewProps = { ...splitProps, orientation: 'diagonal' };
+void [outlineProps, badOutlineLoader, splitProps, invalidSplit];
+
+import type { ColumnViewProps } from '../src/index.js';
+
+const columnView = {
+  ariaLabel: 'Columns',
+  columns: [{ id: 'root', label: 'Root', content: null }],
+} satisfies ColumnViewProps;
+// @ts-expect-error ColumnView uses columns; panels is the legacy ColumnBrowser vocabulary.
+const invalidColumnView: ColumnViewProps = { ariaLabel: 'Columns', panels: [] };
+void [columnView, invalidColumnView];

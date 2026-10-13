@@ -286,3 +286,53 @@ test('schema cancellation retains sibling widths missing from the new snapshot',
   assert.deepEqual(f.widths(), { name: 200, score: 100 });
   assert.deepEqual(f.saved, []);
 });
+
+test('coupled panes restore the full layout and commit normalized displayed sizes', () => {
+  const f = fixture();
+  const owner = f.member();
+  const originalApply = owner.adapter.apply;
+  owner.adapter = {
+    ...owner.adapter,
+    coupled: true,
+    apply: (next) => {
+      const name = Math.min(next.name, 220);
+      originalApply({ name, score: 300 - name });
+    },
+  };
+  const stop = f.controller.retain(owner);
+  assert.equal(f.controller.begin(owner, 'name', 0, 1, f.target, 0), true);
+  f.controller.move(owner, 1, 50);
+  assert.deepEqual(f.widths(), { name: 220, score: 80 });
+  f.controller.cancel(owner, 1);
+  assert.deepEqual(f.widths(), { name: 200, score: 100 });
+  assert.equal(f.saved.length, 0);
+  f.controller.begin(owner, 'name', 0, 2, f.target, 0);
+  f.controller.move(owner, 2, 50);
+  f.controller.end(owner, 2);
+  assert.deepEqual(JSON.parse(f.saved[0]), { name: 220, score: 80 });
+  f.controller.key(owner, 'name', 'End', false);
+  assert.deepEqual(JSON.parse(f.saved[1]), { name: 220, score: 80 });
+  stop();
+});
+
+test('coupled commit snapshots retain normalized intent when a controlled owner ignores previews', () => {
+  const f = fixture();
+  const owner = f.member();
+  owner.adapter = {
+    ...owner.adapter,
+    coupled: true,
+    apply: (next) => {
+      const name = Math.min(next.name, 220);
+      return { name, score: 300 - name };
+    },
+  };
+  const stop = f.controller.retain(owner);
+  f.controller.begin(owner, 'name', 0, 1, f.target, 0);
+  f.controller.move(owner, 1, 50);
+  f.controller.end(owner, 1);
+  assert.deepEqual(f.widths(), { name: 200, score: 100 });
+  assert.deepEqual(JSON.parse(f.saved[0]), { name: 220, score: 80 });
+  f.controller.key(owner, 'name', 'End', false);
+  assert.deepEqual(JSON.parse(f.saved[1]), { name: 220, score: 80 });
+  stop();
+});

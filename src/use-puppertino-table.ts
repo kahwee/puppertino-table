@@ -21,6 +21,7 @@ export function usePuppertinoTable<T extends RowData>({
   columns,
   atoms,
   getRowId,
+  getSubRows,
   sorting: controlledSorting,
   onSortingChange,
   initialSorting = [],
@@ -75,6 +76,7 @@ export function usePuppertinoTable<T extends RowData>({
       columns: sizedColumns,
       data,
       getRowId,
+      getSubRows,
       manualSorting,
       enableSorting:
         !disabled && (atomSorting || controlledSorting === undefined || !!onSortingChange),

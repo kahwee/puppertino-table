@@ -63,6 +63,7 @@ try {
         `react-dom@${react}`,
         `@types/react@${manifest.devDependencies['@types/react'].replace('^', '')}`,
         `@types/react-dom@${manifest.devDependencies['@types/react-dom'].replace('^', '')}`,
+        `@phosphor-icons/react@${manifest.devDependencies['@phosphor-icons/react'].replace('^', '')}`,
         `typescript@${manifest.devDependencies.typescript.replace('^', '')}`,
       ],
       { cwd: directory, stdio: 'pipe' },
@@ -75,7 +76,7 @@ import { createAtom } from '@tanstack/react-store';
 import type { ColumnSizingState, SortingState, RowSelectionState } from '@tanstack/react-table';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { PuppertinoBodyContext, PuppertinoRowProps, ColumnResizeHandleProps, TableHeaderProps, TableBodyProps, RowSelectionCheckboxProps, PuppertinoTableOptions, PuppertinoTableAtoms } from 'puppertino-table';
-import { type DelegatedContextMenuOptions, type ContextMenuItem, type ContextMenuState, type ColumnBrowserItemLinkProps, FinderWindow, FinderToolbar, FinderTitle, FinderBody, FinderContent, FinderIconGrid, FinderIconItem, FinderStatusBar, TagPicker, PuppertinoTable, DensityScope, ColumnBrowser, ColumnBrowserItem, ContextMenu, useContextMenu, usePuppertinoTable, useRowSelectionGestures, applySelectionGesture, fitColumnBrowser, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
+import { type DelegatedContextMenuOptions, type ContextMenuItem, type ContextMenuState, type ColumnBrowserItemLinkProps, OutlineView, SplitView, ColumnView, TableView, FinderWindow, FinderToolbar, FinderTitle, FinderBody, FinderContent, FinderIconGrid, FinderIconItem, FinderStatusBar, TagPicker, PuppertinoTable, DensityScope, ColumnBrowser, ColumnBrowserItem, ContextMenu, useContextMenu, usePuppertinoTable, useRowSelectionGestures, applySelectionGesture, fitColumnBrowser, ColumnResizeHandle, TableHeader, TableBody, RowSelectionCheckbox, createPuppertinoColumnHelper, clampSize } from 'puppertino-table';
 type Item = { id: string; title: string; price: number };
 const helper = createPuppertinoColumnHelper<Item>();
 const columns = helper.columns([
@@ -83,6 +84,19 @@ const columns = helper.columns([
   helper.accessor('price', { header: 'Price', cell: cell => cell.getValue() }),
 ]);
 const data: Item[] = [{ id: 'ten', title: 'Ten', price: 10 }, { id: 'two', title: 'Two', price: 2 }];
+const outlineMarkup = renderToStaticMarkup(createElement(OutlineView<Item>, {
+  data, columns, getRowId: item => item.id, getRowLabel: item => item.title, ariaLabel: 'Consumer outline',
+}));
+if (!outlineMarkup.includes('role="treegrid"') || !outlineMarkup.includes('aria-level="1"')) throw new Error('Outline consumer SSR failed');
+const splitMarkup = renderToStaticMarkup(createElement(SplitView, {
+  ariaLabel: 'Consumer split', orientation: 'vertical', panes: [{id:'sidebar',label:'Sidebar',content:'Navigation'},{id:'detail',label:'Detail',content:'Detail'}],
+}));
+if (!splitMarkup.includes('aria-orientation="horizontal"')) throw new Error('Vertical split consumer SSR failed');
+const columnMarkup = renderToStaticMarkup(createElement(ColumnView, {
+  ariaLabel: 'Consumer columns', columns: [{id:'root',label:'Root',content:'Root'}],
+}));
+if (!columnMarkup.includes('Consumer columns') || TableView !== PuppertinoTable) throw new Error('Apple-named consumer exports failed');
+
 const finderMarkup = renderToStaticMarkup(createElement(FinderWindow, { 'aria-label': 'Consumer Finder' },
   createElement(FinderToolbar, null, createElement(FinderTitle, { as: 'h2' }, 'Documents')),
   createElement(FinderBody, { density: 'comfortable' }, createElement(FinderContent, null,
@@ -177,13 +191,35 @@ console.log('React ${react}: typed imports and server rendering passed');
       [
         'consumer.tsx',
         'public-contracts.ts',
-        ...recipeFiles,
         '--outDir',
         'compiled',
         '--module',
         'NodeNext',
         '--moduleResolution',
         'NodeNext',
+        '--target',
+        'ES2023',
+        '--jsx',
+        'react-jsx',
+        '--strict',
+        '--skipLibCheck',
+        '--types',
+        'react,react-dom',
+      ],
+      { cwd: directory, stdio: 'inherit' },
+    );
+    // Frontend recipes use bundler resolution (including Phosphor's extensionless declarations).
+    // Keep NodeNext above to independently verify library imports and SSR consumers.
+    execFileSync(
+      path.join(directory, 'node_modules/.bin/tsc'),
+      [
+        ...recipeFiles,
+        '--outDir',
+        'compiled-recipes',
+        '--module',
+        'ESNext',
+        '--moduleResolution',
+        'Bundler',
         '--target',
         'ES2023',
         '--jsx',

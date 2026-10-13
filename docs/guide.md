@@ -597,3 +597,77 @@ icon package, fictional artwork or file reducer is required.
 
 See [the live composition example](https://kahwee.github.io/puppertino-table/?path=/docs/puppertino-finder-composition--docs)
 for controlled view/search args and all four views.
+
+## Apple-style view names
+
+Use `TableView` for flat rows, `OutlineView` for hierarchical rows, `ColumnView` for successive hierarchy levels in separate columns, and `SplitView` for adjacent sidebar/content/detail panes. The names follow Apple's [outline views](https://developer.apple.com/design/human-interface-guidelines/outline-views) and [split views](https://developer.apple.com/design/human-interface-guidelines/split-views) guidance. The existing `PuppertinoTable` and `ColumnBrowser` exports remain available; `TableView` uses the same component and `ColumnView` takes `columns` instead of `panels`.
+
+### Outline view and fetching children
+
+`OutlineView<T>` takes the same typed column helper, sorting, selection, density and column-sizing options as `TableView`. Its synchronous `getChildren(item)` returns loaded children, `[]` for a known empty branch, or `undefined` for a branch that has not been fetched. For lazy branches, supply `hasChildren(item)` and `loadChildren(item, { signal })`. Only the first data column contains disclosure and indentation; header sorting orders each sibling group while retaining parents above their children.
+
+```tsx
+import { OutlineView, createPuppertinoColumnHelper } from 'puppertino-table';
+type Item = { id: string; name: string; folder: boolean; children?: Item[] };
+const helper = createPuppertinoColumnHelper<Item>();
+const columns = helper.columns([helper.accessor('name', { header: 'Name', size: 320 })]);
+
+async function loadChildren(item: Item, { signal }: { signal: AbortSignal }): Promise<Item[]> {
+  const response = await fetch(`/api/items/${encodeURIComponent(item.id)}/children`, { signal });
+  if (!response.ok) throw new Error('Could not load children');
+  // Use your app's response decoding/validation here.
+  return response.json();
+}
+
+export function Documents({ roots }: { roots: Item[] }) {
+  return <OutlineView data={roots} columns={columns} getRowId={item => item.id}
+    getRowLabel={item => item.name} getChildren={item => item.children}
+    hasChildren={item => item.folder} loadChildren={loadChildren}
+    ariaLabel="Documents" selectable />;
+}
+```
+
+The callback owns API paths, credentials, authorization, pagination and record decoding. IDs must be globally unique across every level. Loading and errors appear beside the parent; Retry repeats its callback. Successful children are cached, including empty results. Collapsing a pending branch, disabling the view, changing `cacheKey`, or unmounting aborts requests; late results from cancelled requests are ignored. Change `cacheKey` when switching the data source or invalidating cached results. Root data is supplied by the app.
+
+Left collapses a branch or moves to its parent; Right expands or enters its first child. Up/Down, Home/End and typeahead navigate visible rows. Space selects; Enter toggles a branch. Command/Ctrl+A selects all visible rows. Option-click (Alt-click) recursively expands/collapses descendants. Collapsing a parent preserves its descendants' expansion choices. Bulk selection applies only to visible rows, and clearing visible rows preserves hidden selections. Selection never authorizes file operations.
+
+Use `expanded: OutlineExpandedState` and `onExpandedChange` for app-owned expansion, or `initialExpanded` for an internal mount-time seed. A controlled expansion value without a callback is read-only. Save the expansion snapshot in your app if you want it restored across sessions. `useOutline` exposes the same expansion/loading mechanics for custom renderers; `retry(item)` reruns the child loader and can refresh cached children.
+
+The outline uses a row-focused [ARIA treegrid](https://www.w3.org/WAI/ARIA/apg/patterns/treegrid/). Resize subscriptions remain separate from the memoized body. The Storybook recipe uses optional `@phosphor-icons/react` application icons; install that dependency when copying the complete illustrated example.
+
+### Split view
+
+```tsx
+import { SplitView } from 'puppertino-table';
+export function Workspace() {
+  return <div style={{ height: 480 }}>
+    <SplitView ariaLabel="Workspace" panes={[
+      { id: 'sidebar', label: 'Sidebar', size: 240, minSize: 160, maxSize: 400,
+        content: <nav aria-label="Folders">Your navigation</nav> },
+      { id: 'detail', label: 'Detail', minSize: 240, content: <main>Your content</main> },
+    ]} />
+  </div>;
+}
+```
+
+`orientation="horizontal"` arranges panes side by side; `"vertical"` stacks them. `size`, `minSize` and `maxSize` use pixels along that axis; the last visible pane fills the remaining space. Dividers have a thin visible edge with a wider pointer target. Arrow keys resize (Left/Right horizontally, Up/Down vertically); Enter or double-click resets; Escape/pointer cancellation/unmount/disabled/responsive transitions cancel a pending gesture.
+
+Use `sizes` plus `onSizesChange` for controlled preview snapshots. A controlled value without its callback is read-only. `onSizesCommit` fires only for completed pointer, keyboard or reset changes; `storageKey` optionally persists internal sizes after completion. Hidden pane sizes are retained.
+
+Narrow horizontal views show one pane when their combined minimum sizes no longer fit. Supply `activePaneId` and app-owned buttons or menu commands to navigate between panes. Pane contents remain mounted, retaining expansion and selection. Use `hidden` on a pane to hide it deliberately; always provide a way to reveal it. Vertical layouts can nest inside horizontal layouts for more complex workspaces.
+
+### Column view
+
+```tsx
+import { ColumnView, ColumnViewItem } from 'puppertino-table';
+export function FolderColumns() {
+  return <div style={{ height: 320 }}>
+    <ColumnView ariaLabel="Folder path" columns={[
+      { id: 'root', label: 'Folders', content: <ColumnViewItem pathSelected>Projects</ColumnViewItem> },
+      { id: 'current', label: 'Projects', content: <ColumnViewItem selected>Project brief.pdf</ColumnViewItem> },
+    ]} />
+  </div>;
+}
+```
+
+Column navigation, paths and item commands remain app-owned. `ColumnView` shares the existing independent column-width controls and completion-only persistence of `ColumnBrowser`.

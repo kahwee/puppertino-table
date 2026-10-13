@@ -10,7 +10,7 @@ Start with your application's row model. `createPuppertinoColumnHelper<Asset>()`
 
 ## Typed rows, columns and props
 
-Save this complete example as `typed-table-example.tsx`. `satisfies PuppertinoTableProps<Asset>` validates options and row callbacks while preserving inference. The recipe is compiled against the installed package during `pnpm check`.
+Save this complete example as `typed-table-example.tsx`. `satisfies TableViewProps<Asset>` validates options and row callbacks while preserving inference. The recipe is compiled against the installed package during `pnpm check`.
 
 <Source language="tsx" code={tableRecipes.typed} />
 
@@ -19,10 +19,10 @@ Save this complete example as `typed-table-example.tsx`. `satisfies PuppertinoTa
 Save this next to the example as `assets.stories.tsx`. Bind the generic component to your row model before passing it to `Meta`. Put required props in metadata args, and derive `StoryObj<typeof meta>` so each story inherits those defaults. Use `satisfies Story` to check overrides and infer play/decorator arguments. See [Storybook's TypeScript documentation](https://storybook.js.org/docs/writing-stories/typescript).
 
 <Source language="tsx" code={`import type { Meta, StoryObj } from '@storybook/react-vite';
-import { PuppertinoTable } from 'puppertino-table';
+import { TableView } from 'puppertino-table';
 import { type Asset, assetTableProps } from './typed-table-example';
 
-const AssetTable = PuppertinoTable<Asset>;
+const AssetTable = TableView<Asset>;
 const meta = {
   title: 'App/Assets',
   component: AssetTable,
@@ -43,7 +43,7 @@ export const Disabled = { args: { disabled: true } } satisfies Story;
 
 Use Controls for serializable behavior options. Columns contain functions and dates need deliberate construction; keep those fixtures in TypeScript. Change density, selection or disabled mode in the full canvas to explore the same component props your app will use.
 
-The default Table story binds `PuppertinoTable<Person>` using this same pattern. All main Table story args are checked against that public component type.
+The default Table story binds `TableView<Person>` using this same pattern. All main Table story args are checked against that public component type.
 
 <Canvas of={TableStories.Default} />
 

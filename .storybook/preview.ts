@@ -22,7 +22,7 @@ const preview: Preview = {
           'Examples',
           ['Finder'],
           'Puppertino',
-          ['Table', 'Resource browser'],
+          ['Table', 'Outline view', 'Split view', 'Column view'],
         ],
       },
     },

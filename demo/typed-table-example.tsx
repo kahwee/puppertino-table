@@ -1,8 +1,4 @@
-import {
-  createPuppertinoColumnHelper,
-  PuppertinoTable,
-  type PuppertinoTableProps,
-} from '../src/index.js';
+import { createPuppertinoColumnHelper, TableView, type TableViewProps } from '../src/index.js';
 
 export interface Asset {
   id: string;
@@ -43,8 +39,8 @@ export const assetTableProps = {
   getRowLabel: (asset) => asset.name,
   ariaLabel: 'Assets',
   selectable: true,
-} satisfies PuppertinoTableProps<Asset>;
+} satisfies TableViewProps<Asset>;
 
 export function TypedAssetTable() {
-  return <PuppertinoTable {...assetTableProps} />;
+  return <TableView {...assetTableProps} />;
 }

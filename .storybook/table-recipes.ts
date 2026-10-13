@@ -7,6 +7,8 @@ export interface TableRecipeSources {
   statusExample: string;
   navigationExample: string;
   typedExample: string;
+  outlineExample: string;
+  splitExample: string;
 }
 
 export function createTableRecipes({
@@ -18,6 +20,8 @@ export function createTableRecipes({
   statusExample,
   navigationExample,
   typedExample,
+  outlineExample,
+  splitExample,
 }: TableRecipeSources) {
   // Reuse the rendered examples so documentation cannot drift from their state wiring.
   const peopleFixture = fixtures
@@ -87,6 +91,8 @@ ${owner}  });
 }`;
   }
   return {
+    outline: `'use client';\n${styles}\n${outlineExample.replace("'../src/index.js'", "'puppertino-table'")}`,
+    split: `'use client';\n${styles}\n${splitExample.replace("'../src/index.js'", "'puppertino-table'")}`,
     typed: `'use client';\n${styles}\n${typedExample.replace("'../src/index.js'", "'puppertino-table'")}`,
     controlled: recipe(
       `import { useState } from 'react';

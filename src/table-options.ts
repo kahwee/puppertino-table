@@ -21,6 +21,8 @@ interface TableOptions<T extends RowData> {
   columns: readonly PuppertinoColumnDef<T>[];
   /** Stable unique ID, independent of current sorting or page position. */
   getRowId: (row: T, index: number) => string;
+  /** Synchronous nested rows; async fetching belongs in OutlineView/loadChildren. */
+  getSubRows?: (row: T, index: number) => readonly T[] | undefined;
   /** Omit for local state. Controlled state without a callback is read-only. */
   sorting?: SortingState;
   onSortingChange?: OnChangeFn<SortingState>;

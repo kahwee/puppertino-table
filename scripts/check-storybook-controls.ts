@@ -20,7 +20,7 @@ function trackPlaygroundArgs() {
 /** Exercise the actual manager Controls panel, including changes initiated inside the examples. */
 export async function checkPlaygroundControls(page: Page, base: string, evidence: string) {
   await page.setViewportSize({ width: 1440, height: 1100 });
-  await page.goto(`${base}/?path=/story/puppertino-resource-browser--column-workspace`);
+  await page.goto(`${base}/?path=/story/puppertino-column-view--column-workspace`);
   const frame = page.frameLocator('#storybook-preview-iframe');
   const files = frame.getByRole('region', { name: 'Project folders', exact: true });
   await files.waitFor();
@@ -47,7 +47,7 @@ export async function checkPlaygroundControls(page: Page, base: string, evidence
   await page.waitForFunction(
     () =>
       (window as unknown as { playgroundArgs: Record<string, Record<string, unknown>> })
-        .playgroundArgs['puppertino-resource-browser--column-workspace']?.density === 'comfortable',
+        .playgroundArgs['puppertino-column-view--column-workspace']?.density === 'comfortable',
   );
   assert.equal(await summary.textContent(), '2 selected', 'Controls preserve workspace selection');
   await frame.getByRole('combobox', { name: 'Density', exact: true }).selectOption('compact');

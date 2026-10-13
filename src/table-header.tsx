@@ -11,6 +11,7 @@ export function TableHeader<T extends RowData>({
   disabled: disabledOverride,
   resizable: resizeOverride,
   resizeOptions,
+  selectionRows,
 }: TableHeaderProps<T>) {
   const behavior = tableBehavior(table);
   const selectable = selectionOverride ?? (behavior.selectable && behavior.selectionCheckboxes);
@@ -29,7 +30,9 @@ export function TableHeader<T extends RowData>({
             <th className="pt-selection" rowSpan={groups.length} scope="col">
               <Subscribe source={table.atoms.rowSelection}>
                 {(selection) => {
-                  const rows = table.getRowModel().rows.filter((row) => row.getCanSelect());
+                  const rows = (selectionRows ?? table.getRowModel().rows).filter((row) =>
+                    row.getCanSelect(),
+                  );
                   const selected = rows.filter((row) => selection[row.id]).length;
                   const checked = rows.length > 0 && selected === rows.length;
                   const mixed = selected > 0 && !checked;
@@ -48,7 +51,17 @@ export function TableHeader<T extends RowData>({
                         onChange={(event) => {
                           if (!disabled && rows.length > 0) {
                             selectionAnchorFor(table.atoms.rowSelection).current = null;
-                            table.toggleAllPageRowsSelected(event.target.checked);
+                            const checked = event.target.checked;
+                            if (selectionRows)
+                              table.setRowSelection((previous) => {
+                                const next = { ...previous };
+                                for (const row of rows) {
+                                  if (checked) next[row.id] = true;
+                                  else delete next[row.id];
+                                }
+                                return next;
+                              });
+                            else table.toggleAllPageRowsSelected(checked);
                           }
                         }}
                       />

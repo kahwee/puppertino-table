@@ -6,9 +6,7 @@ import { setStorybookTheme } from './storybook-theme.mjs';
 
 /** Shared example page checks, separate from the table gesture stress suite. */
 export async function checkResourceWorkspaces(page: Page, base: string, evidence: string) {
-  await page.goto(
-    `${base}/iframe.html?id=puppertino-resource-browser--custom-styling&viewMode=story`,
-  );
+  await page.goto(`${base}/iframe.html?id=puppertino-column-view--custom-styling&viewMode=story`);
   const styled = page.getByRole('region', { name: 'Styled workspace' });
   await styled.waitFor();
   const selected = styled.locator('.pt-browser-item.p-selected');
@@ -33,7 +31,7 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
   );
   await page.screenshot({ path: `${evidence}/custom-styling.png` });
   await page.goto(
-    `${base}/iframe.html?id=puppertino-resource-browser--density-inheritance&viewMode=story`,
+    `${base}/iframe.html?id=puppertino-column-view--density-inheritance&viewMode=story`,
   );
   const inherited = page.getByRole('table', { name: 'Inherited table', exact: true });
   await inherited.waitFor();
@@ -93,7 +91,7 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
   assert.equal(await padding('Inherited table'), nativePadding);
   await page.screenshot({ path: `${evidence}/density-inheritance.png` });
   await page.goto(
-    `${base}/iframe.html?id=puppertino-resource-browser--column-workspace&viewMode=story&args=widthMode:persistent`,
+    `${base}/iframe.html?id=puppertino-column-view--column-workspace&viewMode=story&args=widthMode:persistent`,
   );
   await page.getByRole('region', { name: 'Project folders' }).waitFor();
   await page.evaluate(() =>
@@ -165,7 +163,7 @@ export async function checkResourceWorkspaces(page: Page, base: string, evidence
       'delegated-table-menus': 'view:table;menuMode:delegated',
     };
     await page.goto(
-      `${base}/iframe.html?id=puppertino-resource-browser--column-workspace&viewMode=story&args=${encodeURIComponent(presets[story])}`,
+      `${base}/iframe.html?id=puppertino-column-view--column-workspace&viewMode=story&args=${encodeURIComponent(presets[story])}`,
     );
     const tableView = story === 'density-table' || story === 'delegated-table-menus';
     const target = tableView

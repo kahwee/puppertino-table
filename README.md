@@ -10,9 +10,11 @@ Build Finder-style React workspaces, accessible tables and resizable column brow
 
 | Build | Use | Explore |
 | --- | --- | --- |
-| A complete table | `PuppertinoTable` and typed column helpers | [Table stories](https://kahwee.github.io/puppertino-table/?path=/docs/puppertino-table--docs) |
+| A complete table | `TableView` and typed column helpers | [Table stories](https://kahwee.github.io/puppertino-table/?path=/docs/puppertino-table--docs) |
+| A hierarchy with lazy children | `OutlineView` with app-owned `loadChildren` | [Outline stories](https://kahwee.github.io/puppertino-table/?path=/docs/puppertino-outline-view--docs) |
+| Resizable sidebar/content/detail panes | `SplitView` | [Split stories](https://kahwee.github.io/puppertino-table/?path=/docs/puppertino-split-view--docs) |
 | A Finder workspace | Window, toolbar, sidebar, views, preview and status primitives | [Composition recipes](https://kahwee.github.io/puppertino-table/?path=/docs/puppertino-finder-composition--docs) |
-| A column browser | `ColumnBrowser` with caller-rendered panels and items | [Browser stories](https://kahwee.github.io/puppertino-table/?path=/docs/puppertino-resource-browser--docs) |
+| A column browser | `ColumnView` with caller-rendered columns and items | [Browser stories](https://kahwee.github.io/puppertino-table/?path=/docs/puppertino-column-view--docs) |
 
 Tables support local or server-owned sorting, shared range selection and bounded pointer/keyboard resizing. Browser panels resize independently. Density, dark themes, menus and optional width persistence work across the shared primitives. Fine-grained sizing subscriptions keep the memoized row body out of resize renders.
 
@@ -25,7 +27,7 @@ pnpm add puppertino-table@0.9.1 @tanstack/react-table@9.2.8 @codedgar/puppertino
 React 19 (`^19.3.0`), TanStack Table and Puppertino are peer dependencies. Import the Puppertino styles used by your components, followed by the library stylesheet:
 
 ```tsx
-import { PuppertinoTable, createPuppertinoColumnHelper } from 'puppertino-table';
+import { TableView, createPuppertinoColumnHelper } from 'puppertino-table';
 import '@codedgar/puppertino/colors';
 import '@codedgar/puppertino/lists';
 import '@codedgar/puppertino/forms';
@@ -39,7 +41,7 @@ const items = [{ id: 'brief', name: 'Project brief.pdf' }];
 
 export function Files() {
   return (
-    <PuppertinoTable
+    <TableView
       data={items}
       columns={columns}
       getRowId={item => item.id}
@@ -175,7 +177,7 @@ Checkboxes and row gestures share a fixed range anchor. Pass `selectionAnchor` t
 
 ## Storybook playgrounds
 
-Use each group’s playground to compare variants through Controls. Resource browser combines table/column layouts, internal/controlled/read-only/persistent widths, density and menu triggers. Tag picker offers option datasets, mixed values, disabled tags and optional creation. Finder views and checkbox settings use args; the Theme toolbar applies across stories. Distinct API recipes and interaction workflows keep their own examples.
+Use each group’s playground to compare variants through Controls. Column view combines table/column layouts, internal/controlled/read-only/persistent widths, density and menu triggers. Tag picker offers option datasets, mixed values, disabled tags and optional creation. Finder views and checkbox settings use args; the Theme toolbar applies across stories. Distinct API recipes and interaction workflows keep their own examples.
 
 ## Develop
 

@@ -4,7 +4,7 @@ import { Subscribe } from '@tanstack/react-table';
 import { ColumnResizeHandle } from './resize-handle.js';
 import { selectionAnchorFor } from './selection-anchor.js';
 import { tableBehavior } from './table-behavior.js';
-export function TableHeader({ table, selectable: selectionOverride, disabled: disabledOverride, resizable: resizeOverride, resizeOptions, }) {
+export function TableHeader({ table, selectable: selectionOverride, disabled: disabledOverride, resizable: resizeOverride, resizeOptions, selectionRows, }) {
     const behavior = tableBehavior(table);
     const selectable = selectionOverride ?? (behavior.selectable && behavior.selectionCheckboxes);
     const disabled = behavior.disabled || !!disabledOverride;
@@ -15,7 +15,7 @@ export function TableHeader({ table, selectable: selectionOverride, disabled: di
         enabled: resizable && !disabled && resizeOptions?.enabled !== false,
     };
     return (_jsx("thead", { children: groups.map((group, index) => (_jsxs("tr", { children: [selectable && index === 0 && (_jsx("th", { className: "pt-selection", rowSpan: groups.length, scope: "col", children: _jsx(Subscribe, { source: table.atoms.rowSelection, children: (selection) => {
-                            const rows = table.getRowModel().rows.filter((row) => row.getCanSelect());
+                            const rows = (selectionRows ?? table.getRowModel().rows).filter((row) => row.getCanSelect());
                             const selected = rows.filter((row) => selection[row.id]).length;
                             const checked = rows.length > 0 && selected === rows.length;
                             const mixed = selected > 0 && !checked;
@@ -25,7 +25,20 @@ export function TableHeader({ table, selectable: selectionOverride, disabled: di
                                         }, onClick: (event) => event.stopPropagation(), onChange: (event) => {
                                             if (!disabled && rows.length > 0) {
                                                 selectionAnchorFor(table.atoms.rowSelection).current = null;
-                                                table.toggleAllPageRowsSelected(event.target.checked);
+                                                const checked = event.target.checked;
+                                                if (selectionRows)
+                                                    table.setRowSelection((previous) => {
+                                                        const next = { ...previous };
+                                                        for (const row of rows) {
+                                                            if (checked)
+                                                                next[row.id] = true;
+                                                            else
+                                                                delete next[row.id];
+                                                        }
+                                                        return next;
+                                                    });
+                                                else
+                                                    table.toggleAllPageRowsSelected(checked);
                                             }
                                         } }), _jsx("span", { "aria-hidden": "true" })] }));
                         } }) })), group.headers.map((header) => {

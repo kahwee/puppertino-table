@@ -1,0 +1,311 @@
+// biome-ignore-all lint/a11y/noNoninteractiveElementToInteractiveRole: ARIA treegrids use native table/cell elements with interactive hierarchy semantics.
+// biome-ignore-all lint/a11y/useFocusableInteractive: This treegrid uses row focus, so cells are reached through their parent row.
+'use client';
+import type { RowData } from '@tanstack/react-table';
+import { type KeyboardEvent, memo, useMemo, useRef } from 'react';
+import { DensityScope } from './density.js';
+import { RowSelectionCheckbox } from './row-selection-checkbox.js';
+import { tableBehavior } from './table-behavior.js';
+import { TableHeader } from './table-header.js';
+import type { PuppertinoRow, PuppertinoTableProps } from './table-types.js';
+import { useItemNavigation } from './use-item-navigation.js';
+import { type OutlineOptions, useOutline, validateOutlineItems } from './use-outline.js';
+import { usePuppertinoTable } from './use-puppertino-table.js';
+import { useRowSelectionGestures } from './use-row-selection-gestures.js';
+
+type OutlineTableProps<P> = P extends unknown
+  ? Omit<
+      P,
+      | 'getSubRows'
+      | 'getRowProps'
+      | 'getCellProps'
+      | 'leadingRows'
+      | 'status'
+      | 'loadingContent'
+      | 'errorContent'
+    >
+  : never;
+export type OutlineViewProps<T extends RowData> = OutlineTableProps<PuppertinoTableProps<T>> &
+  Omit<OutlineOptions<T>, 'getItemId'> & {
+    /** IDs must be globally unique across every hierarchy level. */
+    getRowId(item: T): string;
+    getRowLabel(item: T): string;
+  };
+export interface OutlineRow<T extends RowData> {
+  row: PuppertinoRow<T>;
+  position: number;
+  siblingCount: number;
+  parentId?: string;
+}
+export function visibleOutlineRows<T extends RowData>(
+  rows: readonly PuppertinoRow<T>[],
+  expanded: Readonly<Record<string, boolean>>,
+): OutlineRow<T>[] {
+  const visible: OutlineRow<T>[] = [];
+  const visit = (siblings: readonly PuppertinoRow<T>[], parentId?: string) => {
+    siblings.forEach((row, index) => {
+      visible.push({ row, position: index + 1, siblingCount: siblings.length, parentId });
+      if (expanded[row.id] === true) visit(row.subRows, row.id);
+    });
+  };
+  visit(rows);
+  return visible;
+}
+
+type OutlineBodyProps<T extends RowData> = {
+  table: ReturnType<typeof usePuppertinoTable<T>>;
+  outline: ReturnType<typeof useOutline<T>>;
+  visible: readonly OutlineRow<T>[];
+  getRowLabel: (item: T) => string;
+};
+function OutlineBody<T extends RowData>({
+  table,
+  outline,
+  visible,
+  getRowLabel,
+}: OutlineBodyProps<T>) {
+  const elements = useRef(new Map<string, HTMLTableRowElement>());
+  const orderedIds = visible.map(({ row }) => row.id);
+  const behavior = tableBehavior(table);
+  const gestures = useRowSelectionGestures(table, { orderedIds, disabled: behavior.disabled });
+  const navigation = useItemNavigation({
+    orderedIds,
+    disabled: behavior.disabled,
+    getItemElement: (id) => elements.current.get(id),
+    getItemLabel: (id) => {
+      const item = visible.find((item) => item.row.id === id);
+      return item ? getRowLabel(item.row.original) : '';
+    },
+    onNavigate: gestures.select,
+  });
+  const toggle = (row: PuppertinoRow<T>, recursive = false) => {
+    navigation.focus(row.id);
+    void outline.setExpanded(row.original, outline.expanded[row.id] !== true, recursive);
+  };
+  const keyDown = (event: KeyboardEvent<HTMLTableRowElement>, item: OutlineRow<T>) => {
+    if (
+      event.target === event.currentTarget &&
+      !behavior.disabled &&
+      !event.altKey &&
+      !event.shiftKey &&
+      (event.metaKey || event.ctrlKey) &&
+      event.key.toLowerCase() === 'a' &&
+      table.options.enableRowSelection !== false
+    ) {
+      event.preventDefault();
+      gestures.resetAnchor();
+      table.setRowSelection((previous) => {
+        const next = { ...previous };
+        for (const { row } of visible) if (row.getCanSelect()) next[row.id] = true;
+        return next;
+      });
+      return;
+    }
+    if (
+      event.target !== event.currentTarget ||
+      behavior.disabled ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.altKey
+    )
+      return;
+    const { row, parentId } = item;
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      if (outline.expanded[row.id] !== true && outline.canExpand(row.original))
+        void outline.setExpanded(row.original, true);
+      else if (outline.expanded[row.id] === true && row.subRows[0]) {
+        if (navigation.focus(row.subRows[0].id)) gestures.select(row.subRows[0].id);
+      }
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      if (outline.expanded[row.id] === true) void outline.setExpanded(row.original, false);
+      else if (parentId && navigation.focus(parentId)) gestures.select(parentId);
+    } else if (event.key === ' ' || event.key === 'Enter') {
+      event.preventDefault();
+      if (event.key === 'Enter' && outline.canExpand(row.original)) toggle(row);
+      else gestures.select(row.id, { shift: event.shiftKey, toggle: true });
+    } else navigation.getItemProps(row.id).onKeyDown(event);
+  };
+  const showSelection = behavior.selectable && behavior.selectionCheckboxes;
+  return (
+    <tbody>
+      {visible.map((item) => {
+        const { row, position, siblingCount } = item;
+        const canExpand = outline.canExpand(row.original);
+        const expanded = outline.expanded[row.id] === true;
+        const load = outline.loads.get(row.id);
+        return (
+          <tr
+            key={row.id}
+            ref={(element) => {
+              if (element) elements.current.set(row.id, element);
+              else elements.current.delete(row.id);
+            }}
+            tabIndex={navigation.getItemProps(row.id).tabIndex}
+            aria-level={row.depth + 1}
+            aria-posinset={position}
+            aria-setsize={siblingCount}
+            aria-expanded={canExpand ? expanded : undefined}
+            aria-busy={load?.status === 'loading' || undefined}
+            aria-selected={behavior.selectable ? row.getIsSelected() : undefined}
+            className={row.getIsSelected() ? 'p-selected' : undefined}
+            onFocus={navigation.getItemProps(row.id).onFocus}
+            onKeyDown={(event) => keyDown(event, item)}
+            onClick={(event) => {
+              if ((event.target as HTMLElement).closest('button,input,a')) return;
+              navigation.focus(row.id);
+              gestures.select(row.id, {
+                shift: event.shiftKey,
+                toggle: event.metaKey || event.ctrlKey,
+              });
+            }}
+          >
+            {showSelection && (
+              <td role="gridcell" className="pt-selection">
+                <RowSelectionCheckbox
+                  row={row}
+                  label={getRowLabel(row.original)}
+                  orderedIds={orderedIds}
+                  disabled={behavior.disabled}
+                />
+              </td>
+            )}
+            {row.getAllCells().map((cell, index) => (
+              <td role="gridcell" key={cell.id}>
+                {index === 0 ? (
+                  <div className="pt-outline-cell" style={{ paddingInlineStart: row.depth * 18 }}>
+                    {canExpand ? (
+                      <button
+                        type="button"
+                        className="pt-outline-disclosure"
+                        aria-label={`${expanded ? 'Collapse' : 'Expand'} ${getRowLabel(row.original)}`}
+                        aria-expanded={expanded}
+                        disabled={outline.readOnly}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          toggle(row, event.altKey);
+                        }}
+                      >
+                        <span
+                          className="pt-outline-triangle"
+                          data-expanded={expanded}
+                          aria-hidden="true"
+                        />
+                      </button>
+                    ) : (
+                      <span className="pt-outline-spacer" aria-hidden="true" />
+                    )}
+                    <span className="pt-outline-label">
+                      <table.FlexRender cell={cell} />
+                    </span>
+                    {load?.status === 'loading' && (
+                      <span role="status" className="pt-outline-status">
+                        Loading…
+                      </span>
+                    )}
+                    {load?.status === 'error' && (
+                      <span className="pt-outline-error">
+                        <span role="alert">Could not load children.</span>
+                        <button
+                          type="button"
+                          className="p-button"
+                          disabled={outline.readOnly}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void outline.retry(row.original);
+                          }}
+                        >
+                          Retry {getRowLabel(row.original)}
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <table.FlexRender cell={cell} />
+                )}
+              </td>
+            ))}
+          </tr>
+        );
+      })}
+    </tbody>
+  );
+}
+const MemoOutlineBody = memo(OutlineBody) as typeof OutlineBody;
+
+/** A resizable treegrid. Only the first data column exposes hierarchy; sorting stays within siblings. */
+export function OutlineView<T extends RowData>(props: OutlineViewProps<T>) {
+  const outline = useOutline({ ...props, getItemId: props.getRowId });
+  validateOutlineItems(props.data, props.getRowId, outline.childrenFor);
+  // Core row models are keyed by data identity; successful lazy loads rebuild the hierarchy.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: TanStack keys nested row-model construction by root data identity, including lazy child revisions.
+  const data = useMemo(() => [...props.data], [props.data, outline.loadedChildren, props.cacheKey]);
+  const table = usePuppertinoTable({ ...props, data, getSubRows: outline.childrenFor });
+  const rows = table.getRowModel().rows;
+  const visible = useMemo(
+    () => visibleOutlineRows(rows, outline.expanded),
+    [rows, outline.expanded],
+  );
+  const behavior = tableBehavior(table);
+  const showSelection = behavior.selectable && behavior.selectionCheckboxes;
+  return (
+    <DensityScope
+      density={props.density}
+      metrics={props.densityMetrics}
+      role="region"
+      aria-label={`${props.ariaLabel} scroll area`}
+      tabIndex={0}
+      className={`pt-scroll pt-outline ${props.className ?? ''}`}
+    >
+      <table.Subscribe source={table.atoms.columnSizing}>
+        {() => (
+          <table
+            className="p-table pt-table"
+            role="treegrid"
+            aria-label={props.ariaLabel}
+            aria-multiselectable={behavior.selectable || undefined}
+            style={{ width: table.getTotalSize() + (showSelection ? 36 : 0) }}
+          >
+            {props.caption && <caption>{props.caption}</caption>}
+            <colgroup>
+              {showSelection && <col style={{ width: 36 }} />}
+              {table.getAllLeafColumns().map((column) => (
+                <col key={column.id} style={{ width: column.getSize() }} />
+              ))}
+            </colgroup>
+            <TableHeader
+              table={table}
+              selectionRows={visible.map(({ row }) => row)}
+              resizeOptions={{
+                storageKey:
+                  props.columnSizing === undefined && !props.atoms?.columnSizing
+                    ? props.storageKey
+                    : undefined,
+                storage: props.storage,
+                cancelMediaQuery: props.cancelMediaQuery,
+                onCommit: props.onColumnSizingCommit,
+              }}
+            />
+            {visible.length ? (
+              <MemoOutlineBody
+                table={table}
+                outline={outline}
+                visible={visible}
+                getRowLabel={props.getRowLabel}
+              />
+            ) : (
+              <tbody>
+                <tr>
+                  <td colSpan={table.getAllLeafColumns().length + (showSelection ? 1 : 0)}>
+                    {props.emptyContent ?? 'No items'}
+                  </td>
+                </tr>
+              </tbody>
+            )}
+          </table>
+        )}
+      </table.Subscribe>
+    </DensityScope>
+  );
+}

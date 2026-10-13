@@ -66,7 +66,7 @@ The recording drags the Name divider, double-clicks to reset it, then switches t
   widths={widths} onWidthsChange={setWidths}
   onWidthsCommit={committed => savePreferences(committed)} />;`} />
 
-Custom table headers expose the matching `resizeOptions.onCommit`; individual resize handles use `options.onCommit`. The complete table exposes `onColumnSizingCommit` and saves internal widths with `storageKey`. Change callbacks observe previews (including cancellation); commit callbacks receive only completed snapshots. Supplying controlled widths without a change callback makes them read-only. <a href="./?path=/story/puppertino-resource-browser--column-workspace&args=widthMode:controlled" target="_top">Try controlled panels</a>.
+Custom table headers expose the matching `resizeOptions.onCommit`; individual resize handles use `options.onCommit`. The complete table exposes `onColumnSizingCommit` and saves internal widths with `storageKey`. Change callbacks observe previews (including cancellation); commit callbacks receive only completed snapshots. Supplying controlled widths without a change callback makes them read-only. <a href="./?path=/story/puppertino-column-view--column-workspace&args=widthMode:controlled" target="_top">Try controlled panels</a>.
 
 <Source language="tsx" code={`<PuppertinoTable data={files} columns={columns} getRowId={file => file.id}
   ariaLabel="Files"
@@ -139,7 +139,7 @@ The narrow example constrains the same workspace to 620px. Its toolbar wraps and
 
 <p>Change Row density in the playground or its Controls to compare compact and comfortable spacing.</p>
 
-Set density once on the parent scope; table rows, browser items and `.pt-icon` artwork inherit it. Metrics change geometry, not sorting or saved widths. <a href="./?path=/story/puppertino-resource-browser--density-inheritance" target="_top">Explore nested density overrides</a>.
+Set density once on the parent scope; table rows, browser items and `.pt-icon` artwork inherit it. Metrics change geometry, not sorting or saved widths. <a href="./?path=/story/puppertino-column-view--density-inheritance" target="_top">Explore nested density overrides</a>.
 
 ## Reduce integration code
 
@@ -148,7 +148,7 @@ For app-owned browser widths, keep `widths`, `onWidthsChange` and `onWidthsCommi
 <Source language="tsx" code={`<ColumnBrowser panels={panels} ariaLabel="Projects"
   storageKey="my-app.browser.widths.v1" />;`} />
 
-Restoration waits until hydration; only completed gestures save. Hidden ancestors keep their preferences, and storage failures preserve browsing. Controlled widths ignore automatic persistence. <a href="./?path=/story/puppertino-resource-browser--column-workspace&args=widthMode:persistent" target="_top">Try persistent panels</a>.
+Restoration waits until hydration; only completed gestures save. Hidden ancestors keep their preferences, and storage failures preserve browsing. Controlled widths ignore automatic persistence. <a href="./?path=/story/puppertino-column-view--column-workspace&args=widthMode:persistent" target="_top">Try persistent panels</a>.
 
 A workspace can resolve menu contexts once rather than attaching handlers to every row:
 
@@ -162,7 +162,7 @@ A workspace can resolve menu contexts once rather than attaching handlers to eve
 })}>{items.map(item => <ColumnBrowserItem key={item.id}
   data-item-id={item.id} aria-haspopup="menu">{item.name}</ColumnBrowserItem>)}</div>;`} />
 
-Return no context for unknown items or editable fields to keep their native menus. The app still owns commands, selection and current-item validation. <a href="./?path=/story/puppertino-resource-browser--column-workspace&args=menuMode:delegated" target="_top">Try delegated browser menus</a> · <a href="./?path=/story/puppertino-resource-browser--column-workspace&args=view:table;menuMode:delegated" target="_top">Try delegated table menus</a>.
+Return no context for unknown items or editable fields to keep their native menus. The app still owns commands, selection and current-item validation. <a href="./?path=/story/puppertino-column-view--column-workspace&args=menuMode:delegated" target="_top">Try delegated browser menus</a> · <a href="./?path=/story/puppertino-column-view--column-workspace&args=view:table;menuMode:delegated" target="_top">Try delegated table menus</a>.
 
 Use shared item slots and scoped CSS variables to customize presentation:
 
@@ -173,7 +173,7 @@ Use shared item slots and scoped CSS variables to customize presentation:
   --pt-item-gap: 8px;
 }`} />
 
-Selection preserves inherited icon and secondary-text contrast. <a href="./?path=/story/puppertino-resource-browser--custom-styling" target="_top">Try styling hooks</a> · <a href="https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md#stable-item-styling-hooks" target="_blank" rel="noopener noreferrer">See the full token and slot reference</a>.
+Selection preserves inherited icon and secondary-text contrast. <a href="./?path=/story/puppertino-column-view--custom-styling" target="_top">Try styling hooks</a> · <a href="https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md#stable-item-styling-hooks" target="_blank" rel="noopener noreferrer">See the full token and slot reference</a>.
 
 ## Finder references
 
@@ -181,7 +181,7 @@ The examples follow the sidebar, compact toolbar, four-view switcher and preview
 
 ## Next steps
 
-<a href="./?path=/docs/puppertino-table--docs" target="_top">Table API stories</a> · <a href="./?path=/docs/puppertino-resource-browser--docs" target="_top">Resource browser stories</a> · <a href="https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md" target="_blank" rel="noopener noreferrer">Full integration guide</a>
+<a href="./?path=/docs/puppertino-table--docs" target="_top">Table API stories</a> · <a href="./?path=/docs/puppertino-column-view--docs" target="_top">Column view stories</a> · <a href="https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md" target="_blank" rel="noopener noreferrer">Full integration guide</a>
 
 
 ## Finder keyboard behavior

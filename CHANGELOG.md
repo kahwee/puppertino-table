@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add Apple-named `OutlineView`, `SplitView`, `TableView` and `ColumnView` APIs. Outline rows support sibling sorting, disclosure, visible-only bulk selection, keyboard navigation and cancellable lazy `loadChildren` with caching/retry. Split panes support both axes, compact navigation, hidden panes and completion-only size persistence. Rename the resource-browser Storybook group to Column view.
+
 - Consolidate Storybook variants into args-driven playgrounds while retaining the focused Table sidebar. Replace flag-only Resource browser variants with one playground and keep separate styling and density-inheritance recipes.
 - Synchronize playground args with in-app view, density, narrow-layout and resize controls. Preserve Finder file operations, selection and inspector state while changing views or spacing; offer mutually exclusive width ownership and menu-trigger modes.
 - Combine item-selection ownership and tag option datasets into controls. Keep distinct API recipes, responsive examples and keyboard/creation workflows, update documentation and capture presets, and verify real manager Controls with browser regressions.

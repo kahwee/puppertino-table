@@ -11,17 +11,21 @@ export function createResizeController(environment, persist) {
         drag = null;
         active.cleanup();
         if (cancel) {
-            active.member.adapter.apply({
-                ...active.before,
-                ...active.member.adapter.snapshot(),
-                [active.id]: active.before[active.id],
-            });
+            active.member.adapter.apply(active.member.adapter.coupled
+                ? active.before
+                : {
+                    ...active.before,
+                    ...active.member.adapter.snapshot(),
+                    [active.id]: active.before[active.id],
+                });
         }
         else
-            persist(active.member, {
-                ...active.member.adapter.snapshot(),
-                [active.id]: active.latest[active.id],
-            });
+            persist(active.member, active.member.adapter.coupled
+                ? active.latest
+                : {
+                    ...active.member.adapter.snapshot(),
+                    [active.id]: active.latest[active.id],
+                });
         return true;
     };
     const owns = (member, pointer) => drag?.member === member && drag.pointer === pointer;
@@ -34,8 +38,10 @@ export function createResizeController(environment, persist) {
             return false;
         const widths = member.adapter.snapshot();
         const bounds = member.adapter.bounds(id);
-        member.adapter.reset(id);
-        persist(member, { ...widths, [id]: clampSize(bounds.size, bounds) });
+        const applied = member.adapter.reset(id);
+        persist(member, member.adapter.coupled
+            ? (applied ?? member.adapter.snapshot())
+            : { ...widths, [id]: clampSize(bounds.size, bounds) });
         return true;
     };
     return {
@@ -95,7 +101,9 @@ export function createResizeController(environment, persist) {
                 ...member.adapter.snapshot(),
                 [drag.id]: clampSize(drag.width + x - drag.x, member.adapter.bounds(drag.id)),
             };
-            member.adapter.apply(drag.latest);
+            const applied = member.adapter.apply(drag.latest);
+            if (member.adapter.coupled)
+                drag.latest = { ...(applied ?? member.adapter.snapshot()) };
         },
         end(member, pointer) {
             if (owns(member, pointer))
@@ -127,8 +135,8 @@ export function createResizeController(environment, persist) {
             if (next === undefined)
                 return false;
             const committed = { ...widths, [id]: clampSize(next, bounds) };
-            member.adapter.apply(committed);
-            persist(member, committed);
+            const applied = member.adapter.apply(committed);
+            persist(member, member.adapter.coupled ? (applied ?? member.adapter.snapshot()) : committed);
             return true;
         },
     };
