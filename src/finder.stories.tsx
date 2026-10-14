@@ -589,6 +589,7 @@ function FinderDemo({
   return (
     <main className="finder-demo-stage">
       <FinderWindow
+        appearance="tahoe"
         aria-label="Finder-style demo"
         onKeyDown={(event) => {
           if (

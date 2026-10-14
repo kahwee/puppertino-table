@@ -588,6 +588,35 @@ including when search expands. Icons are supplied by your application; the
 examples use [Phosphor](https://phosphoricons.com/) in the weights recommended
 by [Puppertino](https://puppertino.com/docs/icons/).
 
+Use `appearance="tahoe"` on `FinderWindow` for softer toolbar capsules and
+continuous sidebar chrome. The default `classic` appearance stays available.
+Set `keyboardNavigation` on `FinderToolbar` for one Tab stop: Left/Right moves
+between available controls; Home/End reaches the first/last. Typing and caret
+keys in Search remain native. Disabled or hidden controls are skipped, and
+returning from a menu restores its trigger. Omit the option for ordinary Tab
+navigation. `label` names the toolbar; button `label` supplies both its
+accessible name and hover hint.
+
+```tsx
+<FinderWindow appearance="tahoe" aria-label="Project browser">
+  <FinderToolbar keyboardNavigation label="Project tools">
+    <FinderTitle>Projects</FinderTitle>
+    <FinderToolbarGroup aria-label="File commands">
+      <FinderToolbarButton label="New folder" onClick={createFolder}>
+        <FolderPlusIcon aria-hidden="true" />
+      </FinderToolbarButton>
+      <FinderToolbarButton label="Quick Look" disabled={!selected} onClick={preview}>
+        <EyeIcon aria-hidden="true" />
+      </FinderToolbarButton>
+    </FinderToolbarGroup>
+  </FinderToolbar>
+</FinderWindow>
+```
+
+Keep navigation before the title, related commands in small groups, and search
+at the trailing edge. Supply only commands your app implements. See the
+[Tahoe Finder reference and next steps](./tahoe-finder.md).
+
 Constrain the window's width with its parent or native `style` prop; it creates
 its own size-query container. Add `p-dark-mode` to the window or an ancestor for
 dark mode. Customize `--finder-sidebar-width`, `--finder-radius`,

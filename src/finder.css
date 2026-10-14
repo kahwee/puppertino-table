@@ -352,7 +352,7 @@
     min-height: 58px;
   }
   .pt-finder-history {
-    display: none;
+    display: flex;
   }
   .pt-finder-search {
     width: 100%;
@@ -402,6 +402,44 @@
   border: 0;
   margin: 0;
   min-width: 0;
+}
+
+/* Tahoe's material belongs to navigation chrome, with a solid content canvas. */
+.pt-finder-container[data-appearance="tahoe"] {
+  --finder-radius: 20px;
+  --p-toolbar-bg: color-mix(in srgb, var(--p-window-bg) 88%, transparent);
+  --p-toolbar-rim:
+    inset 0 1px 0 color-mix(in srgb, Canvas 45%, transparent),
+    0 0 0 0.5px color-mix(in srgb, var(--finder-line) 55%, transparent);
+  --p-toolbar-shadow: 0 2px 8px #10183008;
+}
+.pt-finder-container[data-appearance="tahoe"] .pt-finder-toolbar {
+  background: var(--finder-toolbar);
+}
+.pt-finder-container[data-appearance="tahoe"] .pt-finder-titlebar {
+  border-right: 0;
+}
+.pt-finder-container[data-appearance="tahoe"] .pt-finder-titlebar .p-traffic-lights {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 20px;
+  background: var(--p-toolbar-bg);
+  box-shadow: var(--p-toolbar-rim);
+}
+.pt-finder-container[data-appearance="tahoe"] .pt-finder-toolbar-content {
+  border-bottom-color: transparent;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .pt-finder-container[data-appearance="tahoe"] {
+    --p-toolbar-bg: var(--p-window-bg);
+    --p-toolbar-shadow: none;
+  }
+}
+@media (prefers-contrast: more) {
+  .pt-finder-container[data-appearance="tahoe"] {
+    --p-toolbar-rim: 0 0 0 1px var(--p-toolbar-ink);
+  }
 }
 /* Puppertino owns toolbar/button focus. Scope our fallback to custom items. */
 .pt-finder-icon-item:focus-visible,

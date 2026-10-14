@@ -10,10 +10,18 @@ import {
   type SidebarProps,
 } from './sidebar.js';
 
-export type FinderWindowProps = ComponentPropsWithRef<'section'>;
-export function FinderWindow({ className = '', children, ...props }: FinderWindowProps) {
+export interface FinderWindowProps extends ComponentPropsWithRef<'section'> {
+  /** Tahoe uses softer chrome and a continuous sidebar material; classic preserves the original skin. */
+  appearance?: 'classic' | 'tahoe';
+}
+export function FinderWindow({
+  appearance = 'classic',
+  className = '',
+  children,
+  ...props
+}: FinderWindowProps) {
   return (
-    <section {...props} className={`pt-finder-container ${className}`}>
+    <section {...props} data-appearance={appearance} className={`pt-finder-container ${className}`}>
       <div className="p-window pt-finder-window">{children}</div>
     </section>
   );

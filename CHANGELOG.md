@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add opt-in Tahoe Finder chrome, labeled toolbar buttons, and roving toolbar keyboard navigation. Keep history controls available in narrow windows and update the composed examples and Apple reference notes.
+
 - Lead the README with an asserted Team directory screencast showing selection across pages, saved columns and widths, reload, and restore defaults; tighten the workspace and supporting copy.
 
 - Add a keyboard-accessible Columns menu to the existing Paged workspace. Remember visibility and completed widths together, protect Name, retain hidden-column widths, clear hidden sorting and restore the default layout.

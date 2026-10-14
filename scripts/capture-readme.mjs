@@ -550,14 +550,28 @@ async function captureExistingMedia() {
   await pause(panes.page);
   await finish(panes.context, panes.page, 'split-panes');
 }
+async function captureTahoeToolbar() {
+  const { context, page } = await open('file-table');
+  await accessibility(page);
+  await screenshot(page, 'tahoe-toolbar');
+  await setStorybookTheme(page, 'dark');
+  await accessibility(page);
+  await screenshot(page, 'tahoe-toolbar-dark');
+  await context.close();
+}
 try {
-  if (!process.argv.includes('--paged')) await captureExistingMedia();
-  await capturePagedWorkspace();
+  const tahoeOnly = process.argv.includes('--tahoe');
+  const pagedOnly = process.argv.includes('--paged');
+  if (!pagedOnly && !tahoeOnly) await captureExistingMedia();
+  if (!tahoeOnly) await capturePagedWorkspace();
+  if (!pagedOnly) await captureTahoeToolbar();
   assert.deepEqual(errors, []);
   console.log(
-    process.argv.includes('--paged')
-      ? 'README media captured: asserted Team directory workflow; GIF, MP4 and WebM.'
-      : 'README media captured: twenty screenshots and six asserted workflows; GIFs, MP4s and WebMs.',
+    tahoeOnly
+      ? 'README media captured: light/dark Tahoe Finder toolbar.'
+      : pagedOnly
+        ? 'README media captured: asserted Team directory workflow; GIF, MP4 and WebM.'
+        : 'README media captured: twenty-two screenshots and six asserted workflows; GIFs, MP4s and WebMs.',
   );
 } finally {
   await browser.close();

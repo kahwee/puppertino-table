@@ -1,8 +1,11 @@
 import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { type DensityScopeProps } from './density.js';
 import { type SidebarGroupProps, type SidebarItemButtonProps, type SidebarProps } from './sidebar.js';
-export type FinderWindowProps = ComponentPropsWithRef<'section'>;
-export declare function FinderWindow({ className, children, ...props }: FinderWindowProps): import("react").JSX.Element;
+export interface FinderWindowProps extends ComponentPropsWithRef<'section'> {
+    /** Tahoe uses softer chrome and a continuous sidebar material; classic preserves the original skin. */
+    appearance?: 'classic' | 'tahoe';
+}
+export declare function FinderWindow({ appearance, className, children, ...props }: FinderWindowProps): import("react").JSX.Element;
 export declare function FinderBody({ className, ...props }: DensityScopeProps): import("react").JSX.Element;
 export declare function FinderContent({ className, ...props }: ComponentPropsWithRef<'div'>): import("react").JSX.Element;
 export declare function FinderSidebar({ className, ...props }: SidebarProps): import("react").JSX.Element;

@@ -11,10 +11,17 @@ export interface FinderWindowControlsProps {
 export declare function FinderWindowControls({ onClose, onMinimize, onZoom }: FinderWindowControlsProps): import("react").JSX.Element;
 export interface FinderToolbarProps extends ComponentPropsWithRef<'header'> {
     windowControls?: ReactNode;
+    label?: string;
+    /** One Tab stop with Left/Right and Home/End navigation. Text fields retain editing keys. */
+    keyboardNavigation?: boolean;
 }
-export declare function FinderToolbar({ windowControls, children, className, ...props }: FinderToolbarProps): import("react").JSX.Element;
+export declare function FinderToolbar({ windowControls, label, keyboardNavigation, children, className, ...props }: FinderToolbarProps): import("react").JSX.Element;
 export declare function FinderToolbarGroup({ className, ...props }: ComponentPropsWithRef<'fieldset'>): import("react").JSX.Element;
-export declare function FinderToolbarButton({ className, ...props }: ComponentPropsWithRef<'button'>): import("react").JSX.Element;
+export interface FinderToolbarButtonProps extends ComponentPropsWithRef<'button'> {
+    /** Supplies both the accessible name and native hover hint for icon buttons. */
+    label?: string;
+}
+export declare function FinderToolbarButton({ label, title, 'aria-label': ariaLabel, className, ...props }: FinderToolbarButtonProps): import("react").JSX.Element;
 export interface FinderTitleProps extends ComponentPropsWithRef<'h1'> {
     as?: 'h1' | 'h2' | 'h3';
 }

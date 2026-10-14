@@ -2,6 +2,7 @@
 import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useRef, useState } from 'react';
 import { ContextMenu } from './context-menu.js';
+import { useFinderToolbarNavigation } from './finder-toolbar-navigation.js';
 export const finderViews = ['icons', 'list', 'columns', 'gallery', 'outline'];
 /** Without handlers, traffic lights are decoration rather than inert buttons. */
 export function FinderWindowControls({ onClose, onMinimize, onZoom }) {
@@ -11,14 +12,16 @@ export function FinderWindowControls({ onClose, onMinimize, onZoom }) {
             ['zoom', 'Zoom window', onZoom],
         ].map(([name, label, handler]) => handler ? (_jsx("button", { type: "button", className: `p-traffic-light p-traffic-light-${name}`, "aria-label": label, onClick: handler }, name)) : (_jsx("span", { className: `p-traffic-light p-traffic-light-${name}`, "aria-hidden": "true" }, name))) }));
 }
-export function FinderToolbar({ windowControls = _jsx(FinderWindowControls, {}), children, className = '', ...props }) {
-    return (_jsxs("header", { ...props, className: `pt-finder-toolbar ${className}`, children: [_jsx("div", { className: "pt-finder-titlebar", children: windowControls }), _jsx("div", { className: "pt-finder-toolbar-content", children: children })] }));
+export function FinderToolbar({ windowControls = _jsx(FinderWindowControls, {}), label = 'Finder toolbar', keyboardNavigation = false, children, className = '', ...props }) {
+    const content = useRef(null);
+    useFinderToolbarNavigation(content, keyboardNavigation);
+    return (_jsxs("header", { ...props, className: `pt-finder-toolbar ${className}`, children: [_jsx("div", { className: "pt-finder-titlebar", children: windowControls }), _jsx("div", { ref: content, role: "toolbar", "aria-label": label, className: "pt-finder-toolbar-content", children: children })] }));
 }
 export function FinderToolbarGroup({ className = '', ...props }) {
     return _jsx("fieldset", { ...props, className: `p-toolbar-group pt-finder-toolbar-group ${className}` });
 }
-export function FinderToolbarButton({ className = '', ...props }) {
-    return _jsx("button", { type: "button", ...props, className: `p-toolbar-btn ${className}` });
+export function FinderToolbarButton({ label, title, 'aria-label': ariaLabel, className = '', ...props }) {
+    return (_jsx("button", { type: "button", ...props, "aria-label": ariaLabel ?? label, title: title ?? label, className: `p-toolbar-btn ${className}` }));
 }
 export function FinderTitle({ as: Heading = 'h1', className = '', ...props }) {
     return _jsx(Heading, { ...props, className: `pt-finder-title ${className}` });

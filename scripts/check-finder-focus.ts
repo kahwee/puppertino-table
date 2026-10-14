@@ -13,7 +13,7 @@ export async function checkFinderFocus(page: Page, base: string, evidence: strin
       theme === 'dark',
     );
     await page.getByRole('button', { name: 'Icons', exact: true }).focus();
-    await page.keyboard.press('Tab');
+    await page.keyboard.press('ArrowRight');
     const list = page.getByRole('button', { name: 'List', exact: true });
     assert.equal(await list.evaluate((node) => node.matches(':focus-visible')), true);
     assert.deepEqual(
@@ -175,7 +175,89 @@ export async function checkFinderFocus(page: Page, base: string, evidence: strin
   );
   await page.keyboard.press('Escape');
   await page.emulateMedia({ forcedColors: 'none' });
+  await checkToolbarNavigation(page, base, evidence);
   console.log(
     'Finder focus passed: pointer/keyboard toolbar, clipped headers, tag input/token, menu and forced colors.',
+  );
+}
+
+async function checkToolbarNavigation(page: Page, base: string, evidence: string) {
+  await page.goto(`${base}/iframe.html?${storyQuery('examples-finder--file-table')}`);
+  const toolbar = page.getByRole('toolbar', { name: 'Finder toolbar' });
+  const icons = toolbar.getByRole('button', { name: 'Icons', exact: true });
+  const list = toolbar.getByRole('button', { name: 'List', exact: true });
+  const search = toolbar.getByRole('button', { name: 'Search', exact: true });
+  await icons.focus();
+  await icons.press('ArrowRight');
+  assert.equal(await list.evaluate((node) => node === document.activeElement), true);
+  assert.equal(
+    await list.getAttribute('aria-pressed'),
+    'true',
+    'arrow focus does not change the selected view',
+  );
+  assert.equal(await toolbar.locator('[tabindex="0"]').count(), 1, 'one toolbar Tab entry');
+  await list.press('End');
+  assert.equal(await search.evaluate((node) => node === document.activeElement), true);
+  await search.press('ArrowRight');
+  assert.equal(
+    await icons.evaluate((node) => node === document.activeElement),
+    true,
+    'wrap and skip disabled history',
+  );
+  await toolbar.evaluate((node) => {
+    node.setAttribute('dir', 'rtl');
+  });
+  await icons.press('ArrowLeft');
+  assert.equal(
+    await list.evaluate((node) => node === document.activeElement),
+    true,
+    'respect RTL arrows',
+  );
+  await toolbar.evaluate((node) => {
+    node.removeAttribute('dir');
+  });
+  await list.press('Shift+ArrowRight');
+  assert.equal(
+    await list.evaluate((node) => node === document.activeElement),
+    true,
+    'modified shortcuts remain available to the app',
+  );
+  await list.press('End');
+  await search.press('Enter');
+  const input = toolbar.getByRole('searchbox', { name: 'Search files' });
+  await input.waitFor();
+  await page.waitForFunction(
+    () => document.activeElement?.getAttribute('aria-label') === 'Search files',
+  );
+  await input.fill('brief');
+  await input.press('ArrowLeft');
+  assert.equal(
+    await input.evaluate((node) => node === document.activeElement),
+    true,
+    'search caret stays native',
+  );
+  await input.press('Escape');
+  await search.waitFor();
+  await page.waitForFunction(() => document.activeElement?.getAttribute('aria-label') === 'Search');
+  assert.equal(
+    await toolbar.locator('[tabindex="0"]').count(),
+    1,
+    'collapsed Search restores the single entry',
+  );
+  await search.press('Home');
+  assert.equal(await icons.evaluate((node) => node === document.activeElement), true);
+  await page.screenshot({ path: `${evidence}/tahoe-toolbar.png` });
+  await page.setViewportSize({ width: 680, height: 720 });
+  const back = toolbar.getByRole('button', { name: 'Back', exact: true });
+  assert.equal(await back.isVisible(), true, 'compact layout retains history');
+  await page
+    .getByRole('navigation', { name: 'Favorites' })
+    .getByRole('button', { name: 'Archive', exact: true })
+    .click();
+  await back.click();
+  await page.getByRole('heading', { name: 'Projects', exact: true }).waitFor();
+  await page.screenshot({ path: `${evidence}/tahoe-toolbar-compact.png` });
+  console.log(
+    'Toolbar navigation passed: one Tab entry, arrows/Home/End, disabled skipping, RTL, native search editing, restored focus and compact history.',
   );
 }

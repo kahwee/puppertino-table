@@ -1,6 +1,7 @@
 'use client';
 import { type ComponentPropsWithRef, type ReactNode, useEffect, useRef, useState } from 'react';
 import { ContextMenu, type ContextMenuItem, type ContextMenuState } from './context-menu.js';
+import { useFinderToolbarNavigation } from './finder-toolbar-navigation.js';
 
 export const finderViews = ['icons', 'list', 'columns', 'gallery', 'outline'] as const;
 export type FinderView = (typeof finderViews)[number];
@@ -41,17 +42,26 @@ export function FinderWindowControls({ onClose, onMinimize, onZoom }: FinderWind
 }
 export interface FinderToolbarProps extends ComponentPropsWithRef<'header'> {
   windowControls?: ReactNode;
+  label?: string;
+  /** One Tab stop with Left/Right and Home/End navigation. Text fields retain editing keys. */
+  keyboardNavigation?: boolean;
 }
 export function FinderToolbar({
   windowControls = <FinderWindowControls />,
+  label = 'Finder toolbar',
+  keyboardNavigation = false,
   children,
   className = '',
   ...props
 }: FinderToolbarProps) {
+  const content = useRef<HTMLDivElement>(null);
+  useFinderToolbarNavigation(content, keyboardNavigation);
   return (
     <header {...props} className={`pt-finder-toolbar ${className}`}>
       <div className="pt-finder-titlebar">{windowControls}</div>
-      <div className="pt-finder-toolbar-content">{children}</div>
+      <div ref={content} role="toolbar" aria-label={label} className="pt-finder-toolbar-content">
+        {children}
+      </div>
     </header>
   );
 }
@@ -61,8 +71,26 @@ export function FinderToolbarGroup({
 }: ComponentPropsWithRef<'fieldset'>) {
   return <fieldset {...props} className={`p-toolbar-group pt-finder-toolbar-group ${className}`} />;
 }
-export function FinderToolbarButton({ className = '', ...props }: ComponentPropsWithRef<'button'>) {
-  return <button type="button" {...props} className={`p-toolbar-btn ${className}`} />;
+export interface FinderToolbarButtonProps extends ComponentPropsWithRef<'button'> {
+  /** Supplies both the accessible name and native hover hint for icon buttons. */
+  label?: string;
+}
+export function FinderToolbarButton({
+  label,
+  title,
+  'aria-label': ariaLabel,
+  className = '',
+  ...props
+}: FinderToolbarButtonProps) {
+  return (
+    <button
+      type="button"
+      {...props}
+      aria-label={ariaLabel ?? label}
+      title={title ?? label}
+      className={`p-toolbar-btn ${className}`}
+    />
+  );
 }
 export interface FinderTitleProps extends ComponentPropsWithRef<'h1'> {
   as?: 'h1' | 'h2' | 'h3';

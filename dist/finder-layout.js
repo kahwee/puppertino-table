@@ -2,8 +2,8 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { DensityScope } from './density.js';
 import { Sidebar, SidebarGroup, SidebarItem, } from './sidebar.js';
-export function FinderWindow({ className = '', children, ...props }) {
-    return (_jsx("section", { ...props, className: `pt-finder-container ${className}`, children: _jsx("div", { className: "p-window pt-finder-window", children: children }) }));
+export function FinderWindow({ appearance = 'classic', className = '', children, ...props }) {
+    return (_jsx("section", { ...props, "data-appearance": appearance, className: `pt-finder-container ${className}`, children: _jsx("div", { className: "p-window pt-finder-window", children: children }) }));
 }
 export function FinderBody({ className = '', ...props }) {
     return _jsx(DensityScope, { ...props, className: `pt-finder-workspace ${className}` });

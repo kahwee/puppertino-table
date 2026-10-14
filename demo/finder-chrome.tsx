@@ -44,7 +44,7 @@ export function DemoToolbar({
   onPreview,
 }: DemoToolbarProps) {
   return (
-    <FinderToolbar>
+    <FinderToolbar keyboardNavigation>
       <FinderHistory
         onBack={canBack ? () => onTravel(-1) : undefined}
         onForward={canForward ? () => onTravel(1) : undefined}

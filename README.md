@@ -82,6 +82,10 @@ Sorting automatically orders the supplied rows by default. Set `manualSorting` f
 
 The Finder example shares selection between List, Icons, Columns, Gallery and Outline. Search, folder history, tags, previews and in-memory file operations belong to the example app. The public components provide layout, table/browser geometry, gestures and menus.
 
+For Tahoe-style chrome, use `FinderWindow appearance="tahoe"`. Add `keyboardNavigation` to `FinderToolbar` for one Tab stop and arrow-key navigation; Search keeps native editing keys. Button `label` provides an accessible name and hover hint. [Toolbar recipe](https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md#compose-a-finder) · [Apple references and next steps](https://github.com/kahwee/puppertino-table/blob/main/docs/tahoe-finder.md).
+
+![Tahoe-inspired Finder with soft toolbar groups and navigation beside the folder title](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/tahoe-toolbar.png)
+
 ![Column browser with a selected document and app-owned preview](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/columns-preview.png)
 
 | Icons | Gallery |

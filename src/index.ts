@@ -69,6 +69,7 @@ export {
   type FinderTitleProps,
   FinderToolbar,
   FinderToolbarButton,
+  type FinderToolbarButtonProps,
   FinderToolbarGroup,
   type FinderToolbarProps,
   type FinderView,
