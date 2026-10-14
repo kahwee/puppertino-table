@@ -482,6 +482,9 @@ export async function checkFinderOutline(page: Page, base: string, evidence: str
   await brief.focus();
   await brief.press('Control+1');
   await page.getByRole('button', { name: 'Project brief.pdf PDF document', exact: true }).waitFor();
+  await page.waitForFunction(
+    () => document.activeElement?.getAttribute('data-file-id') === 'brief',
+  );
   await page.keyboard.press('Control+5');
   await brief.waitFor();
   await page.waitForFunction(

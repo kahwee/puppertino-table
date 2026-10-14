@@ -2,7 +2,16 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useCreateAtom } from '@tanstack/react-store';
 import type { ColumnSizingState, RowSelectionState, SortingState } from '@tanstack/react-table';
 import type { DragEvent, KeyboardEvent, MouseEvent } from 'react';
-import { useEffect, useEffectEvent, useId, useMemo, useReducer, useRef, useState } from 'react';
+import {
+  useEffect,
+  useEffectEvent,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 import { useArgs } from 'storybook/preview-api';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { finderViewRecipes } from '../.storybook/finder-recipes.js';
@@ -121,17 +130,18 @@ function FinderDemo({
   const selectionSummary = useRef<HTMLOutputElement>(null);
   const [tagNames, setTagNames] = useState(['Project Alpine', 'Work', 'Review']);
   const [folder, setFolder] = useState('Projects');
-  const [view, setLocalView] = useState(initialView);
-  const [density, setLocalDensity] = useState<'compact' | 'comfortable'>(initialDensity);
-  useEffect(() => setLocalView(initialView), [initialView]);
-  useEffect(() => setLocalDensity(initialDensity), [initialDensity]);
+  const [localView, setLocalView] = useState(initialView);
+  const [localDensity, setLocalDensity] = useState<'compact' | 'comfortable'>(initialDensity);
+  // A slice has one owner: live Storybook args or local state, never delayed prop mirrors.
+  const view = onViewChange ? initialView : localView;
+  const density = onDensityChange ? initialDensity : localDensity;
   const setView = (next: FinderView) => {
-    setLocalView(next);
-    onViewChange?.(next);
+    if (onViewChange) onViewChange(next);
+    else setLocalView(next);
   };
   const setDensity = (next: 'compact' | 'comfortable') => {
-    setLocalDensity(next);
-    onDensityChange?.(next);
+    if (onDensityChange) onDensityChange(next);
+    else setLocalDensity(next);
   };
   const [revision, setRevision] = useState(0);
   const [detail, setDetail] = useState<string | null>(
@@ -267,7 +277,7 @@ function FinderDemo({
     onNavigate: (id, modifiers) =>
       selectFile(id, { shiftKey: !!modifiers.shift, metaKey: false, ctrlKey: false }, displayIds()),
   });
-  useEffect(() => {
+  useLayoutEffect(() => {
     const pending = pendingViewFocus.current;
     if (pending?.view === view && navigation.focus(pending.id)) {
       pendingViewFocus.current = null;
@@ -1339,7 +1349,7 @@ export const KeyboardWorkflow: Story = {
     });
     await step('Keep selection and focus across Icons, Columns and Gallery', async () => {
       await userEvent.keyboard('{Control>}1{/Control}');
-      const icons = within(canvas.getByRole('region', { name: 'Project file icons' }));
+      const icons = within(await canvas.findByRole('region', { name: 'Project file icons' }));
       const budget = icons.getByRole('button', { name: 'Budget 2027.xlsx Spreadsheet' });
       await expect(budget).toHaveFocus();
       await expect(budget).toHaveAttribute('aria-pressed', 'true');
@@ -1347,7 +1357,9 @@ export const KeyboardWorkflow: Story = {
       await expect(canvas.getByRole('dialog', { name: 'Quick Look' })).toBeInTheDocument();
       await userEvent.keyboard('{Escape}');
       await userEvent.keyboard('{Control>}3{/Control}');
-      await expect(canvas.getByRole('region', { name: 'Workspace columns' })).toBeInTheDocument();
+      await expect(
+        await canvas.findByRole('region', { name: 'Workspace columns' }),
+      ).toBeInTheDocument();
       await expect(canvas.getByRole('button', { name: 'Budget 2027.xlsx' })).toHaveFocus();
       await userEvent.keyboard('{ArrowLeft}');
       const workspace = within(canvas.getByRole('region', { name: 'Workspace' }));
@@ -1356,7 +1368,7 @@ export const KeyboardWorkflow: Story = {
       await expect(canvas.getByRole('button', { name: 'Budget 2027.xlsx' })).toHaveFocus();
       await userEvent.keyboard('{Control>}4{/Control}');
       await expect(
-        canvas.getByRole('region', { name: 'Project file gallery' }),
+        await canvas.findByRole('region', { name: 'Project file gallery' }),
       ).toBeInTheDocument();
       await userEvent.keyboard('{ArrowRight}');
       await expect(canvas.getByRole('button', { name: 'Cover artwork.png' })).toHaveFocus();
