@@ -15,6 +15,8 @@ export interface TableRecipeSources {
   dataPresets: string;
   pagedExample: string;
   peoplePage: string;
+  peopleLayout: string;
+  usePeopleLayout: string;
 }
 
 export function createTableRecipes({
@@ -32,6 +34,8 @@ export function createTableRecipes({
   dataPresets,
   pagedExample,
   peoplePage,
+  peopleLayout,
+  usePeopleLayout,
 }: TableRecipeSources) {
   // Reuse the rendered examples so documentation cannot drift from their state wiring.
   const peopleFixture = fixtures
@@ -106,7 +110,13 @@ ${owner}  });
       .replace("'../src/index.js'", "'puppertino-table'")
       .replace("'./fixtures.js'", "'./table-data'")
       .replace("'./table-data-presets.js'", "'./table-data'")
-      .replace("'./people-page.js'", "'./people-page'"),
+      .replace("'./people-page.js'", "'./people-page'")
+      .replace("'./people-layout.js'", "'./people-layout'")
+      .replace("'./use-people-layout.js'", "'./use-people-layout'"),
+    peopleLayout: peopleLayout
+      .replace("'../src/index.js'", "'puppertino-table'")
+      .replace("'./fixtures.js'", "'./table-data'"),
+    usePeopleLayout: usePeopleLayout.replace("'./people-layout.js'", "'./people-layout'"),
     peoplePage: peoplePage.replace("'./fixtures.js'", "'./table-data'"),
     sidebar: `'use client';\n${styles}\nimport '@codedgar/puppertino/sidebars';\n${sidebarExample.replace("'../src/index.js'", "'puppertino-table'")}`,
     outline: `'use client';\n${styles}\n${outlineExample.replace("'../src/index.js'", "'puppertino-table'")}`,

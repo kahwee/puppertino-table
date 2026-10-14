@@ -18,6 +18,8 @@ export const supportingSources: Readonly<
     additional: [
       { filename: 'paged-people.tsx', code: tableRecipes.pagedExample },
       { filename: 'people-page.ts', code: tableRecipes.peoplePage },
+      { filename: 'people-layout.ts', code: tableRecipes.peopleLayout },
+      { filename: 'use-people-layout.ts', code: tableRecipes.usePeopleLayout },
       { filename: 'paged-people.css', code: pagedStyles },
     ],
   },

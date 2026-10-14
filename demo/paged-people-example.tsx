@@ -6,11 +6,13 @@ import {
   type SortingState,
   Subscribe,
 } from '@tanstack/react-table';
-import { useMemo, useRef, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import { PuppertinoTable, type TableDensity } from '../src/index.js';
 import { personColumns } from './fixtures.js';
+import { peopleColumnChoices } from './people-layout.js';
 import { peoplePage } from './people-page.js';
 import { type TableDataPreset, tableData } from './table-data-presets.js';
+import { usePeopleLayout } from './use-people-layout.js';
 
 export interface PagedPeopleProps {
   dataPreset?: TableDataPreset;
@@ -32,6 +34,23 @@ export function PagedPeopleExample({
   disabled = false,
 }: PagedPeopleProps) {
   const people = useMemo(() => tableData(dataPreset), [dataPreset]);
+  const layout = usePeopleLayout();
+  const columns = useMemo(
+    () =>
+      personColumns.filter(
+        (column) =>
+          !layout.hidden.includes(
+            ('accessorKey' in column
+              ? column.accessorKey
+              : column.id) as (typeof peopleColumnChoices)[number]['id'],
+          ),
+      ),
+    [layout.hidden],
+  );
+  const columnsId = useId();
+  const columnsPanel = useRef<HTMLDivElement>(null);
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const [panelPosition, setPanelPosition] = useState({ left: 0, top: 0 });
   const [pagination, setPagination] = useState({ query, pageSize, pageIndex: 0 });
   // Adjust paging before rendering new args; retain selection and column widths.
   if (pagination.query !== query || pagination.pageSize !== pageSize)
@@ -66,15 +85,80 @@ export function PagedPeopleExample({
           />
         </label>
         <p>Select people across pages. Your selection stays with you.</p>
+        <button
+          type="button"
+          className="p-button demo-people-columns-trigger"
+          disabled={disabled || !layout.ready}
+          popoverTarget={columnsId}
+          aria-haspopup="dialog"
+          aria-expanded={columnsOpen}
+          onClick={(event) => {
+            const rect = event.currentTarget.getBoundingClientRect();
+            setPanelPosition({
+              left: Math.max(12, Math.min(rect.right - 250, window.innerWidth - 262)),
+              top: Math.max(12, Math.min(rect.bottom + 6, window.innerHeight - 290)),
+            });
+          }}
+        >
+          Columns
+        </button>
+        <div
+          ref={columnsPanel}
+          id={columnsId}
+          popover="auto"
+          role="dialog"
+          aria-label="Columns"
+          className="demo-people-column-panel"
+          style={panelPosition}
+          onToggle={(event) => {
+            const open = event.newState === 'open';
+            setColumnsOpen(open);
+            if (open)
+              columnsPanel.current
+                ?.querySelector<HTMLInputElement>('input:not(:disabled)')
+                ?.focus();
+          }}
+        >
+          <fieldset>
+            <legend>Visible columns</legend>
+            {peopleColumnChoices.map(({ id, label }) => (
+              <label key={id} className="p-checkbox">
+                <input
+                  type="checkbox"
+                  checked={!layout.hidden.includes(id)}
+                  disabled={disabled || id === 'name'}
+                  onChange={(event) => {
+                    layout.setVisible(id, event.target.checked);
+                    if (!event.target.checked && sorting[0]?.id === id) {
+                      setSorting([]);
+                      setPageIndex(0);
+                      onSortingChange?.([]);
+                    }
+                  }}
+                />
+                <span aria-hidden="true" />
+                {label}
+              </label>
+            ))}
+          </fieldset>
+          <p>Name stays visible. Column widths are remembered too.</p>
+          <button type="button" className="p-button" disabled={disabled} onClick={layout.reset}>
+            Restore default layout
+          </button>
+          <span role="status" aria-live="polite">
+            {layout.notice}
+          </span>
+        </div>
       </header>
       <PuppertinoTable
         data={page.rows}
-        columns={personColumns}
+        columns={columns}
         getRowId={(person) => person.id}
         getRowLabel={(person) => person.name}
         ariaLabel="Paged people"
         density={density}
         disabled={disabled}
+        resizable={layout.ready}
         manualSorting
         sorting={sorting}
         onSortingChange={(update) => {
@@ -83,7 +167,8 @@ export function PagedPeopleExample({
           onSortingChange?.(update);
         }}
         selectable
-        atoms={{ rowSelection }}
+        atoms={{ rowSelection, columnSizing: layout.columnSizing }}
+        onColumnSizingCommit={layout.commitWidths}
         isRowSelectable={dataPreset === 'readOnly' ? () => false : undefined}
         emptyContent={
           <div className="demo-people-empty">

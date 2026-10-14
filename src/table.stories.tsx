@@ -3,7 +3,7 @@ import { useCreateAtom } from '@tanstack/react-store';
 import type { RowSelectionState, SortingState } from '@tanstack/react-table';
 import { useMemo, useRef, useState } from 'react';
 import { useArgs } from 'storybook/preview-api';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { pagedPeopleSource } from '../.storybook/people-recipes.js';
 import { tablePlaygroundSource } from '../.storybook/playground-source.js';
 import { ResettableExample } from '../.storybook/resettable-example.js';
@@ -879,7 +879,7 @@ export const PaginatedSelection: Story = {
       },
       description: {
         story:
-          'The app filters and orders the full dataset before paging, using manualSorting to prevent a second sort inside the supplied page. Stable IDs and a selection atom preserve off-page choices. The footer subscribes to selection independently. Change page size, search or sorting without losing selected IDs; changing the dataset or Reset example starts fresh.',
+          'The app filters and orders the full dataset before paging, using manualSorting to prevent a second sort inside the supplied page. Stable IDs and a selection atom preserve off-page choices. The footer subscribes to selection independently. Change page size, search or sorting without losing selected IDs; changing the dataset or Reset example starts fresh. Columns and completed widths are remembered on this device; Restore default layout resets those preferences.',
       },
     },
   },
@@ -906,6 +906,9 @@ export const PaginatedSelection: Story = {
   play: async ({ canvas, args, step, userEvent }) => {
     if (args.dataPreset !== 'standard' || args.disabled || args.query || args.pageSize !== 2)
       return;
+    // Saved layouts can hide Score; leave customized layouts intact during automatic replay.
+    await waitFor(() => expect(canvas.getByRole('button', { name: 'Columns' })).toBeEnabled());
+    if (!canvas.queryByRole('button', { name: 'Sort by Score' })) return;
     const all = () => canvas.getByRole('checkbox', { name: 'Select all visible rows' });
     const selected = () => canvas.getByLabelText('Total selected');
     await step('Select the first page with the keyboard', async () => {

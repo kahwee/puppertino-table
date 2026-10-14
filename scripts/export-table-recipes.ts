@@ -26,6 +26,8 @@ const [
   dataPresets,
   pagedExample,
   peoplePage,
+  peopleLayout,
+  usePeopleLayout,
 ] = await Promise.all(
   [
     'demo/fixtures.tsx',
@@ -42,6 +44,8 @@ const [
     'demo/table-data-presets.ts',
     'demo/paged-people-example.tsx',
     'demo/people-page.ts',
+    'demo/people-layout.ts',
+    'demo/use-people-layout.ts',
   ].map((file) => readFile(file, 'utf8')),
 );
 const recipes = createTableRecipes({
@@ -59,6 +63,8 @@ const recipes = createTableRecipes({
   dataPresets,
   pagedExample,
   peoplePage,
+  peopleLayout,
+  usePeopleLayout,
 });
 const directory = process.argv[2];
 if (!directory) throw new Error('Provide the installed consumer directory.');
@@ -73,6 +79,8 @@ await Promise.all([
   writeFile(path.join(directory, 'table-data.tsx'), recipes.tableData),
   writeFile(path.join(directory, 'paged-people.tsx'), recipes.pagedExample),
   writeFile(path.join(directory, 'people-page.ts'), recipes.peoplePage),
+  writeFile(path.join(directory, 'people-layout.ts'), recipes.peopleLayout),
+  writeFile(path.join(directory, 'use-people-layout.ts'), recipes.usePeopleLayout),
   writeFile(path.join(directory, 'outline-example.tsx'), recipes.outline),
   writeFile(path.join(directory, 'split-example.tsx'), recipes.split),
   writeFile(path.join(directory, 'document-workspace.tsx'), workspace),

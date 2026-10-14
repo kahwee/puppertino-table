@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import type { Page } from 'playwright';
+import { peopleLayoutKey } from '../demo/people-layout.js';
 
 /** Verify native scenario navigation, matching Code and resets through the actual manager. */
 export async function checkStorybookQuality(page: Page, base: string, evidence: string) {
@@ -168,6 +169,7 @@ export async function checkStorybookQuality(page: Page, base: string, evidence: 
     (url) => url.searchParams.get('path') === '/story/puppertino-table--selection',
   );
   await frame.getByLabel('Checked rows').waitFor();
+  await page.evaluate((key) => localStorage.removeItem(key), peopleLayoutKey);
   await page.goto(`${base}/?path=/docs/puppertino-table--docs`);
   await frame.getByRole('link', { name: 'Select across pages', exact: true }).click();
   await page.waitForURL(

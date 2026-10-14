@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import type { Page } from 'playwright';
 import { checkDataPresets } from './check-data-presets.js';
 import { checkPagedWorkspace } from './check-paged-workspace.js';
+import { checkPeopleColumns } from './check-people-columns.js';
 import { checkPlaygroundControls } from './check-storybook-controls.js';
 import { checkStorybookQuality } from './check-storybook-quality.js';
 
@@ -133,6 +134,7 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   await checkStorybookQuality(page, base, evidence);
   await checkDataPresets(page, base, evidence);
   await checkPagedWorkspace(page, base, evidence);
+  await checkPeopleColumns(page, base, evidence);
   console.log(
     'Storybook docs passed: media playback, readable source, live args, reset and manager navigation.',
   );
