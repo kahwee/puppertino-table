@@ -1,16 +1,15 @@
 import type { Person } from '../demo/fixtures.js';
 import type { OutlineViewExampleProps } from '../demo/outline-view-example.js';
 import type { SplitViewExample } from '../demo/split-view-example.js';
-import { type TableDataPreset, tablePresetNames } from '../demo/table-data-presets.js';
+import type { TableDataPreset } from '../demo/table-data-presets.js';
 import type { PuppertinoTableProps } from '../src/index.js';
 
 /** Keep a complete consumer recipe while reflecting the live public configuration. */
 export function tablePlaygroundSource(
-  code: string,
+  _code: string,
   args: Partial<PuppertinoTableProps<Person>> & { dataPreset?: TableDataPreset },
 ) {
   const preset = args.dataPreset ?? 'standard';
-  const count = preset === 'empty' ? 0 : preset === 'large' ? 1000 : 12;
   const properties = [
     `ariaLabel=${JSON.stringify(args.ariaLabel ?? 'People')}`,
     ...(preset === 'readOnly' ? ['isRowSelectable={() => false}'] : []),
@@ -19,23 +18,22 @@ export function tablePlaygroundSource(
       ['selectable', 'selectionCheckboxes', 'resizable', 'disabled', 'manualSorting'] as const
     ).map((key) => `${key}={${Boolean(args[key])}}`),
   ];
-  const from = code.indexOf('export interface Person');
-  const to = code.indexOf('export function PeopleTable');
-  const fixture = `type Person = { id: string; name: string; team: string; score: number; active: boolean };
-const names = ${JSON.stringify(tablePresetNames)};
-const people: Person[] = Array.from({ length: ${count} }, (_, index) => ({
-  id: \`person-\${index}\`, name: ${preset === 'longNames' ? "names[index % names.length] + ' — international project coordination and final review owner'" : "names[index % names.length] + (index >= names.length ? ' (' + (Math.floor(index / names.length) + 1) + ')' : '')"},
-  team: ['Design', 'Engineering', 'Operations'][index % 3], score: (index * 17) % 101, active: index % 4 !== 0,
-}));
-const helper = createPuppertinoColumnHelper<Person>();
-const personColumns = helper.columns([
-  helper.accessor('name', { header: 'Name' }), helper.accessor('team', { header: 'Team' }),
-  helper.accessor('score', { header: 'Score' }), helper.accessor('active', { header: 'Status' }),
-]);
-`;
-  return (from >= 0 && to > from ? code.slice(0, from) + fixture + code.slice(to) : code)
-    .replace('ariaLabel="People"\n      selectable', properties.join('\n      '))
-    .replace('data={people.slice(0, 12)}', 'data={people}');
+  return `import { PuppertinoTable } from 'puppertino-table';
+import { tableData, personColumns } from './table-data';
+import '@codedgar/puppertino/colors';
+import '@codedgar/puppertino/lists';
+import '@codedgar/puppertino/forms';
+import 'puppertino-table/style.css';
+
+// Stable data and columns; replace the fixture with your application data.
+const people = tableData(${JSON.stringify(preset)});
+
+export function PeopleTable() {
+  return <PuppertinoTable
+    data={people} columns={personColumns}
+    getRowId={(person) => person.id} getRowLabel={(person) => person.name}
+    ${properties.join('\n    ')} />;
+}`;
 }
 
 function withApp(code: string, app: string) {

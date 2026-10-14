@@ -33,17 +33,20 @@ export function ComponentDocs() {
           'Use Controls to explore this component. Use the shared Theme and Viewport toolbars for appearance and responsive layouts.'}
       </p>
       <Primary />
-      {supporting && (
-        <details className="storybook-supporting">
-          <summary>Supporting code: {supporting.filename}</summary>
-          <p>
-            {supporting.filename.endsWith('.tsx')
-              ? 'Copy this file alongside the short integration above.'
-              : 'Full default recipe with the original fixtures and cells.'}
-          </p>
-          <Source language="tsx" code={supporting.code} />
-        </details>
-      )}
+      {supporting &&
+        [supporting, ...(supporting.additional ?? [])].map((file) => (
+          <details className="storybook-supporting" key={file.filename}>
+            <summary>Supporting code: {file.filename}</summary>
+            <p>
+              {file.filename.endsWith('.tsx') ||
+              file.filename.endsWith('.ts') ||
+              file.filename.endsWith('.css')
+                ? 'Use this file with its matching short integration in Code.'
+                : 'Full default recipe with the original fixtures and cells.'}
+            </p>
+            <Source language={file.filename.endsWith('.css') ? 'css' : 'tsx'} code={file.code} />
+          </details>
+        ))}
       {scenarios && (
         <>
           <h2 id="open-a-scenario">Open a scenario</h2>

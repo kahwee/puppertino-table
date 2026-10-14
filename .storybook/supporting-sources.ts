@@ -1,10 +1,25 @@
 import workspace from '../demo/document-workspace-example.tsx?raw';
+import pagedStyles from '../demo/paged-people.css?raw';
 import { tableRecipes } from './table-sources.js';
 import { documentWorkspaceRecipe } from './workspace-recipe.js';
-export const supportingSources: Readonly<Record<string, { filename: string; code: string }>> = {
+export const supportingSources: Readonly<
+  Record<
+    string,
+    {
+      filename: string;
+      code: string;
+      additional?: readonly { filename: string; code: string }[];
+    }
+  >
+> = {
   'Puppertino/Table': {
-    filename: 'Full table example and fixtures',
-    code: tableRecipes.uncontrolled,
+    filename: 'table-data.tsx',
+    code: tableRecipes.tableData,
+    additional: [
+      { filename: 'paged-people.tsx', code: tableRecipes.pagedExample },
+      { filename: 'people-page.ts', code: tableRecipes.peoplePage },
+      { filename: 'paged-people.css', code: pagedStyles },
+    ],
   },
   'Puppertino/Outline view': { filename: 'outline-example.tsx', code: tableRecipes.outline },
   'Puppertino/Split view': { filename: 'split-example.tsx', code: tableRecipes.split },

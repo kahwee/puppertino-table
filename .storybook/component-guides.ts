@@ -35,7 +35,7 @@ export const componentGuides: Readonly<Record<string, ComponentGuide>> = {
       },
     ],
     integration:
-      'Copy the Code panel recipe with your own row type and column helpers. Keep Date values in accessors and format in cells. Choose internal, React-controlled or atom ownership for each state slice; use one owner per slice.',
+      'Copy the Code panel recipe with your own row type and column helpers. Keep Date values in accessors and format in cells. Choose internal, React-controlled or atom ownership for each state slice; use one owner per slice. Keep data and columns stable. For app-owned paging, filter and sort before slicing and preserve selection by getRowId, including IDs outside the current page.',
     keyboard: [
       { keys: 'Space', action: 'Toggle a focused checkbox.' },
       {

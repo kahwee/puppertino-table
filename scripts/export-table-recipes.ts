@@ -1,6 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { finderViewRecipes } from '../.storybook/finder-recipes.js';
+import { pagedPeopleSource } from '../.storybook/people-recipes.js';
 import {
   outlinePlaygroundSource,
   splitPlaygroundSource,
@@ -22,6 +23,9 @@ const [
   outlineExample,
   splitExample,
   sidebarExample,
+  dataPresets,
+  pagedExample,
+  peoplePage,
 ] = await Promise.all(
   [
     'demo/fixtures.tsx',
@@ -35,6 +39,9 @@ const [
     'demo/outline-view-example.tsx',
     'demo/split-view-example.tsx',
     'demo/sidebar-example.tsx',
+    'demo/table-data-presets.ts',
+    'demo/paged-people-example.tsx',
+    'demo/people-page.ts',
   ].map((file) => readFile(file, 'utf8')),
 );
 const recipes = createTableRecipes({
@@ -49,6 +56,9 @@ const recipes = createTableRecipes({
   outlineExample,
   splitExample,
   sidebarExample,
+  dataPresets,
+  pagedExample,
+  peoplePage,
 });
 const directory = process.argv[2];
 if (!directory) throw new Error('Provide the installed consumer directory.');
@@ -56,11 +66,21 @@ const workspace = documentWorkspaceRecipe(
   await readFile('demo/document-workspace-example.tsx', 'utf8'),
 );
 await Promise.all([
+  writeFile(
+    path.join(directory, 'paged-people.css'),
+    await readFile('demo/paged-people.css', 'utf8'),
+  ),
+  writeFile(path.join(directory, 'table-data.tsx'), recipes.tableData),
+  writeFile(path.join(directory, 'paged-people.tsx'), recipes.pagedExample),
+  writeFile(path.join(directory, 'people-page.ts'), recipes.peoplePage),
   writeFile(path.join(directory, 'outline-example.tsx'), recipes.outline),
   writeFile(path.join(directory, 'split-example.tsx'), recipes.split),
   writeFile(path.join(directory, 'document-workspace.tsx'), workspace),
 ]);
 const files = Object.entries({
+  'paged-large': pagedPeopleSource({ dataPreset: 'large', query: 'engineering', pageSize: 25 }),
+  'paged-read-only': pagedPeopleSource({ dataPreset: 'readOnly', disabled: true }),
+  'paged-empty': pagedPeopleSource({ dataPreset: 'empty', pageSize: 5 }),
   'workspace-short': shortWorkspaceRecipe(),
   'workspace-read-only': shortWorkspaceRecipe({ dataPreset: 'readOnly', view: 'icons' }),
   'table-empty': tablePlaygroundSource(recipes.uncontrolled, { dataPreset: 'empty' }),
@@ -119,7 +139,9 @@ await Promise.all(files.map(({ name, source }) => writeFile(path.join(directory,
 // Styles are resolved by the app's bundler; give the TS-only consumer exact CSS declarations.
 await writeFile(
   path.join(directory, 'recipe-styles.d.ts'),
-  `declare module '@codedgar/puppertino/colors';
+  `declare module '*/paged-people.css';
+declare module '@codedgar/puppertino/colors';
+declare module '@codedgar/puppertino/buttons';
 declare module '@codedgar/puppertino/lists';
 declare module '@codedgar/puppertino/forms';
 declare module '@codedgar/puppertino/sidebars';

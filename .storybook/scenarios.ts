@@ -1,8 +1,10 @@
 import type { CompositionProps } from '../demo/document-workspace-example.js';
 import type { Person } from '../demo/fixtures.js';
 import type { OutlineViewExampleProps } from '../demo/outline-view-example.js';
+import type { PagedPeopleProps } from '../demo/paged-people-example.js';
 import type { SidebarExampleProps } from '../demo/sidebar-example.js';
 import type { SplitViewExample } from '../demo/split-view-example.js';
+import type { TableDataPreset } from '../demo/table-data-presets.js';
 import type { PuppertinoTableProps } from '../src/index.js';
 
 type Primitive = string | number | boolean;
@@ -16,6 +18,22 @@ export interface Scenario<Args> {
 }
 
 const table = [
+  {
+    name: 'Large team directory',
+    story: 'puppertino-table--paginated-selection',
+    args: { dataPreset: 'large', pageSize: 25 },
+    observe: 'Filter and sort 1,000 people, then keep selection across pages.',
+  },
+  {
+    name: 'Empty table',
+    args: { dataPreset: 'empty' },
+    observe: 'Inspect the empty row and disabled bulk-selection control.',
+  },
+  {
+    name: 'Read-only rows',
+    args: { dataPreset: 'readOnly' },
+    observe: 'Inspect rows without selection while retaining sorting and resizing.',
+  },
   {
     name: 'Row selection without checkboxes',
     args: { selectable: true, selectionCheckboxes: false },
@@ -43,7 +61,13 @@ const table = [
     args: { stateOwner: 'atoms' },
     observe: 'Resize, sort and select through shared atoms; compare the matching Code recipe.',
   },
-] satisfies readonly Scenario<PuppertinoTableProps<Person> & { stateOwner: 'react' | 'atoms' }>[];
+] satisfies readonly Scenario<
+  PuppertinoTableProps<Person> & {
+    stateOwner: 'react' | 'atoms';
+    dataPreset: TableDataPreset;
+    pageSize: PagedPeopleProps['pageSize'];
+  }
+>[];
 const outline = [
   {
     name: 'Select documents only',

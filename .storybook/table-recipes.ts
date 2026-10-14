@@ -1,3 +1,5 @@
+import { pagedPeopleSource, peopleDataSource } from './people-recipes.js';
+
 export interface TableRecipeSources {
   fixtures: string;
   stateExamples: string;
@@ -10,6 +12,9 @@ export interface TableRecipeSources {
   outlineExample: string;
   splitExample: string;
   sidebarExample: string;
+  dataPresets: string;
+  pagedExample: string;
+  peoplePage: string;
 }
 
 export function createTableRecipes({
@@ -24,6 +29,9 @@ export function createTableRecipes({
   outlineExample,
   splitExample,
   sidebarExample,
+  dataPresets,
+  pagedExample,
+  peoplePage,
 }: TableRecipeSources) {
   // Reuse the rendered examples so documentation cannot drift from their state wiring.
   const peopleFixture = fixtures
@@ -93,6 +101,13 @@ ${owner}  });
 }`;
   }
   return {
+    tableData: peopleDataSource(fixtures, dataPresets),
+    pagedExample: pagedExample
+      .replace("'../src/index.js'", "'puppertino-table'")
+      .replace("'./fixtures.js'", "'./table-data'")
+      .replace("'./table-data-presets.js'", "'./table-data'")
+      .replace("'./people-page.js'", "'./people-page'"),
+    peoplePage: peoplePage.replace("'./fixtures.js'", "'./table-data'"),
     sidebar: `'use client';\n${styles}\nimport '@codedgar/puppertino/sidebars';\n${sidebarExample.replace("'../src/index.js'", "'puppertino-table'")}`,
     outline: `'use client';\n${styles}\n${outlineExample.replace("'../src/index.js'", "'puppertino-table'")}`,
     split: `'use client';\n${styles}\n${splitExample.replace("'../src/index.js'", "'puppertino-table'")}`,
@@ -180,19 +195,7 @@ import { PuppertinoTable } from 'puppertino-table';`,
       section(stories, 'function CustomizedRowsExample(', 'export const CustomizedRows:') +
         '\nexport function EmptyTableWithLeadingRows() { return <CustomizedRowsExample empty />; }',
     ),
-    paginated: recipe(
-      `import { useState } from 'react';
-import type { RowSelectionState } from '@tanstack/react-table';
-import { PuppertinoTable } from 'puppertino-table';`,
-      section(
-        stories,
-        'function PaginatedSelectionExample()',
-        'export const PaginatedSelection:',
-      ).replace(
-        'function PaginatedSelectionExample()',
-        'export function PaginatedSelectionExample()',
-      ),
-    ),
+    paginated: pagedPeopleSource(),
     controlledGestures: gestureRecipe('controlled'),
     localGestures: gestureRecipe('local'),
     atomGestures: gestureRecipe('atom'),

@@ -3,13 +3,15 @@ import { useCreateAtom } from '@tanstack/react-store';
 import type { RowSelectionState, SortingState } from '@tanstack/react-table';
 import { useMemo, useRef, useState } from 'react';
 import { useArgs } from 'storybook/preview-api';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
+import { pagedPeopleSource } from '../.storybook/people-recipes.js';
 import { tablePlaygroundSource } from '../.storybook/playground-source.js';
 import { ResettableExample } from '../.storybook/resettable-example.js';
 import { tableRecipes } from '../.storybook/table-sources.js';
 import { DateTableExample } from '../demo/date-table-example.js';
 import { type Person, people, personColumns, productColumns, products } from '../demo/fixtures.js';
 import { KeyboardNavigationExample } from '../demo/keyboard-navigation-example.js';
+import { PagedPeopleExample, type PagedPeopleProps } from '../demo/paged-people-example.js';
 import { type TableDataPreset, tableData } from '../demo/table-data-presets.js';
 import {
   AtomOwnershipExample,
@@ -77,7 +79,7 @@ const meta = {
       source: { language: 'tsx', type: 'code' },
       description: {
         component:
-          'Playground is the typed public TableView<Person> component with internally managed state. State ownership compares React-controlled state with shared atoms in one example. Automatic sorting is the default. Set manualSorting for server pages or app-owned ordering. The visible stories cover the main integration paths; advanced interaction and state cases remain tested by direct story URL. Each Show code panel includes public imports, typed columns and sample data.',
+          'Playground is the typed public TableView<Person> component with internally managed state. State ownership compares React-controlled state with shared atoms in one example. Automatic sorting is the default. Set manualSorting for server pages or app-owned ordering. The visible stories cover the main integration paths; advanced interaction and state cases remain tested by direct story URL. Code leads with the integration; supporting files contain typed columns and sample data.',
       },
     },
   },
@@ -148,6 +150,9 @@ const meta = {
     gestureOwnership?: 'controlled' | 'local' | 'atom';
     stateOwner?: 'react' | 'atoms';
     dataPreset?: TableDataPreset;
+    pageSize?: PagedPeopleProps['pageSize'];
+    query?: string;
+    onQueryChange?: PagedPeopleProps['onQueryChange'];
   }
 >;
 export default meta;
@@ -155,6 +160,7 @@ export type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   name: 'Playground',
+  args: { onSortingChange: fn(), onRowSelectionChange: fn(), onColumnSizingCommit: fn() },
   argTypes: {
     dataPreset: {
       control: {
@@ -197,6 +203,23 @@ export const Default: Story = {
         ) => tablePlaygroundSource(tableRecipes.uncontrolled, context.args),
       },
     },
+  },
+  play: async ({ canvas, args, step, userEvent }) => {
+    if (
+      args.disabled ||
+      !args.selectable ||
+      !args.selectionCheckboxes ||
+      args.dataPreset !== 'standard'
+    )
+      return;
+    await step('Select a stable row and observe its callback in Actions', async () => {
+      const checkbox = canvas.getByRole('checkbox', { name: 'Select Maya Chen' });
+      await userEvent.click(checkbox);
+      await expect(checkbox).toBeChecked();
+      await expect(args.onRowSelectionChange).toHaveBeenCalled();
+      await userEvent.click(checkbox);
+      await expect(checkbox).not.toBeChecked();
+    });
   },
   render: function Playground(args) {
     const [, , resetArgs] = useArgs<typeof args>();
@@ -828,69 +851,107 @@ export const ControlledSizing: Story = {
   },
 };
 
-function PaginatedSelectionExample() {
-  const [page, setPage] = useState(0);
-  const [selection, setSelection] = useState<RowSelectionState>({});
-  return (
-    <>
-      <button type="button" onClick={() => setPage(page === 0 ? 1 : 0)}>
-        Switch page
-      </button>
-      <PuppertinoTable
-        data={people.slice(page * 2, page * 2 + 2)}
-        columns={personColumns}
-        getRowId={(row) => row.id}
-        getRowLabel={(row) => row.name}
-        ariaLabel="Paged people"
-        manualSorting
-        selectable
-        rowSelection={selection}
-        onRowSelectionChange={setSelection}
-      />
-      <output aria-label="Total selected">{Object.values(selection).filter(Boolean).length}</output>
-    </>
-  );
-}
 export const PaginatedSelection: Story = {
+  name: 'Paged workspace',
+  args: {
+    pageSize: 2,
+    query: '',
+    dataPreset: 'standard',
+    onQueryChange: fn(),
+    onSortingChange: fn(),
+  },
+  argTypes: {
+    pageSize: { control: 'select', options: [2, 5, 10, 25], table: { category: 'Example data' } },
+    query: {
+      control: 'text',
+      description: 'Filter names and teams; selection survives filtering.',
+      table: { category: 'Example data' },
+    },
+    dataPreset: Default.argTypes?.dataPreset,
+  },
   parameters: {
-    controls: { disable: true },
+    controls: { include: ['dataPreset', 'pageSize', 'query', 'density', 'disabled'] },
     docs: {
-      source: { code: tableRecipes.paginated },
+      source: {
+        type: 'dynamic',
+        transform: (_code: string, context: { args: Partial<PagedPeopleProps> }) =>
+          pagedPeopleSource(context.args),
+      },
       description: {
         story:
-          'The header checkbox selects only the current page. Switch pages to verify that selections on other pages survive selecting and clearing this page.',
+          'The app filters and orders the full dataset before paging, using manualSorting to prevent a second sort inside the supplied page. Stable IDs and a selection atom preserve off-page choices. The footer subscribes to selection independently. Change page size, search or sorting without losing selected IDs; changing the dataset or Reset example starts fresh.',
       },
     },
   },
-  render: () => <PaginatedSelectionExample />,
-  play: async ({ canvas, step }) => {
+  render: function PagedWorkspace(args) {
+    const [, updateArgs, resetArgs] = useArgs<typeof args>();
+    return (
+      <ResettableExample onReset={resetArgs}>
+        <PagedPeopleExample
+          key={args.dataPreset}
+          dataPreset={args.dataPreset}
+          pageSize={args.pageSize}
+          query={args.query ?? ''}
+          density={args.density}
+          disabled={args.disabled}
+          onSortingChange={args.onSortingChange}
+          onQueryChange={(query) => {
+            args.onQueryChange?.(query);
+            updateArgs({ query });
+          }}
+        />
+      </ResettableExample>
+    );
+  },
+  play: async ({ canvas, args, step, userEvent }) => {
+    if (args.dataPreset !== 'standard' || args.disabled || args.query || args.pageSize !== 2)
+      return;
     const all = () => canvas.getByRole('checkbox', { name: 'Select all visible rows' });
-    await step('Select the first page', async () => {
+    const selected = () => canvas.getByLabelText('Total selected');
+    await step('Select the first page with the keyboard', async () => {
       await expect(all()).not.toBeChecked();
-      await userEvent.click(canvas.getAllByRole('checkbox', { name: /^Select Person/ })[0]);
+      await userEvent.click(canvas.getByRole('checkbox', { name: 'Select Maya Chen' }));
       await expect(all()).toHaveAttribute('aria-checked', 'mixed');
       await expect((all() as HTMLInputElement).indeterminate).toBe(true);
       all().focus();
       await userEvent.keyboard(' ');
       await expect(all()).toBeChecked();
-      await expect(canvas.getByLabelText('Total selected')).toHaveTextContent('2');
+      await expect(selected()).toHaveTextContent('2 selected · 2 on this page');
     });
-    await step('Select and clear the second page without losing the first', async () => {
-      await userEvent.click(canvas.getByRole('button', { name: 'Switch page' }));
+    await step('Select and clear another page while preserving the first', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Next page' }));
       await expect(all()).not.toBeChecked();
+      await expect(selected()).toHaveTextContent('2 selected · 0 on this page');
       await userEvent.click(all());
-      await expect(canvas.getByLabelText('Total selected')).toHaveTextContent('4');
+      await expect(selected()).toHaveTextContent('4 selected · 2 on this page');
       await userEvent.click(all());
-      await expect(canvas.getByLabelText('Total selected')).toHaveTextContent('2');
-    });
-    await step('Return to the selected first page', async () => {
-      await userEvent.click(canvas.getByRole('button', { name: 'Switch page' }));
+      await expect(selected()).toHaveTextContent('2 selected · 0 on this page');
+      await userEvent.click(canvas.getByRole('button', { name: 'Previous page' }));
       await expect(all()).toBeChecked();
-      await userEvent.click(canvas.getAllByRole('checkbox', { name: /^Select Person/ })[0]);
-      await expect(all()).toHaveAttribute('aria-checked', 'mixed');
-      await userEvent.click(all());
-      await userEvent.click(all());
-      await expect(canvas.getByLabelText('Total selected')).toHaveTextContent('0');
+    });
+    await step('Sort the full dataset before paging and log the callback', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Next page' }));
+      await userEvent.click(canvas.getByRole('button', { name: 'Sort by Score' }));
+      await canvas.findByRole('row', { name: /Elias Fischer/ });
+      await expect(canvas.getAllByRole('row')[1]).toHaveTextContent('Elias Fischer');
+      await expect(canvas.getByLabelText('People page')).toHaveTextContent('Page 1 of 6');
+      await expect(args.onSortingChange).toHaveBeenCalled();
+      await expect(selected()).toHaveTextContent('2 selected · 0 on this page');
+    });
+    await step('Recover an empty search without losing selected IDs', async () => {
+      await userEvent.type(
+        canvas.getByRole('searchbox', { name: 'Filter people' }),
+        'no-such-teammate',
+      );
+      await expect(await canvas.findByText('No matching people')).toBeInTheDocument();
+      await expect(selected()).toHaveTextContent('2 selected · 0 on this page');
+      await userEvent.click(canvas.getByRole('button', { name: 'Clear search' }));
+      await canvas.findByRole('row', { name: /Elias Fischer/ });
+      await expect(selected()).toHaveTextContent('2 selected · 0 on this page');
+    });
+    await step('Clear selection across every page', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Clear selection' }));
+      await expect(selected()).toHaveTextContent('0 selected · 0 on this page');
     });
   },
 };

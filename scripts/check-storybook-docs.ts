@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import type { Page } from 'playwright';
 import { checkDataPresets } from './check-data-presets.js';
+import { checkPagedWorkspace } from './check-paged-workspace.js';
 import { checkPlaygroundControls } from './check-storybook-controls.js';
 import { checkStorybookQuality } from './check-storybook-quality.js';
 
@@ -131,6 +132,7 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   await checkPlaygroundControls(page, base, evidence);
   await checkStorybookQuality(page, base, evidence);
   await checkDataPresets(page, base, evidence);
+  await checkPagedWorkspace(page, base, evidence);
   console.log(
     'Storybook docs passed: media playback, readable source, live args, reset and manager navigation.',
   );
@@ -204,7 +206,7 @@ async function checkTableRecipes(page: Page, base: string) {
     ['selection', 'onRowSelectionChange={setSelection}'],
     ['server-owned-order', 'manualSorting\n'],
     ['customized-rows', 'getRowProps='],
-    ['paginated-selection', 'manualSorting\n'],
+    ['paginated-selection', "from './paged-people'"],
     ['date-columns', "sortFn: 'datetime'"],
     ['request-states', 'status={status}'],
   ]) {
@@ -213,16 +215,23 @@ async function checkTableRecipes(page: Page, base: string) {
       .locator(`#story--puppertino-table--${canvasId}`)
       .locator('xpath=ancestor::div[contains(@class,"sbdocs-preview")]/..');
     await preview.getByRole('switch', { name: 'Show code' }).click();
-    await page.waitForFunction((id) => {
-      const canvas = document.getElementById(`story--puppertino-table--${id}`);
-      const source = canvas
-        ?.closest('.sbdocs-preview')
-        ?.parentElement?.querySelector<HTMLPreElement>('pre');
-      return source?.innerText?.includes("from 'puppertino-table'");
-    }, canvasId);
+    await page.waitForFunction(
+      ({ id, marker }) => {
+        const canvas = document.getElementById(`story--puppertino-table--${id}`);
+        const source = canvas
+          ?.closest('.sbdocs-preview')
+          ?.parentElement?.querySelector<HTMLPreElement>('pre');
+        return source?.innerText?.includes(marker);
+      },
+      { id: canvasId, marker },
+    );
     const source = await preview.locator('pre').innerText();
-    assert.ok(source.includes("from 'puppertino-table'"), `${story}: public imports`);
-    assert.ok(source.includes('createPuppertinoColumnHelper<'), `${story}: typed columns`);
+    const supporting = ['default', 'paginated-selection'].includes(story)
+      ? (await page.locator('details.storybook-supporting pre').allTextContents()).join('\n')
+      : '';
+    const complete = source + supporting;
+    assert.ok(complete.includes("from 'puppertino-table'"), `${story}: public imports`);
+    assert.ok(complete.includes('createPuppertinoColumnHelper<'), `${story}: typed columns`);
     assert.ok(source.includes(marker), `${story}: actual state wiring`);
     assert.ok(
       !source.includes('../src/') && !source.includes('<Example'),

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Shorten Table integrations by moving typed fixtures into expandable supporting files. Add explicit Actions spies and typed paging/data scenarios without increasing the story count.
+- Replace the two-page selection toy with a searchable, sortable paged workspace. Sort/filter before slicing, preserve off-page selection with a v9 atom, subscribe to footer counts separately, recover empty searches and reset paging when query/page-size args change.
+
 ## 0.12.2 — 2026-10-13
 
 - Upgrade TanStack React Table and its consumer peer to the latest stable 9.3.1. Update the full Storybook stack to 10.6.2 and refresh the lockfile.

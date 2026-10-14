@@ -174,7 +174,11 @@ export async function checkStorybookQuality(page: Page, base: string, evidence: 
     (url) => url.searchParams.get('path') === '/story/puppertino-table--paginated-selection',
   );
   await page.getByRole('tab', { name: 'Interactions', exact: true, selected: true }).waitFor();
-  await page.getByText('Return to the selected first page', { exact: false }).waitFor();
+  await page.getByText('Clear selection across every page', { exact: false }).waitFor();
+  await frame
+    .getByLabel('Total selected')
+    .filter({ hasText: '0 selected · 0 on this page' })
+    .waitFor();
   console.log(
     'Story quality passed: typed scenario links, matching configuration/ownership Code, full data resets, synchronized archive/preview controls, and compact workspace navigation.',
   );

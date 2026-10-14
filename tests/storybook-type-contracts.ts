@@ -47,3 +47,10 @@ const invalidEventPreset = {
   observe: '',
 } satisfies Scenario<OutlineViewExampleProps>;
 void [validScenario, invalidScenario, invalidEventPreset];
+
+const validPageSize = { args: { pageSize: 25, query: 'Engineering' } } satisfies Story;
+// @ts-expect-error The paging workflow exposes its actual supported page sizes.
+const invalidPageSize = { args: { pageSize: 3 } } satisfies Story;
+// @ts-expect-error Dataset args use the shared preset union.
+const invalidPreset = { args: { dataPreset: 'random' } } satisfies Story;
+void [validPageSize, invalidPageSize, invalidPreset];
