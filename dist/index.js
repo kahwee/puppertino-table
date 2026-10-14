@@ -1,5 +1,6 @@
 export { ColumnBrowser, ColumnBrowserItem, } from './column-browser.js';
 export { fitColumnBrowser } from './column-browser-layout.js';
+export { columnLayoutMenu, moveLayoutColumn, normalizeColumnLayout, readColumnLayout, } from './column-layout.js';
 export { ColumnView, ColumnViewItem, } from './column-view.js';
 export { ContextMenu, useContextMenu, } from './context-menu.js';
 export { DensityScope, } from './density.js';
@@ -19,6 +20,7 @@ export { PuppertinoTable, PuppertinoTable as TableView } from './table.js';
 export { TableBody } from './table-body.js';
 export { TableHeader } from './table-header.js';
 export { TagPicker } from './tag-picker.js';
+export { useColumnLayout } from './use-column-layout.js';
 export { useColumnResize } from './use-column-resize.js';
 export { useItemNavigation } from './use-item-navigation.js';
 export { useOutline, } from './use-outline.js';

@@ -43,7 +43,7 @@ export function PuppertinoTable<T extends RowData>(props: PuppertinoTableProps<T
       role="region"
       aria-label={`${ariaLabel} scroll area`}
     >
-      <table.Subscribe source={table.atoms.columnSizing}>
+      <table.Subscribe source={table.options.atoms?.columnSizing ?? table.atoms.columnSizing}>
         {() => (
           <table
             className="p-table pt-table"

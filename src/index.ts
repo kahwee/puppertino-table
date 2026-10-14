@@ -10,6 +10,15 @@ export {
 } from './column-browser.js';
 export { type ColumnBrowserLayoutOptions, fitColumnBrowser } from './column-browser-layout.js';
 export {
+  type ColumnLayout,
+  type ColumnLayoutColumn,
+  type ColumnLayoutCommands,
+  columnLayoutMenu,
+  moveLayoutColumn,
+  normalizeColumnLayout,
+  readColumnLayout,
+} from './column-layout.js';
+export {
   ColumnView,
   type ColumnViewColumn,
   ColumnViewItem,
@@ -143,6 +152,7 @@ export type {
   TableStatus,
 } from './table-types.js';
 export { type TagOption, TagPicker, type TagPickerProps } from './tag-picker.js';
+export { type ColumnLayoutOptions, useColumnLayout } from './use-column-layout.js';
 export { useColumnResize } from './use-column-resize.js';
 export { type ItemNavigationHookOptions, useItemNavigation } from './use-item-navigation.js';
 export {

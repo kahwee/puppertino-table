@@ -1,5 +1,6 @@
 export { ColumnBrowser, ColumnBrowserItem, type ColumnBrowserItemButtonProps, type ColumnBrowserItemLinkProps, type ColumnBrowserItemProps, type ColumnBrowserPanel, type ColumnBrowserProps, type ColumnBrowserWidths, } from './column-browser.js';
 export { type ColumnBrowserLayoutOptions, fitColumnBrowser } from './column-browser-layout.js';
+export { type ColumnLayout, type ColumnLayoutColumn, type ColumnLayoutCommands, columnLayoutMenu, moveLayoutColumn, normalizeColumnLayout, readColumnLayout, } from './column-layout.js';
 export { ColumnView, type ColumnViewColumn, ColumnViewItem, type ColumnViewProps, type ColumnViewWidths, } from './column-view.js';
 export { ContextMenu, type ContextMenuAction, type ContextMenuItem, type ContextMenuLink, type ContextMenuPosition, type ContextMenuProps, type ContextMenuSeparator, type ContextMenuState, type DelegatedContextMenuOptions, useContextMenu, } from './context-menu.js';
 export { type DensityMetrics, DensityScope, type DensityScopeProps, type TableDensity, } from './density.js';
@@ -22,6 +23,7 @@ export { TableHeader } from './table-header.js';
 export type { PuppertinoTableAtoms, PuppertinoTableOptions } from './table-options.js';
 export type { PuppertinoBodyContext, PuppertinoBodyOptions, PuppertinoCell, PuppertinoCellProps, PuppertinoDataAttributes, PuppertinoHeaderMenu, PuppertinoRow, PuppertinoRowProps, PuppertinoTableProps, PuppertinoTableProps as TableViewProps, RowSelectionCheckboxProps, TableBodyProps, TableHeaderProps, TableStatus, } from './table-types.js';
 export { type TagOption, TagPicker, type TagPickerProps } from './tag-picker.js';
+export { type ColumnLayoutOptions, useColumnLayout } from './use-column-layout.js';
 export { useColumnResize } from './use-column-resize.js';
 export { type ItemNavigationHookOptions, useItemNavigation } from './use-item-navigation.js';
 export { type OutlineExpandedState, type OutlineLoadState, type OutlineOptions, useOutline, } from './use-outline.js';

@@ -24,7 +24,10 @@ export function ColumnResizeHandle<T extends RowData>({
   )
     return null;
   return (
-    <Subscribe source={table.atoms.columnSizing} selector={(widths) => widths[header.column.id]}>
+    <Subscribe
+      source={table.options.atoms?.columnSizing ?? table.atoms.columnSizing}
+      selector={(widths) => widths[header.column.id]}
+    >
       {() => (
         // biome-ignore lint/a11y/useSemanticElements: An interactive ARIA separator exposes resize values and pointer/keyboard actions; an hr is static.
         <span

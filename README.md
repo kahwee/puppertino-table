@@ -136,7 +136,7 @@ Real Storybook workflows with fictional data, short captions and a visible point
 
 [WebM](https://kahwee.github.io/puppertino-table/media/paged-workspace.webm) · [MP4](https://kahwee.github.io/puppertino-table/media/paged-workspace.mp4) · [Try the Paged workspace](https://kahwee.github.io/puppertino-table/?path=/story/puppertino-table--paginated-selection&args=pageSize:5)
 
-The Columns menu hides optional fields and remembers visibility and completed widths on this device. Name stays visible; hidden fields keep their widths. **Restore default layout** resets both. Selection survives paging, search and sorting; reloading starts a fresh selection.
+The Columns menu hides optional fields and remembers visibility, order and completed widths on this device. Name stays visible and first; hidden fields keep their widths. Open a header’s column options to move it earlier or later. **Restore default layout** resets both. Selection survives paging, search and sorting; reloading starts a fresh selection.
 
 ### Resize and reset
 
@@ -247,7 +247,25 @@ Checkboxes and row gestures share a fixed range anchor. Pass `selectionAnchor` t
 
 Code starts with a short integration; expand Supporting code in Docs for the complete files. Try empty, long-name, large and read-only datasets through args in Table and the composed workspace. Selection counts, command results and empty-state recovery stay visible in the workspace.
 
-Install `@tanstack/react-store` for atom-owned examples. The Paged workspace filters and sorts before paging, keeps selection by stable ID, and subscribes to counts in the footer. Its app-owned layout saves column visibility and committed widths together. Supporting code includes the storage parser and hook. Actions shows callbacks; Interactions checks each workflow.
+Install `@tanstack/react-store` for atom-owned examples. The Paged workspace filters and sorts before paging, keeps selection by stable ID, and subscribes to footer counts. Actions shows callbacks; Interactions checks each workflow.
+
+**Unreleased:** these layout helpers are available from Git main.
+
+`useColumnLayout({ columns: schema, storageKey })` saves visibility, order and completed widths. Keep `schema` stable, give each field a label and width bounds, and mark Name `pinned: true`. Project definitions through `layout.order` and `layout.hidden`, then connect:
+
+```tsx
+<PuppertinoTable
+  data={rows} columns={visibleColumns}
+  getRowId={row => row.id} ariaLabel="Items"
+  atoms={{ columnSizing: layout.columnSizing }}
+  onColumnSizingCommit={layout.commitWidths}
+  resizable={layout.ready}
+  getHeaderMenu={column => layout.ready
+    ? columnLayoutMenu({ ...layout, columns: schema }, column.id) : []}
+/>
+```
+
+Restore defaults resets visibility, order and widths. Hidden fields retain widths; stale IDs and malformed preferences are discarded. Restoration runs after hydration. Optional `legacyWidthsKey` migrates width-only preferences. The app owns selection and sorting, including recovery when the sorted field is hidden.
 
 These examples follow [Storybook args](https://storybook.js.org/docs/writing-stories/args), [interaction testing](https://storybook.js.org/docs/writing-tests/interaction-testing), and TanStack Table v9 guidance for [state ownership](https://github.com/TanStack/table/blob/main/docs/framework/react/guide/table-state.md) and [row selection](https://github.com/TanStack/table/blob/main/docs/framework/react/guide/row-selection.md).
 

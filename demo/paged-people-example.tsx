@@ -7,9 +7,9 @@ import {
   Subscribe,
 } from '@tanstack/react-table';
 import { useId, useMemo, useRef, useState } from 'react';
-import { PuppertinoTable, type TableDensity } from '../src/index.js';
+import { columnLayoutMenu, PuppertinoTable, type TableDensity } from '../src/index.js';
 import { personColumns } from './fixtures.js';
-import { peopleColumnChoices } from './people-layout.js';
+import { peopleColumnChoices, peopleLayoutColumns } from './people-layout.js';
 import { peoplePage } from './people-page.js';
 import { type TableDataPreset, tableData } from './table-data-presets.js';
 import { usePeopleLayout } from './use-people-layout.js';
@@ -37,15 +37,13 @@ export function PagedPeopleExample({
   const layout = usePeopleLayout();
   const columns = useMemo(
     () =>
-      personColumns.filter(
-        (column) =>
-          !layout.hidden.includes(
-            ('accessorKey' in column
-              ? column.accessorKey
-              : column.id) as (typeof peopleColumnChoices)[number]['id'],
-          ),
-      ),
-    [layout.hidden],
+      layout.order.flatMap((id) => {
+        const column = personColumns.find(
+          (column) => ('accessorKey' in column ? column.accessorKey : column.id) === id,
+        );
+        return column && !layout.hidden.includes(id) ? [column] : [];
+      }),
+    [layout.order, layout.hidden],
   );
   const columnsId = useId();
   const columnsPanel = useRef<HTMLDivElement>(null);
@@ -169,6 +167,11 @@ export function PagedPeopleExample({
         selectable
         atoms={{ rowSelection, columnSizing: layout.columnSizing }}
         onColumnSizingCommit={layout.commitWidths}
+        getHeaderMenu={(column) =>
+          disabled || !layout.ready
+            ? []
+            : columnLayoutMenu({ ...layout, columns: peopleLayoutColumns }, column.id)
+        }
         isRowSelectable={dataPreset === 'readOnly' ? () => false : undefined}
         emptyContent={
           <div className="demo-people-empty">

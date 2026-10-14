@@ -90,6 +90,14 @@ Pass `status="ready" | "loading" | "error"` to `PuppertinoTable` or `TableBody`.
 
 The complete table exposes `aria-busy` during loading. Both complete and custom bodies render semantic status/error messages with the correct column span. Retry buttons, request state, network calls, cancellation and error details remain application-owned. The spinner respects reduced-motion preferences.
 
+### Saved column layouts
+
+Use `useColumnLayout` with a stable schema of IDs, labels and width bounds. Pin identity columns with `pinned: true` (first and always visible), or set `required: true` to protect visibility while allowing movement. `order` and `hidden` project your column definitions; `columnSizing` is the live atom. `layout` holds the latest committed snapshot, excluding drag previews.
+
+Pass the atom to the table and `commitWidths` to `onColumnSizingCommit`. Do not combine this owner with the table’s uncontrolled `storageKey`. Disable controls until `ready`; restoration occurs after hydration without writing storage. `columnLayoutMenu({ ...layoutController, columns: schema }, column.id)` composes with `getHeaderMenu`. Moves skip hidden fields and protected leading columns. `reset()` restores schema defaults.
+
+Storage is optional: unavailable storage keeps preferences for the visit. Versioned normalization validates IDs and widths, appends newly added columns, drops retired IDs, and retains hidden-column widths when visible fields resize. `legacyWidthsKey` reads an existing width-only key when no layout exists. Selection, filtering and server sorting remain app-owned; decide how to recover when a sorted field becomes hidden.
+
 ### Controlled column sizing
 
 Pass `columnSizing` and `onColumnSizingChange` to either `PuppertinoTable` or `usePuppertinoTable`:

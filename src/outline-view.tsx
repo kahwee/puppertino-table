@@ -276,7 +276,7 @@ export function OutlineView<T extends RowData>(props: OutlineViewProps<T>) {
       tabIndex={0}
       className={`pt-scroll pt-outline ${props.className ?? ''}`}
     >
-      <table.Subscribe source={table.atoms.columnSizing}>
+      <table.Subscribe source={table.options.atoms?.columnSizing ?? table.atoms.columnSizing}>
         {() => (
           <table
             className="p-table pt-table"

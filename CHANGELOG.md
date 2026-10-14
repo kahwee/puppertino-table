@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add `useColumnLayout`, validated saved visibility/order/widths and reusable header-menu commands. Name can be protected and pinned; hidden widths survive other resizes, and cancelled gestures never persist.
+- Subscribe directly to externally owned sizing atoms so drag previews remain live after switching table views.
+- Demonstrate saved column ordering in the existing Paged workspace.
+
 ## 0.13.0 — 2026-10-14
 
 - Group optional Finder tools into named capsules, preserve focus when tools enter overflow, reposition customization after resize/scroll, and add icon previews and Done. Reduce resting Tahoe header clutter, refresh the visual audit and record a focused Finder workflow.

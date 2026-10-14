@@ -879,7 +879,7 @@ export const PaginatedSelection: Story = {
       },
       description: {
         story:
-          'Filter and sort before paging. Stable IDs keep selection across pages, search and sorting; the footer subscribes to counts independently. Columns saves visibility and completed widths on this device. Restore default layout resets both. Reloading or resetting the example clears selection. [Watch the workflow](./media/paged-workspace.webm).',
+          'Filter and sort before paging. Stable IDs keep selection across pages, search and sorting; the footer subscribes to counts independently. Columns saves visibility, order and completed widths on this device. Header options move fields earlier or later; Name stays first. Restore default layout resets all three. Reloading or resetting the example clears selection. [Watch the workflow](./media/paged-workspace.webm).',
       },
     },
   },

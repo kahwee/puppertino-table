@@ -116,7 +116,9 @@ ${owner}  });
     peopleLayout: peopleLayout
       .replace("'../src/index.js'", "'puppertino-table'")
       .replace("'./fixtures.js'", "'./table-data'"),
-    usePeopleLayout: usePeopleLayout.replace("'./people-layout.js'", "'./people-layout'"),
+    usePeopleLayout: usePeopleLayout
+      .replace("'../src/index.js'", "'puppertino-table'")
+      .replace("'./people-layout.js'", "'./people-layout'"),
     peoplePage: peoplePage.replace("'./fixtures.js'", "'./table-data'"),
     sidebar: `'use client';\n${styles}\nimport '@codedgar/puppertino/sidebars';\n${sidebarExample.replace("'../src/index.js'", "'puppertino-table'")}`,
     outline: `'use client';\n${styles}\n${outlineExample.replace("'../src/index.js'", "'puppertino-table'")}`,

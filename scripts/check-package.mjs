@@ -58,7 +58,7 @@ try {
         '--no-fund',
         '--registry=https://registry.npmjs.org/',
         installSpec,
-        `@tanstack/react-store@${manifest.devDependencies['@tanstack/react-store']}`,
+        `@tanstack/react-store@${manifest.dependencies['@tanstack/react-store']}`,
         `react@${react}`,
         `react-dom@${react}`,
         `@types/react@${manifest.devDependencies['@types/react'].replace('^', '')}`,

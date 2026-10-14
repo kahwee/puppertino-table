@@ -39,6 +39,12 @@ export async function checkPeopleColumns(page: Page, base: string, evidence: str
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
   await page.mouse.move(box.x + 70, box.y + box.height / 2);
+  await page.waitForFunction(
+    (width) =>
+      document.querySelector('[aria-label="Resize Name column"]')?.getAttribute('aria-valuenow') !==
+      width,
+    nameWidth,
+  );
   await page.keyboard.press('Escape');
   await page.mouse.up();
   assert.equal(
@@ -86,6 +92,26 @@ export async function checkPeopleColumns(page: Page, base: string, evidence: str
     'hiding the sorted column clears its ordering',
   );
   await panel.getByRole('button', { name: 'Restore default layout' }).click();
+  await page.keyboard.press('Escape');
+  const headerMenu = table.getByRole('button', { name: 'Column options for Score' });
+  await headerMenu.click();
+  await page.getByRole('menuitem', { name: 'Move Score earlier', exact: true }).click();
+  const headerOrder = () => table.getByRole('columnheader').allTextContents();
+  assert.ok(
+    (await headerOrder()).join('|').indexOf('Score') <
+      (await headerOrder()).join('|').indexOf('Team'),
+  );
+  await page.reload();
+  await headerMenu.waitFor();
+  await page.waitForFunction(() => {
+    const headers = [...document.querySelectorAll('th')]
+      .map((element) => element.textContent || '')
+      .join('|');
+    return headers.indexOf('Score') < headers.indexOf('Team');
+  });
+  await headerMenu.click();
+  await page.getByRole('menuitem', { name: 'Restore default layout', exact: true }).click();
+  await trigger.click();
   await page.screenshot({ path: `${evidence}/people-columns.png` });
   for (const theme of ['light', 'dark']) {
     await page.setViewportSize({ width: 390, height: 850 });
