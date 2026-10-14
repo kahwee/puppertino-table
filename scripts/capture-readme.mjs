@@ -56,7 +56,7 @@ window.captureAxe = window.axe; window.axe = previousAxe; }`,
   );
   assert.deepEqual(violations, []);
 }
-async function open(story, recording = false, closeup = false) {
+async function open(story, recording = false, closeup = false, args = '') {
   const viewport = closeup ? { width: 864, height: 512 } : { width: 1080, height: 640 };
   const context = await browser.newContext({
     viewport,
@@ -67,49 +67,55 @@ async function open(story, recording = false, closeup = false) {
   const page = await context.newPage();
   page.on('pageerror', (error) => errors.push(error.message));
   const storyId = story.includes('--') ? story : `examples-finder--${story}`;
-  await page.goto(`${base}/iframe.html?${storyQuery(storyId)}`);
+  await page.goto(
+    `${base}/iframe.html?${storyQuery(storyId)}${args ? `&args=${encodeURIComponent(args)}` : ''}`,
+  );
   if (storyId.startsWith('examples-finder--'))
     await page.getByRole('region', { name: 'Finder-style demo' }).waitFor();
+  else if (storyId === 'puppertino-table--paginated-selection')
+    await page.getByRole('button', { name: 'Columns', exact: true }).waitFor();
   else await page.getByRole('main').waitFor();
   await page.evaluate(() => document.fonts.ready);
-  if (recording)
-    await page.evaluate(() => {
-      const style = document.createElement('style');
-      style.textContent =
-        '#capture-cursor {position:fixed;left:0;top:0;width:18px;height:24px;visibility:hidden;z-index:2147483647;pointer-events:none;filter:drop-shadow(0 1px 2px #0008)} #capture-caption {position:fixed;bottom:18px;left:36px;right:36px;padding:12px 18px;border-radius:10px;background:#182332f2;color:#fff;font:500 16px system-ui;box-shadow:0 4px 20px #0003;z-index:2147483646;pointer-events:none}';
-      document.head.append(style);
-      const cursor = document.createElement('div');
-      cursor.id = 'capture-cursor';
-      cursor.setAttribute('aria-hidden', 'true');
-      cursor.innerHTML =
-        '<svg viewBox="0 0 18 24"><path d="M1 1v19l5-5 4 8 3-2-4-8h7Z" fill="white" stroke="#182332" stroke-width="1.5"/></svg>';
-      const caption = document.createElement('div');
-      caption.id = 'capture-caption';
-      caption.setAttribute('role', 'status');
-      document.body.append(cursor, caption);
-      const move = (event) => {
-        cursor.style.visibility = 'visible';
-        cursor.style.transform = `translate(${event.clientX}px,${event.clientY}px)`;
-      };
-      document.addEventListener('mousemove', move, true);
-      document.addEventListener('dragover', move, true);
-      document.addEventListener(
-        'pointerdown',
-        () => {
-          cursor.style.filter = 'drop-shadow(0 0 7px #007aff)';
-        },
-        true,
-      );
-      document.addEventListener(
-        'pointerup',
-        () => {
-          cursor.style.filter = 'drop-shadow(0 1px 2px #0008)';
-        },
-        true,
-      );
-    });
+  if (recording) await recordingOverlay(page);
   captureStarts.set(page, (performance.now() - createdAt) / 1000);
   return { context, page };
+}
+async function recordingOverlay(page) {
+  await page.evaluate(() => {
+    const style = document.createElement('style');
+    style.textContent =
+      '#capture-cursor {position:fixed;left:0;top:0;width:18px;height:24px;visibility:hidden;z-index:2147483647;pointer-events:none;filter:drop-shadow(0 1px 2px #0008)} #capture-caption {position:fixed;bottom:18px;left:36px;right:36px;padding:12px 18px;border-radius:10px;background:#182332f2;color:#fff;font:500 16px system-ui;box-shadow:0 4px 20px #0003;z-index:2147483646;pointer-events:none}';
+    document.head.append(style);
+    const cursor = document.createElement('div');
+    cursor.id = 'capture-cursor';
+    cursor.setAttribute('aria-hidden', 'true');
+    cursor.innerHTML =
+      '<svg viewBox="0 0 18 24"><path d="M1 1v19l5-5 4 8 3-2-4-8h7Z" fill="white" stroke="#182332" stroke-width="1.5"/></svg>';
+    const caption = document.createElement('div');
+    caption.id = 'capture-caption';
+    caption.setAttribute('role', 'status');
+    document.body.append(cursor, caption);
+    const move = (event) => {
+      cursor.style.visibility = 'visible';
+      cursor.style.transform = `translate(${event.clientX}px,${event.clientY}px)`;
+    };
+    document.addEventListener('mousemove', move, true);
+    document.addEventListener('dragover', move, true);
+    document.addEventListener(
+      'pointerdown',
+      () => {
+        cursor.style.filter = 'drop-shadow(0 0 7px #007aff)';
+      },
+      true,
+    );
+    document.addEventListener(
+      'pointerup',
+      () => {
+        cursor.style.filter = 'drop-shadow(0 1px 2px #0008)';
+      },
+      true,
+    );
+  });
 }
 async function caption(page, text) {
   await page.locator('#capture-caption').evaluate((element, text) => {
@@ -225,7 +231,94 @@ async function drag(page, handle, delta) {
   await page.mouse.up();
   await pause(page);
 }
-try {
+async function capturePagedWorkspace() {
+  const { context, page } = await open(
+    'puppertino-table--paginated-selection',
+    true,
+    true,
+    'pageSize:5',
+  );
+  const table = page.getByRole('table', { name: 'Paged people' });
+  const columns = page.getByRole('button', { name: 'Columns', exact: true });
+  const panel = page.getByRole('dialog', { name: 'Columns', exact: true });
+  const nameEdge = page.getByRole('separator', { name: 'Resize Name column' });
+  await caption(page, '1 / 5 · Select a teammate. Keep the selection across pages.');
+  await pause(page);
+  await pointerClick(page, table.getByRole('checkbox', { name: 'Select Maya Chen' }));
+  await pointerClick(page, page.getByRole('button', { name: 'Next page' }));
+  assert.equal(
+    await page.getByLabel('Total selected').textContent(),
+    '1 selected · 0 on this page',
+  );
+  await pause(page);
+  await pointerClick(page, page.getByRole('button', { name: 'Previous page' }));
+  assert.equal(await table.getByRole('checkbox', { name: 'Select Maya Chen' }).isChecked(), true);
+  await caption(page, '2 / 5 · Hide Score. Selection stays intact.');
+  await pointerClick(page, columns);
+  await pointerClick(page, panel.locator('label').filter({ hasText: 'Score' }));
+  assert.equal(await table.getByRole('button', { name: 'Sort by Score' }).count(), 0);
+  await accessibility(page);
+  await page.locator('#capture-caption, #capture-cursor').evaluateAll((elements) => {
+    for (const element of elements) element.style.visibility = 'hidden';
+  });
+  // A clean poster pairs the open Columns menu with a selected row.
+  const workspaceBox = await page
+    .getByRole('region', { name: 'Team directory workspace' })
+    .boundingBox();
+  const panelBox = await panel.boundingBox();
+  assert.ok(workspaceBox && panelBox);
+  const y = Math.max(0, workspaceBox.y - 8);
+  await page.screenshot({
+    path: path.join(media, 'paged-workspace.png'),
+    clip: {
+      x: 0,
+      y,
+      width: page.viewportSize().width,
+      height: Math.min(
+        page.viewportSize().height - y,
+        Math.max(workspaceBox.y + workspaceBox.height, panelBox.y + panelBox.height) + 14 - y,
+      ),
+    },
+  });
+  await page.locator('#capture-caption, #capture-cursor').evaluateAll((elements) => {
+    for (const element of elements) element.style.visibility = '';
+  });
+  await pause(page);
+  await page.keyboard.press('Escape');
+  await caption(page, '3 / 5 · Resize Name. Only finished changes are saved.');
+  const before = await nameEdge.getAttribute('aria-valuenow');
+  await drag(page, nameEdge, 80);
+  const width = await nameEdge.getAttribute('aria-valuenow');
+  assert.notEqual(width, before);
+  await caption(page, '4 / 5 · Reload. Hidden fields and widths return.');
+  await pause(page);
+  await page.reload();
+  await columns.waitFor();
+  await page.waitForFunction(
+    (width) =>
+      document.querySelector('[aria-label="Resize Name column"]')?.getAttribute('aria-valuenow') ===
+      width,
+    width,
+  );
+  assert.equal(await table.getByRole('button', { name: 'Sort by Score' }).count(), 0);
+  await recordingOverlay(page);
+  await caption(page, '4 / 5 · Layout restored. Selection starts fresh on reload.');
+  assert.equal(
+    await page.getByLabel('Total selected').textContent(),
+    '0 selected · 0 on this page',
+  );
+  await pause(page);
+  await caption(page, '5 / 5 · Restore defaults: all fields, original widths.');
+  await pointerClick(page, columns);
+  await pointerClick(page, panel.getByRole('button', { name: 'Restore default layout' }));
+  await table.getByRole('button', { name: 'Sort by Score' }).waitFor();
+  assert.equal(await nameEdge.getAttribute('aria-valuenow'), before);
+  await pause(page);
+  await page.keyboard.press('Escape');
+  await pause(page);
+  await finish(context, page, 'paged-workspace');
+}
+async function captureExistingMedia() {
   const { context, page } = await open('file-table');
   await accessibility(page);
   await screenshot(page, 'table-light');
@@ -456,9 +549,15 @@ try {
   await panes.page.getByRole('region', { name: 'Sidebar', exact: true }).waitFor();
   await pause(panes.page);
   await finish(panes.context, panes.page, 'split-panes');
+}
+try {
+  if (!process.argv.includes('--paged')) await captureExistingMedia();
+  await capturePagedWorkspace();
   assert.deepEqual(errors, []);
   console.log(
-    'README media captured: nineteen composed screenshots, five asserted interaction GIFs, MP4s and WebMs.',
+    process.argv.includes('--paged')
+      ? 'README media captured: asserted Team directory workflow; GIF, MP4 and WebM.'
+      : 'README media captured: twenty screenshots and six asserted workflows; GIFs, MP4s and WebMs.',
   );
 } finally {
   await browser.close();

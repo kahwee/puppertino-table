@@ -118,7 +118,15 @@ Finder’s Outline view groups the current file collection into expandable Docum
 
 ## Watch the interactions
 
-Each recording shows the working Storybook app with fictional files. Numbered captions and a pointer overlay explain the real interactions. Full-size videos are available as WebM and MP4.
+Real Storybook workflows with fictional data, short captions and a visible pointer. Full-size videos are available as WebM and MP4.
+
+### Saved columns and selection across pages
+
+![Select teammates across pages, hide Score, resize Name, reload the saved layout and restore defaults](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/paged-workspace.gif)
+
+[WebM](https://kahwee.github.io/puppertino-table/media/paged-workspace.webm) · [MP4](https://kahwee.github.io/puppertino-table/media/paged-workspace.mp4) · [Try the Paged workspace](https://kahwee.github.io/puppertino-table/?path=/story/puppertino-table--paginated-selection&args=pageSize:5)
+
+The Columns menu hides optional fields and remembers visibility and completed widths on this device. Name stays visible; hidden fields keep their widths. **Restore default layout** resets both. Selection survives paging, search and sorting; reloading starts a fresh selection.
 
 ### Resize and reset
 
@@ -229,7 +237,7 @@ Checkboxes and row gestures share a fixed range anchor. Pass `selectionAnchor` t
 
 Code starts with a short integration; expand Supporting code in Docs for the complete files. Try empty, long-name, large and read-only datasets through args in Table and the composed workspace. Selection counts, command results and empty-state recovery stay visible in the workspace.
 
-Install `@tanstack/react-store` when copying an atom-owned example. The Paged workspace filters and sorts the full dataset before slicing a page. It uses stable IDs and a v9 selection atom to keep off-page choices; a small footer subscription displays total and visible selections. Its Columns menu hides optional fields, keeps Name visible, and remembers visibility plus completed widths on this device. Restore default layout resets both; hidden columns retain their widths. Search and page-size controls stay synchronized, and changing the dataset starts fresh. Actions records explicit callback spies; named Interactions steps check the workflows.
+Install `@tanstack/react-store` for atom-owned examples. The Paged workspace filters and sorts before paging, keeps selection by stable ID, and subscribes to counts in the footer. Its app-owned layout saves column visibility and committed widths together. Supporting code includes the storage parser and hook. Actions shows callbacks; Interactions checks each workflow.
 
 These examples follow [Storybook args](https://storybook.js.org/docs/writing-stories/args), [interaction testing](https://storybook.js.org/docs/writing-tests/interaction-testing), and TanStack Table v9 guidance for [state ownership](https://github.com/TanStack/table/blob/main/docs/framework/react/guide/table-state.md) and [row selection](https://github.com/TanStack/table/blob/main/docs/framework/react/guide/row-selection.md).
 

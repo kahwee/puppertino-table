@@ -1,9 +1,10 @@
 # README media
 
-Curated documentation assets recorded from the working Finder, Sidebar, Outline view and Split view Storybook playgrounds, using fictional files and in-memory state. These are public demo media, not uploaded documents or browser regression artifacts.
+Curated assets recorded from the Team directory, Finder, Sidebar, Outline and Split Storybook playgrounds with fictional data. These are public demo media.
 
-Run `pnpm capture:readme` from the repository root. It builds Storybook, captures nineteen PNG screenshots, and records five real interaction sequences as animated GIFs, MP4s and WebMs. Requirements: Chromium, Playwright's video helper (`pnpm exec playwright install ffmpeg`), and `ffmpeg` with libx264 and libvpx-vp9. `FFMPEG_EXECUTABLE` can select a locally installed encoder. `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can select a system browser.
+Run `pnpm capture:readme` from the repository root. It builds Storybook, captures twenty PNG screenshots, and records six interaction sequences as GIFs, MP4s and WebMs. To refresh only the latest Team directory workflow, run `pnpm build:storybook && node scripts/capture-readme.mjs --paged`. Requirements: Chromium, Playwright's video helper (`pnpm exec playwright install ffmpeg`), and `ffmpeg` with libx264 and libvpx-vp9. `FFMPEG_EXECUTABLE` can select an encoder; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can select a browser.
 
+- **Team directory:** select across pages, hide Score, resize Name, reload the saved layout, restore defaults. Layout persists; selection starts fresh on reload.
 - **Resizing:** table divider drag, double-click reset, independent browser-panel drag.
 - **Context menu:** right-click in a close-up, Get Info, Shift+F10, arrow-key navigation, Escape.
 - **Outline:** load nested branches, select a document, handle an error and retry while preserving selection.

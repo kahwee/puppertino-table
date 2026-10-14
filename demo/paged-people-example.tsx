@@ -84,7 +84,7 @@ export function PagedPeopleExample({
             onChange={(event) => changeQuery(event.target.value)}
           />
         </label>
-        <p>Select people across pages. Your selection stays with you.</p>
+        <p>Selection stays with you across pages.</p>
         <button
           type="button"
           className="p-button demo-people-columns-trigger"
@@ -141,7 +141,7 @@ export function PagedPeopleExample({
               </label>
             ))}
           </fieldset>
-          <p>Name stays visible. Column widths are remembered too.</p>
+          <p>Name stays visible. Visibility and widths are saved.</p>
           <button type="button" className="p-button" disabled={disabled} onClick={layout.reset}>
             Restore default layout
           </button>

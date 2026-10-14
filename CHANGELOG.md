@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Lead the README with an asserted Team directory screencast showing selection across pages, saved columns and widths, reload, and restore defaults; tighten the workspace and supporting copy.
+
 - Add a keyboard-accessible Columns menu to the existing Paged workspace. Remember visibility and completed widths together, protect Name, retain hidden-column widths, clear hidden sorting and restore the default layout.
 - Give Finder view/density one state owner and restore file focus before paint, preventing delayed Storybook arg updates from replaying a stale view during rapid keyboard switches.
 - Shorten Table integrations by moving typed fixtures into expandable supporting files. Add explicit Actions spies and typed paging/data scenarios without increasing the story count.

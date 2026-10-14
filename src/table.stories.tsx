@@ -879,7 +879,7 @@ export const PaginatedSelection: Story = {
       },
       description: {
         story:
-          'The app filters and orders the full dataset before paging, using manualSorting to prevent a second sort inside the supplied page. Stable IDs and a selection atom preserve off-page choices. The footer subscribes to selection independently. Change page size, search or sorting without losing selected IDs; changing the dataset or Reset example starts fresh. Columns and completed widths are remembered on this device; Restore default layout resets those preferences.',
+          'Filter and sort before paging. Stable IDs keep selection across pages, search and sorting; the footer subscribes to counts independently. Columns saves visibility and completed widths on this device. Restore default layout resets both. Reloading or resetting the example clears selection. [Watch the workflow](./media/paged-workspace.webm).',
       },
     },
   },
