@@ -2,8 +2,9 @@
 
 Curated assets recorded from the Team directory, Finder, Sidebar, Outline and Split Storybook playgrounds with fictional data. These are public demo media.
 
-Run `pnpm capture:readme` from the repository root. It builds Storybook, captures twenty-two PNG screenshots, and records six interaction sequences as GIFs, MP4s and WebMs. To refresh only the latest Team directory workflow, run `pnpm build:storybook && node scripts/capture-readme.mjs --paged`. Use `--tahoe` instead for the light/dark Tahoe toolbar screenshots. Requirements: Chromium, Playwright's video helper (`pnpm exec playwright install ffmpeg`), and `ffmpeg` with libx264 and libvpx-vp9. `FFMPEG_EXECUTABLE` can select an encoder; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can select a browser.
+Run `pnpm capture:readme` from the repository root. It builds Storybook, captures twenty-two PNG screenshots, and records seven interaction sequences as GIFs, MP4s and WebMs. To refresh only the latest Team directory workflow, run `pnpm build:storybook && node scripts/capture-readme.mjs --paged`. Use `--tools` for the Finder column/customization/view workflow, or `--tahoe` instead for the light/dark Tahoe toolbar screenshots. Requirements: Chromium, Playwright's video helper (`pnpm exec playwright install ffmpeg`), and `ffmpeg` with libx264 and libvpx-vp9. `FFMPEG_EXECUTABLE` can select an encoder; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can select a browser.
 
+- **Finder tools:** sort and choose columns, customize grouped tools, retain the selected file in Gallery.
 - **Team directory:** select across pages, hide Score, resize Name, reload the saved layout, restore defaults. Layout persists; selection starts fresh on reload.
 - **Resizing:** table divider drag, double-click reset, independent browser-panel drag.
 - **Context menu:** right-click in a close-up, Get Info, Shift+F10, arrow-key navigation, Escape.

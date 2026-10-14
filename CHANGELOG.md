@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.13.0 — 2026-10-14
 
 - Group optional Finder tools into named capsules, preserve focus when tools enter overflow, reposition customization after resize/scroll, and add icon previews and Done. Reduce resting Tahoe header clutter, refresh the visual audit and record a focused Finder workflow.
 
