@@ -617,6 +617,56 @@ Keep navigation before the title, related commands in small groups, and search
 at the trailing edge. Supply only commands your app implements. See the
 [Tahoe Finder reference and next steps](./tahoe-finder.md).
 
+### Overflow, customization and inactive windows
+
+Place optional tools in `FinderToolbarItems`, between the title and trailing
+commands/Search. Each item supplies `id`, `label`, `icon`, `onSelect`, and optional
+`disabled`/`pressed` state. Only fitting tools render as buttons; the rest appear
+in More tools. There is one actionable copy of each command.
+
+```tsx
+const [tools, setTools] = useState(['preview', 'share']);
+<FinderToolbarItems
+  items={commands} selectedIds={tools} onSelectedIdsChange={setTools}
+  overflowIcon={<CaretDoubleRightIcon aria-hidden="true" />} />
+```
+
+`selectedIds` is the display order. Supplying `onSelectedIdsChange` enables
+Customize Toolbar: choose tools, move them earlier/later, and restore defaults.
+The app owns persistence; unknown or repeated IDs are ignored. Omit both props
+for automatic overflow without customization. Keep essential controls outside
+this group. Very small windows may wrap pinned controls; expanded Search keeps
+its input usable. Navigation and the location title remain available.
+
+Use `FinderWindow active={isActive}` when your app owns window focus, or
+`active="auto"` to track focus leaving the browser window and the Finder subtree.
+Owned portaled menus keep it active. Inactive selection turns neutral; it is
+still selected. The default remains active, and this appearance never disables
+commands or clears state.
+
+### List header menus
+
+Pass `getHeaderMenu(column)` to `PuppertinoTable`, `TableView`, `OutlineView`, or
+`TableHeader`. Return the same command descriptors used by `ContextMenu`.
+Headers gain an options button and support right-click and Shift+F10. Menu
+commands remain app-owned; manual sorting still respects supplied row order.
+
+```tsx
+getHeaderMenu={(column) => [
+  { id: 'asc', label: 'Sort Ascending', checked: column.getIsSorted() === 'asc',
+    onSelect: () => column.toggleSorting(false) },
+  { id: 'desc', label: 'Sort Descending', checked: column.getIsSorted() === 'desc',
+    onSelect: () => column.toggleSorting(true) },
+]}
+```
+
+`checked` gives a command real `menuitemcheckbox` semantics. Checkbox commands
+close after a choice by default; set `closeOnSelect: false` for repeated choices.
+Column visibility is a schema choice in your app: filter the supplied columns,
+protect required fields, and clear sorting when hiding its field. The Finder
+example protects Name and provides Restore Default Columns. Width ownership and
+row IDs remain separate from visibility.
+
 Constrain the window's width with its parent or native `style` prop; it creates
 its own size-query container. Add `p-dark-mode` to the window or an ancestor for
 dark mode. Customize `--finder-sidebar-width`, `--finder-radius`,

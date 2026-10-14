@@ -7,7 +7,8 @@ export function useFinderToolbarNavigation(ref, enabled) {
             return;
         const original = new Map();
         let entry;
-        const items = () => Array.from(root.querySelectorAll('button, a[href], input:not([type="hidden"]), select, textarea')).filter((item) => !item.matches(':disabled') &&
+        const items = () => Array.from(root.querySelectorAll('button, a[href], input:not([type="hidden"]), select, textarea')).filter((item) => !item.closest('[popover], [role="dialog"], [role="menu"]') &&
+            !item.matches(':disabled') &&
             !item.closest('[hidden], [inert]') &&
             item.getClientRects().length > 0 &&
             getComputedStyle(item).visibility !== 'hidden');
@@ -16,6 +17,8 @@ export function useFinderToolbarNavigation(ref, enabled) {
             const focused = controls.find((item) => item === document.activeElement);
             entry = focused ?? (entry && controls.includes(entry) ? entry : controls[0]);
             for (const item of root.querySelectorAll('button, a[href], input, select, textarea')) {
+                if (item.closest('[popover], [role="dialog"], [role="menu"]'))
+                    continue;
                 if (!original.has(item))
                     original.set(item, item.getAttribute('tabindex'));
                 item.tabIndex = item === entry ? 0 : -1;

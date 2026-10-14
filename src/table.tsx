@@ -29,6 +29,7 @@ export function PuppertinoTable<T extends RowData>(props: PuppertinoTableProps<T
     getRowProps,
     getCellProps,
     leadingRows,
+    getHeaderMenu,
   } = props;
   const table = usePuppertinoTable(props);
   const behavior = tableBehavior(table);
@@ -59,6 +60,7 @@ export function PuppertinoTable<T extends RowData>(props: PuppertinoTableProps<T
             </colgroup>
             <TableHeader
               table={table}
+              getHeaderMenu={getHeaderMenu}
               resizeOptions={{
                 storageKey:
                   columnSizing === undefined && !atoms?.columnSizing ? storageKey : undefined,

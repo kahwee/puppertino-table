@@ -84,6 +84,10 @@ The Finder example shares selection between List, Icons, Columns, Gallery and Ou
 
 For Tahoe-style chrome, use `FinderWindow appearance="tahoe"`. Add `keyboardNavigation` to `FinderToolbar` for one Tab stop and arrow-key navigation; Search keeps native editing keys. Button `label` provides an accessible name and hover hint. [Toolbar recipe](https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md#compose-a-finder) · [Apple references and next steps](https://github.com/kahwee/puppertino-table/blob/main/docs/tahoe-finder.md).
 
+`FinderToolbarItems` moves optional tools into overflow and lets users choose their tools and order. `FinderWindow active="auto"` softens an unfocused window while preserving selection. In the Finder List view, use a header’s **⋯** button, right-click, or Shift+F10 to sort and choose columns; Name stays visible.
+
+[Agent Browser critique and comparison, with screenshots](https://github.com/kahwee/puppertino-table/blob/main/docs/tahoe-finder-review.md).
+
 ![Tahoe-inspired Finder with soft toolbar groups and navigation beside the folder title](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/tahoe-toolbar.png)
 
 ![Column browser with a selected document and app-owned preview](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/columns-preview.png)

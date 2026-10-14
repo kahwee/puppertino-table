@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import type { Page } from 'playwright';
+import { checkFinderTools } from './check-finder-tools.js';
 import { storyQuery } from './story-presets.mjs';
 
 export async function checkFinderFocus(page: Page, base: string, evidence: string) {
@@ -176,6 +177,7 @@ export async function checkFinderFocus(page: Page, base: string, evidence: strin
   await page.keyboard.press('Escape');
   await page.emulateMedia({ forcedColors: 'none' });
   await checkToolbarNavigation(page, base, evidence);
+  await checkFinderTools(page, base, evidence);
   console.log(
     'Finder focus passed: pointer/keyboard toolbar, clipped headers, tag input/token, menu and forced colors.',
   );

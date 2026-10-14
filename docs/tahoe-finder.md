@@ -29,15 +29,21 @@ editing and modified shortcuts alone. Ordinary Tab navigation remains available
 by omitting the option. Toolbar and button labels make custom icon commands
 discoverable to assistive technology and through native hover hints.
 
-Compact windows retain Back and Forward. Groups wrap with their hit areas intact
-instead of silently removing history. This is an intentional web adaptation;
-it is not Apple's native overflow behavior.
+`FinderToolbarItems` moves optional tools into an accessible overflow menu and
+offers tool selection, keyboard-accessible ordering, and reset. Navigation,
+location and Search remain available; at very small web widths, pinned controls
+may wrap. Apps own the chosen IDs and persistence.
+
+`FinderWindow active="auto"` tracks focus, including owned portaled menus;
+`active={false}` allows explicit inactive styling. Neutral selection and softer
+chrome keep state intact. Header menus offer sorting and column choices, with
+Name protected in the demo and keyboard/context-menu alternatives.
 
 ## Next steps
 
-1. **Overflow and customization:** keep history, the location title and Search pinned; move optional command groups into an accessible menu when they no longer fit. Let apps own the chosen commands and saved order. Avoid duplicating focusable commands or dropping disabled-state explanations.
-2. **Search scope:** compose current-folder and workspace scopes with clear result counts and a reliable way back. The app owns indexing and results.
-3. **Window state and materials:** add an explicit inactive-window appearance and test it against real Tahoe light/dark captures, reduced transparency, increased contrast and keyboard focus.
+1. **Search scope:** compose current-folder and workspace scopes with clear result counts and a reliable way back. The app owns indexing and results.
+2. **Materials:** compare inactive chrome against real Tahoe light/dark captures, with reduced transparency and increased contrast.
+3. **Customization feel:** consider pointer drag ordering alongside the accessible earlier/later controls, and app-owned saved presets.
 
 The CSS skin approximates the geometry and hierarchy of Apple's screenshot.
 Browser blur cannot reproduce native Liquid Glass refraction or system vibrancy.

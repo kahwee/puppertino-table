@@ -403,6 +403,87 @@
   margin: 0;
   min-width: 0;
 }
+.pt-finder-toolbar-content:has(.pt-finder-toolbar-items) {
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+.pt-finder-toolbar-content:has(.pt-finder-toolbar-items) .pt-finder-title {
+  min-width: 60px;
+}
+.pt-finder-toolbar-items {
+  flex-shrink: 1;
+  min-width: 40px;
+  overflow: hidden;
+}
+.pt-finder-toolbar-items > .p-toolbar-btn {
+  width: 32px;
+  padding: 0;
+}
+.pt-toolbar-customize {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 16px;
+  width: 280px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100dvh - 16px);
+  overflow: auto;
+  border: 1px solid var(--finder-line);
+  border-radius: 12px;
+  background: var(--p-window-bg, Canvas);
+  color: var(--p-list-text, CanvasText);
+  font: 13px system-ui;
+  box-shadow: 0 8px 28px #0003;
+}
+.pt-toolbar-customize-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+.pt-toolbar-customize p {
+  margin: 0 0 12px;
+}
+.pt-toolbar-customize-row,
+.pt-toolbar-customize-label,
+.pt-toolbar-customize-order {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pt-toolbar-customize-row {
+  justify-content: space-between;
+  padding: 4px 0;
+}
+.pt-toolbar-customize-row button {
+  min-width: 28px;
+  min-height: 28px;
+  color: inherit;
+  background: var(--p-window-bg);
+  border: 1px solid var(--finder-line);
+  border-radius: 5px;
+}
+.pt-toolbar-customize-row button:disabled {
+  opacity: 0.5;
+}
+.pt-toolbar-customize > .p-button {
+  margin-top: 12px;
+}
+@container (max-width: 700px) {
+  .pt-finder-toolbar-content:has(.pt-finder-toolbar-items) {
+    gap: 4px;
+    padding: 8px;
+  }
+  .pt-finder-toolbar-content:has(.pt-finder-toolbar-items):has(.pt-finder-search) {
+    flex-wrap: wrap;
+  }
+}
+@container (max-width: 440px) {
+  .pt-finder-toolbar-content:has(.pt-finder-toolbar-items) {
+    flex-wrap: wrap;
+  }
+  .pt-finder-toolbar-items {
+    max-width: 40px;
+  }
+}
 
 /* Tahoe's material belongs to navigation chrome, with a solid content canvas. */
 .pt-finder-container[data-appearance="tahoe"] {
@@ -477,4 +558,24 @@
 
 .pt-finder-window:not(:has(.pt-finder-sidebar)) .pt-finder-status {
   border-bottom-left-radius: var(--finder-radius);
+}
+
+.pt-finder-container[data-active="false"] {
+  --p-toolbar-ink: var(--p-text-secondary);
+  --finder-sidebar-icon: var(--p-text-secondary);
+}
+.pt-finder-container[data-active="false"] .pt-finder-title {
+  color: var(--p-text-secondary);
+}
+.pt-finder-container[data-active="false"] .pt-finder-sidebar .p-sidebar-icon {
+  color: var(--p-text-secondary);
+}
+.pt-finder-container[data-active="false"]
+  :is(
+    .pt-table tbody tr.p-selected td,
+    .pt-finder-icon-item[aria-pressed="true"] span,
+    .pt-finder-filmstrip > button[aria-pressed="true"]
+  ) {
+  background: color-mix(in srgb, var(--p-text-secondary) 20%, var(--p-window-bg));
+  color: inherit;
 }

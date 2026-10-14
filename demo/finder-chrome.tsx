@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import {
   type ContextMenuItem,
   FinderActions,
@@ -6,10 +6,10 @@ import {
   FinderSearch,
   FinderTitle,
   FinderToolbar,
-  FinderToolbarButton,
   FinderToolbarGroup,
+  FinderToolbarItems,
   type FinderView,
-  FinderViewSwitcher,
+  finderViews,
 } from '../src/index.js';
 import { ViewGlyph } from './finder-artwork.js';
 
@@ -43,6 +43,7 @@ export function DemoToolbar({
   canPreview,
   onPreview,
 }: DemoToolbarProps) {
+  const [tools, setTools] = useState<string[]>([...finderViews, 'quick-look']);
   return (
     <FinderToolbar keyboardNavigation>
       <FinderHistory
@@ -52,27 +53,29 @@ export function DemoToolbar({
         forwardIcon={<ViewGlyph view="forward" />}
       />
       <FinderTitle>{folder}</FinderTitle>
-      <FinderViewSwitcher
-        value={view}
-        onValueChange={onView}
-        icons={{
-          icons: <ViewGlyph view="icons" selected={view === 'icons'} />,
-          list: <ViewGlyph view="list" selected={view === 'list'} />,
-          columns: <ViewGlyph view="columns" selected={view === 'columns'} />,
-          gallery: <ViewGlyph view="gallery" selected={view === 'gallery'} />,
-          outline: <ViewGlyph view="outline" selected={view === 'outline'} />,
-        }}
+      <FinderToolbarItems
+        items={[
+          ...finderViews.map((item) => ({
+            id: item,
+            label: item[0].toUpperCase() + item.slice(1),
+            icon: <ViewGlyph view={item} selected={view === item} />,
+            pressed: view === item,
+            onSelect: () => onView(item),
+          })),
+          {
+            id: 'quick-look',
+            label: 'Quick Look',
+            icon: <ViewGlyph view="preview" />,
+            disabled: !canPreview,
+            onSelect: onPreview,
+          },
+        ]}
+        selectedIds={tools}
+        onSelectedIdsChange={setTools}
+        overflowIcon={<ViewGlyph view="overflow" />}
       />
       <FinderToolbarGroup aria-label="File commands">
         {tags}
-        <FinderToolbarButton
-          aria-label="Quick Look"
-          title="Quick Look"
-          disabled={!canPreview}
-          onClick={onPreview}
-        >
-          <ViewGlyph view="preview" />
-        </FinderToolbarButton>
         <FinderActions actions={actions} icon={<ViewGlyph view="actions" />} />
       </FinderToolbarGroup>
       <FinderSearch value={query} onValueChange={onQuery} icon={<ViewGlyph view="search" />} />

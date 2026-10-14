@@ -71,7 +71,8 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   };
   await toggleControl('selectable');
   await page.waitForFunction(
-    () => !document.querySelector('#story--examples-finder--file-table input[type="checkbox"]'),
+    () =>
+      !document.querySelector('#story--examples-finder--file-table table input[type="checkbox"]'),
   );
   assert.equal(await app.getByRole('searchbox').inputValue(), 'brief');
   await toggleControl('resizable');

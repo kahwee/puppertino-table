@@ -15,6 +15,12 @@ Assertions check the actual resulting UI, loaded children, preserved selection a
 
 The README uses absolute GitHub image URLs so images also resolve on npm. Storybook copies this directory to `/media` for Pages video links. Keep media out of the npm package.
 
+The five `finder-tools-*`, `finder-header-menu`, `finder-toolbar-customize` and
+`finder-inactive` captures support the [Agent Browser review](../tahoe-finder-review.md).
+They were captured interactively with Agent Browser 0.39.1 from the current
+Storybook build and inspected before acceptance; the capture script does not
+regenerate these review-specific states.
+
 Storybook offers WebM first and MP4 second so playback does not depend on a browser build shipping the H.264 decoder.
 
 Finder references: [Apple’s Finder guide](https://support.apple.com/guide/mac-help/organize-your-files-in-the-finder-mchle9f0a1b2/mac), reviewed 2026-10-13. Sidebar/titlebar alignment, Finder view toolbar, column ancestry and gallery filmstrip follow those references. Toolbar and file-type icons use Phosphor; Alpine preview artwork is original example content. Screenshots include list/selection/density/dark, light/dark/narrow columns, icons, gallery, the Finder hierarchy and the open menu. Standalone captures include light/dark Sidebar, the touch variant, expanded light/dark Outline, and horizontal/vertical Split views.

@@ -80,6 +80,11 @@ export {
   finderViews,
 } from './finder-toolbar.js';
 export {
+  type FinderToolbarItem,
+  FinderToolbarItems,
+  type FinderToolbarItemsProps,
+} from './finder-toolbar-items.js';
+export {
   type ItemNavigationOptions,
   type ItemNavigationOrientation,
   nextItemId,
@@ -127,6 +132,7 @@ export type {
   PuppertinoCell,
   PuppertinoCellProps,
   PuppertinoDataAttributes,
+  PuppertinoHeaderMenu,
   PuppertinoRow,
   PuppertinoRowProps,
   PuppertinoTableProps,

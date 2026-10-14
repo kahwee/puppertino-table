@@ -96,6 +96,7 @@ export function ContextMenu({ position, actions, ariaLabel, onClose, returnFocus
     if (!position)
         return null;
     const hasIcons = actions.some((action) => 'icon' in action && !!action.icon);
+    const hasChecks = actions.some((action) => 'checked' in action && typeof action.checked === 'boolean');
     const theme = returnFocus?.closest('.p-dark-mode,.p-light-mode,[data-p-theme]');
     const themeClass = theme?.matches('.p-dark-mode,[data-p-theme="darkmode"]')
         ? 'p-dark-mode'
@@ -116,7 +117,13 @@ export function ContextMenu({ position, actions, ariaLabel, onClose, returnFocus
                             return _jsx(BaseContextMenu.Separator, { className: "pt-menu-separator" }, action.id);
                         if (!('label' in action))
                             return null;
-                        const content = (_jsxs(_Fragment, { children: [hasIcons && (_jsx("span", { className: "pt-menu-icon", "aria-hidden": "true", children: action.icon })), _jsx("span", { className: "pt-menu-label", children: action.label }), action.shortcut && (_jsx("span", { className: "pt-menu-shortcut", "aria-hidden": "true", children: action.shortcut }))] }));
+                        const content = (_jsxs(_Fragment, { children: [hasChecks && (_jsx("span", { className: "pt-menu-check", "aria-hidden": "true", children: action.checked ? '✓' : '' })), hasIcons && (_jsx("span", { className: "pt-menu-icon", "aria-hidden": "true", children: action.icon })), _jsx("span", { className: "pt-menu-label", children: action.label }), action.shortcut && (_jsx("span", { className: "pt-menu-shortcut", "aria-hidden": "true", children: action.shortcut }))] }));
+                        if (typeof action.checked === 'boolean')
+                            return (_jsx(BaseContextMenu.CheckboxItem, { checked: action.checked, disabled: action.disabled, label: action.label, closeOnClick: false, onCheckedChange: () => {
+                                    if (action.closeOnSelect !== false)
+                                        close.current();
+                                    action.onSelect();
+                                }, children: content }, action.id));
                         if (action.href !== undefined) {
                             if (action.disabled)
                                 return (_jsx(BaseContextMenu.Item, { disabled: true, label: action.label, children: content }, action.id));

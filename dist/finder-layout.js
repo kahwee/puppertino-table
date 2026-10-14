@@ -1,9 +1,40 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { useEffect, useRef, useState } from 'react';
 import { DensityScope } from './density.js';
 import { Sidebar, SidebarGroup, SidebarItem, } from './sidebar.js';
-export function FinderWindow({ appearance = 'classic', className = '', children, ...props }) {
-    return (_jsx("section", { ...props, "data-appearance": appearance, className: `pt-finder-container ${className}`, children: _jsx("div", { className: "p-window pt-finder-window", children: children }) }));
+export function FinderWindow({ appearance = 'classic', active = true, onFocusCapture, onBlurCapture, className = '', children, ...props }) {
+    const [focused, setFocused] = useState(true);
+    const lastFocus = useRef(null);
+    const frame = useRef(null);
+    useEffect(() => {
+        if (active !== 'auto')
+            return;
+        const blur = () => setFocused(false);
+        const focus = () => setFocused(document.activeElement === lastFocus.current);
+        window.addEventListener('blur', blur);
+        window.addEventListener('focus', focus);
+        return () => {
+            window.removeEventListener('blur', blur);
+            window.removeEventListener('focus', focus);
+            if (frame.current !== null)
+                cancelAnimationFrame(frame.current);
+        };
+    }, [active]);
+    const isActive = active === 'auto' ? focused : active;
+    return (_jsx("section", { ...props, "data-appearance": appearance, "data-active": isActive, className: `pt-finder-container ${className}`, onFocusCapture: (event) => {
+            onFocusCapture?.(event);
+            lastFocus.current = event.target;
+            if (active === 'auto')
+                setFocused(true);
+        }, onBlurCapture: (event) => {
+            onBlurCapture?.(event);
+            if (active === 'auto') {
+                if (frame.current !== null)
+                    cancelAnimationFrame(frame.current);
+                frame.current = requestAnimationFrame(() => setFocused(document.activeElement === lastFocus.current));
+            }
+        }, children: _jsx("div", { className: `p-window pt-finder-window${isActive ? '' : ' p-window-inactive'}`, children: children }) }));
 }
 export function FinderBody({ className = '', ...props }) {
     return _jsx(DensityScope, { ...props, className: `pt-finder-workspace ${className}` });

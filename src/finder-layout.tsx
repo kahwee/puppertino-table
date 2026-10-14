@@ -1,5 +1,5 @@
 'use client';
-import type { ComponentPropsWithRef, ReactNode } from 'react';
+import { type ComponentPropsWithRef, type ReactNode, useEffect, useRef, useState } from 'react';
 import { DensityScope, type DensityScopeProps } from './density.js';
 import {
   Sidebar,
@@ -13,16 +13,58 @@ import {
 export interface FinderWindowProps extends ComponentPropsWithRef<'section'> {
   /** Tahoe uses softer chrome and a continuous sidebar material; classic preserves the original skin. */
   appearance?: 'classic' | 'tahoe';
+  /** Controlled window state, or track focus including owned portaled menus. */
+  active?: boolean | 'auto';
 }
 export function FinderWindow({
   appearance = 'classic',
+  active = true,
+  onFocusCapture,
+  onBlurCapture,
   className = '',
   children,
   ...props
 }: FinderWindowProps) {
+  const [focused, setFocused] = useState(true);
+  const lastFocus = useRef<EventTarget | null>(null);
+  const frame = useRef<number | null>(null);
+  useEffect(() => {
+    if (active !== 'auto') return;
+    const blur = () => setFocused(false);
+    const focus = () => setFocused(document.activeElement === lastFocus.current);
+    window.addEventListener('blur', blur);
+    window.addEventListener('focus', focus);
+    return () => {
+      window.removeEventListener('blur', blur);
+      window.removeEventListener('focus', focus);
+      if (frame.current !== null) cancelAnimationFrame(frame.current);
+    };
+  }, [active]);
+  const isActive = active === 'auto' ? focused : active;
   return (
-    <section {...props} data-appearance={appearance} className={`pt-finder-container ${className}`}>
-      <div className="p-window pt-finder-window">{children}</div>
+    <section
+      {...props}
+      data-appearance={appearance}
+      data-active={isActive}
+      className={`pt-finder-container ${className}`}
+      onFocusCapture={(event) => {
+        onFocusCapture?.(event);
+        lastFocus.current = event.target;
+        if (active === 'auto') setFocused(true);
+      }}
+      onBlurCapture={(event) => {
+        onBlurCapture?.(event);
+        if (active === 'auto') {
+          if (frame.current !== null) cancelAnimationFrame(frame.current);
+          frame.current = requestAnimationFrame(() =>
+            setFocused(document.activeElement === lastFocus.current),
+          );
+        }
+      }}
+    >
+      <div className={`p-window pt-finder-window${isActive ? '' : ' p-window-inactive'}`}>
+        {children}
+      </div>
     </section>
   );
 }

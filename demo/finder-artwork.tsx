@@ -1,6 +1,7 @@
 import {
   ArchiveIcon,
   ArrowUUpLeftIcon,
+  CaretDoubleRightIcon,
   CaretLeftIcon,
   CaretRightIcon,
   CircleIcon,
@@ -46,6 +47,7 @@ const viewIcons = {
   trash: TrashIcon,
   restore: ArrowUUpLeftIcon,
   actions: DotsThreeIcon,
+  overflow: CaretDoubleRightIcon,
   preview: EyeIcon,
   folder: FolderIcon,
   archive: ArchiveIcon,

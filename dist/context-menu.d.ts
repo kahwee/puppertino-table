@@ -15,12 +15,18 @@ interface MenuItemPresentation {
 }
 export interface ContextMenuAction extends MenuItemPresentation {
     onSelect(): void;
+    /** A controlled checkmark uses menuitemcheckbox semantics. */
+    checked?: boolean;
+    /** Keep checkbox menus open for repeated choices. Commands close by default. */
+    closeOnSelect?: boolean;
     href?: never;
     target?: never;
     rel?: never;
     download?: never;
 }
 export interface ContextMenuLink extends MenuItemPresentation {
+    checked?: never;
+    closeOnSelect?: never;
     href: string;
     target?: string;
     rel?: string;

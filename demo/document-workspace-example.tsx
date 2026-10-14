@@ -203,7 +203,7 @@ export function Composition({
     />
   );
   return (
-    <FinderWindow appearance="tahoe" aria-label="Composed document browser">
+    <FinderWindow appearance="tahoe" active="auto" aria-label="Composed document browser">
       <FinderToolbar keyboardNavigation label="Document toolbar">
         <FinderTitle>Documents</FinderTitle>
         <FinderViewSwitcher

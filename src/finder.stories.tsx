@@ -117,6 +117,63 @@ function FinderDemo({
   const { files, trash, lastDeletedIds } = fileState;
   const [selection, setSelection] = useState<RowSelectionState>({});
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
+  const visibleColumns = useMemo(
+    () =>
+      columns.filter(
+        (column) =>
+          !hiddenColumns.includes(
+            column.id ?? ('accessorKey' in column ? String(column.accessorKey) : ''),
+          ),
+      ),
+    [hiddenColumns],
+  );
+  const headerMenu: import('./table-types.js').PuppertinoHeaderMenu<FinderOutlineItem> = (
+    column,
+  ) => [
+    {
+      id: 'ascending',
+      label: 'Sort Ascending',
+      checked: column.getIsSorted() === 'asc',
+      disabled: !column.getCanSort(),
+      onSelect: () => setSorting([{ id: column.id, desc: false }]),
+    },
+    {
+      id: 'descending',
+      label: 'Sort Descending',
+      checked: column.getIsSorted() === 'desc',
+      disabled: !column.getCanSort(),
+      onSelect: () => setSorting([{ id: column.id, desc: true }]),
+    },
+    {
+      id: 'clear-sorting',
+      label: 'Clear Sorting',
+      disabled: !sorting.length,
+      onSelect: () => setSorting([]),
+    },
+    { id: 'columns-separator', type: 'separator' },
+    ...columns.map((definition) => {
+      const id =
+        definition.id ?? ('accessorKey' in definition ? String(definition.accessorKey) : '');
+      return {
+        id: `column-${id}`,
+        label: typeof definition.header === 'string' ? definition.header : id,
+        checked: !hiddenColumns.includes(id),
+        disabled: id === 'name',
+        onSelect: () => {
+          setHiddenColumns((previous) =>
+            previous.includes(id) ? previous.filter((hidden) => hidden !== id) : [...previous, id],
+          );
+          if (sorting.some((sort) => sort.id === id)) setSorting([]);
+        },
+      };
+    }),
+    {
+      id: 'restore-columns',
+      label: 'Restore Default Columns',
+      onSelect: () => setHiddenColumns([]),
+    },
+  ];
   const columnSizing = useCreateAtom<ColumnSizingState>({});
   const [outlineExpanded, setOutlineExpanded] = useState<OutlineExpandedState>(() =>
     Object.fromEntries(
@@ -590,6 +647,7 @@ function FinderDemo({
     <main className="finder-demo-stage">
       <FinderWindow
         appearance="tahoe"
+        active="auto"
         aria-label="Finder-style demo"
         onKeyDown={(event) => {
           if (
@@ -727,7 +785,8 @@ function FinderDemo({
                   : {})}
                 isRowSelectable={(item) => !isFinderGroup(item)}
                 atoms={{ columnSizing }}
-                columns={columns}
+                columns={visibleColumns}
+                getHeaderMenu={headerMenu}
                 getRowId={(file) => file.id}
                 getRowLabel={(file) => file.name}
                 ariaLabel={view === 'outline' ? 'Project file hierarchy' : 'Project files'}

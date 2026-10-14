@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add responsive, customizable `FinderToolbarItems`, controlled/automatic inactive-window styling, and app-owned table header menus. Finder demonstrates sorting and column choices; context menus support controlled checkmarks.
+
 - Add opt-in Tahoe Finder chrome, labeled toolbar buttons, and roving toolbar keyboard navigation. Keep history controls available in narrow windows and update the composed examples and Apple reference notes.
 
 - Lead the README with an asserted Team directory screencast showing selection across pages, saved columns and widths, reload, and restore defaults; tighten the workspace and supporting copy.

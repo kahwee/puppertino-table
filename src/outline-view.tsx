@@ -294,6 +294,7 @@ export function OutlineView<T extends RowData>(props: OutlineViewProps<T>) {
             </colgroup>
             <TableHeader
               table={table}
+              getHeaderMenu={props.getHeaderMenu}
               selectionRows={visible.map(({ row }) => row)}
               resizeOptions={{
                 storageKey:

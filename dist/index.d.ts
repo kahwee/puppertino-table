@@ -5,6 +5,7 @@ export { ContextMenu, type ContextMenuAction, type ContextMenuItem, type Context
 export { type DensityMetrics, DensityScope, type DensityScopeProps, type TableDensity, } from './density.js';
 export { FinderBody, FinderContent, FinderDetails, FinderEmptyState, FinderFilmstrip, FinderGallery, FinderGalleryItem, type FinderGalleryItemProps, FinderIconGrid, FinderIconItem, type FinderIconItemProps, FinderPathBar, FinderPreview, type FinderPreviewProps, FinderSidebar, FinderSidebarGroup, type FinderSidebarGroupProps, FinderSidebarItem, type FinderSidebarItemProps, FinderStatusBar, FinderWindow, type FinderWindowProps, } from './finder-layout.js';
 export { FinderActions, type FinderActionsProps, FinderHistory, type FinderHistoryProps, FinderSearch, type FinderSearchProps, FinderTitle, type FinderTitleProps, FinderToolbar, FinderToolbarButton, type FinderToolbarButtonProps, FinderToolbarGroup, type FinderToolbarProps, type FinderView, FinderViewSwitcher, type FinderViewSwitcherProps, FinderWindowControls, type FinderWindowControlsProps, finderViews, } from './finder-toolbar.js';
+export { type FinderToolbarItem, FinderToolbarItems, type FinderToolbarItemsProps, } from './finder-toolbar-items.js';
 export { type ItemNavigationOptions, type ItemNavigationOrientation, nextItemId, } from './item-navigation.js';
 export { createPuppertinoColumnHelper, type PuppertinoColumnDef, type PuppertinoTableInstance, puppertinoTableFeatures, } from './model.js';
 export { OutlineView, type OutlineViewProps } from './outline-view.js';
@@ -19,7 +20,7 @@ export { PuppertinoTable, PuppertinoTable as TableView } from './table.js';
 export { TableBody } from './table-body.js';
 export { TableHeader } from './table-header.js';
 export type { PuppertinoTableAtoms, PuppertinoTableOptions } from './table-options.js';
-export type { PuppertinoBodyContext, PuppertinoBodyOptions, PuppertinoCell, PuppertinoCellProps, PuppertinoDataAttributes, PuppertinoRow, PuppertinoRowProps, PuppertinoTableProps, PuppertinoTableProps as TableViewProps, RowSelectionCheckboxProps, TableBodyProps, TableHeaderProps, TableStatus, } from './table-types.js';
+export type { PuppertinoBodyContext, PuppertinoBodyOptions, PuppertinoCell, PuppertinoCellProps, PuppertinoDataAttributes, PuppertinoHeaderMenu, PuppertinoRow, PuppertinoRowProps, PuppertinoTableProps, PuppertinoTableProps as TableViewProps, RowSelectionCheckboxProps, TableBodyProps, TableHeaderProps, TableStatus, } from './table-types.js';
 export { type TagOption, TagPicker, type TagPickerProps } from './tag-picker.js';
 export { useColumnResize } from './use-column-resize.js';
 export { type ItemNavigationHookOptions, useItemNavigation } from './use-item-navigation.js';

@@ -1,9 +1,11 @@
 import type { Cell, Row, RowData } from '@tanstack/react-table';
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import type { ContextMenuItem } from './context-menu.js';
 import type { DensityMetrics, TableDensity } from './density.js';
 import type { PuppertinoTableInstance, puppertinoTableFeatures } from './model.js';
 import type { ColumnResizeOptions } from './resize-types.js';
 import type { PuppertinoTableOptions } from './table-options.js';
+export type PuppertinoHeaderMenu<T extends RowData> = (column: ReturnType<PuppertinoTableInstance<T>['getAllLeafColumns']>[number]) => readonly ContextMenuItem[];
 export type PuppertinoRow<T extends RowData> = Row<typeof puppertinoTableFeatures, T>;
 export type PuppertinoCell<T extends RowData> = Cell<typeof puppertinoTableFeatures, T>;
 export type PuppertinoDataAttributes = {
@@ -45,6 +47,8 @@ export type PuppertinoTableProps<T extends RowData> = PuppertinoTableOptions<T> 
     ariaLabel: string;
     caption?: ReactNode;
     className?: string;
+    /** Optional header commands; the app owns column visibility and sorting policy. */
+    getHeaderMenu?: PuppertinoHeaderMenu<T>;
     /** Inherits the enclosing DensityScope when omitted. */
     density?: TableDensity;
     densityMetrics?: DensityMetrics;
@@ -57,6 +61,7 @@ export interface TableHeaderProps<T extends RowData> {
     resizeOptions?: ColumnResizeOptions;
     /** Override bulk-selection scope with the visible outline rows. */
     selectionRows?: readonly PuppertinoRow<T>[];
+    getHeaderMenu?: PuppertinoHeaderMenu<T>;
 }
 export interface TableBodyProps<T extends RowData> extends PuppertinoBodyOptions<T> {
     table: PuppertinoTableInstance<T>;

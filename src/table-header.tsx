@@ -1,5 +1,7 @@
 'use client';
 import { type RowData, Subscribe } from '@tanstack/react-table';
+import { useEffect, useRef } from 'react';
+import { ContextMenu, useContextMenu } from './context-menu.js';
 import { ColumnResizeHandle } from './resize-handle.js';
 import { selectionAnchorFor } from './selection-anchor.js';
 import { tableBehavior } from './table-behavior.js';
@@ -12,10 +14,16 @@ export function TableHeader<T extends RowData>({
   resizable: resizeOverride,
   resizeOptions,
   selectionRows,
+  getHeaderMenu,
 }: TableHeaderProps<T>) {
+  const menu = useContextMenu<ReturnType<typeof table.getAllLeafColumns>[number]>();
   const behavior = tableBehavior(table);
   const selectable = selectionOverride ?? (behavior.selectable && behavior.selectionCheckboxes);
   const disabled = behavior.disabled || !!disabledOverride;
+  const root = useRef<HTMLTableSectionElement>(null);
+  useEffect(() => {
+    if (disabled || !getHeaderMenu) menu.close();
+  }, [disabled, getHeaderMenu, menu.close]);
   const resizable = behavior.resizable && resizeOverride !== false;
   const groups = table.getHeaderGroups();
   const options = {
@@ -23,7 +31,7 @@ export function TableHeader<T extends RowData>({
     enabled: resizable && !disabled && resizeOptions?.enabled !== false,
   };
   return (
-    <thead>
+    <thead ref={root}>
       {groups.map((group, index) => (
         <tr key={group.id}>
           {selectable && index === 0 && (
@@ -78,8 +86,10 @@ export function TableHeader<T extends RowData>({
             const label =
               typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id;
             const sorted = column.getIsSorted();
+            const hasMenu = !disabled && !!getHeaderMenu?.(column).length;
             return (
               <th
+                {...(hasMenu ? menu.getTriggerProps(column) : {})}
                 key={header.id}
                 colSpan={header.colSpan}
                 scope={column.columns.length === 0 ? 'col' : 'colgroup'}
@@ -105,6 +115,18 @@ export function TableHeader<T extends RowData>({
                 ) : (
                   <table.FlexRender header={header} />
                 )}
+                {hasMenu && (
+                  <button
+                    type="button"
+                    className="pt-header-menu-trigger"
+                    aria-label={`Column options for ${label}`}
+                    title={`Column options for ${label}`}
+                    aria-haspopup="menu"
+                    onClick={(event) => menu.open(column, event)}
+                  >
+                    ⋯
+                  </button>
+                )}
                 {options.enabled && (
                   <ColumnResizeHandle
                     table={table}
@@ -118,6 +140,17 @@ export function TableHeader<T extends RowData>({
           })}
         </tr>
       ))}
+      <ContextMenu
+        ariaLabel="Column options"
+        position={disabled ? null : (menu.state?.position ?? null)}
+        returnFocus={
+          menu.state?.returnFocus?.isConnected
+            ? menu.state.returnFocus
+            : root.current?.querySelector('button')
+        }
+        onClose={menu.close}
+        actions={menu.state && getHeaderMenu ? getHeaderMenu(menu.state.context) : []}
+      />
     </thead>
   );
 }

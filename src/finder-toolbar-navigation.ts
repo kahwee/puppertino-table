@@ -17,6 +17,7 @@ export function useFinderToolbarNavigation(
         ),
       ).filter(
         (item) =>
+          !item.closest('[popover], [role="dialog"], [role="menu"]') &&
           !item.matches(':disabled') &&
           !item.closest('[hidden], [inert]') &&
           item.getClientRects().length > 0 &&
@@ -29,6 +30,7 @@ export function useFinderToolbarNavigation(
       for (const item of root.querySelectorAll<HTMLElement>(
         'button, a[href], input, select, textarea',
       )) {
+        if (item.closest('[popover], [role="dialog"], [role="menu"]')) continue;
         if (!original.has(item)) original.set(item, item.getAttribute('tabindex'));
         item.tabIndex = item === entry ? 0 : -1;
       }

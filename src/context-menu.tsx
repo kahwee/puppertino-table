@@ -27,12 +27,18 @@ interface MenuItemPresentation {
 }
 export interface ContextMenuAction extends MenuItemPresentation {
   onSelect(): void;
+  /** A controlled checkmark uses menuitemcheckbox semantics. */
+  checked?: boolean;
+  /** Keep checkbox menus open for repeated choices. Commands close by default. */
+  closeOnSelect?: boolean;
   href?: never;
   target?: never;
   rel?: never;
   download?: never;
 }
 export interface ContextMenuLink extends MenuItemPresentation {
+  checked?: never;
+  closeOnSelect?: never;
   href: string;
   target?: string;
   rel?: string;
@@ -178,6 +184,9 @@ export function ContextMenu({
   }, [position]);
   if (!position) return null;
   const hasIcons = actions.some((action) => 'icon' in action && !!action.icon);
+  const hasChecks = actions.some(
+    (action) => 'checked' in action && typeof action.checked === 'boolean',
+  );
   const theme = returnFocus?.closest('.p-dark-mode,.p-light-mode,[data-p-theme]');
   const themeClass = theme?.matches('.p-dark-mode,[data-p-theme="darkmode"]')
     ? 'p-dark-mode'
@@ -225,6 +234,11 @@ export function ContextMenu({
               if (!('label' in action)) return null;
               const content = (
                 <>
+                  {hasChecks && (
+                    <span className="pt-menu-check" aria-hidden="true">
+                      {action.checked ? '✓' : ''}
+                    </span>
+                  )}
                   {hasIcons && (
                     <span className="pt-menu-icon" aria-hidden="true">
                       {action.icon}
@@ -238,6 +252,22 @@ export function ContextMenu({
                   )}
                 </>
               );
+              if (typeof action.checked === 'boolean')
+                return (
+                  <BaseContextMenu.CheckboxItem
+                    key={action.id}
+                    checked={action.checked}
+                    disabled={action.disabled}
+                    label={action.label}
+                    closeOnClick={false}
+                    onCheckedChange={() => {
+                      if (action.closeOnSelect !== false) close.current();
+                      action.onSelect();
+                    }}
+                  >
+                    {content}
+                  </BaseContextMenu.CheckboxItem>
+                );
               if (action.href !== undefined) {
                 if (action.disabled)
                   return (
