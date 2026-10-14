@@ -221,6 +221,7 @@ export interface FinderActionsProps {
   label?: string;
   menuLabel?: string;
   disabled?: boolean;
+  buttonClassName?: string;
 }
 export function FinderActions({
   actions,
@@ -228,6 +229,7 @@ export function FinderActions({
   label = 'Actions',
   menuLabel = 'Finder actions',
   disabled,
+  buttonClassName,
 }: FinderActionsProps) {
   const [menu, setMenu] = useState<ContextMenuState<null> | null>(null);
   useEffect(() => {
@@ -236,6 +238,7 @@ export function FinderActions({
   return (
     <>
       <FinderToolbarButton
+        className={buttonClassName}
         aria-label={label}
         title={label}
         disabled={disabled}

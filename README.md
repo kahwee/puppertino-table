@@ -84,11 +84,13 @@ The Finder example shares selection between List, Icons, Columns, Gallery and Ou
 
 For Tahoe-style chrome, use `FinderWindow appearance="tahoe"`. Add `keyboardNavigation` to `FinderToolbar` for one Tab stop and arrow-key navigation; Search keeps native editing keys. Button `label` provides an accessible name and hover hint. [Toolbar recipe](https://github.com/kahwee/puppertino-table/blob/main/docs/guide.md#compose-a-finder) · [Apple references and next steps](https://github.com/kahwee/puppertino-table/blob/main/docs/tahoe-finder.md).
 
-`FinderToolbarItems` moves optional tools into overflow and lets users choose their tools and order. `FinderWindow active="auto"` softens an unfocused window while preserving selection. In the Finder List view, use a header’s **⋯** button, right-click, or Shift+F10 to sort and choose columns; Name stays visible.
+`FinderToolbarItems` moves optional tools into overflow and lets users choose their tools and order. Give items a `group` label to separate view choices from commands. Keyboard focus follows tools into overflow when the window narrows. `FinderWindow active="auto"` softens an unfocused window while preserving selection. In the Finder List view, use a header’s **⋯** button, right-click, or Shift+F10 to sort and choose columns; Name stays visible.
 
 [Agent Browser critique and comparison, with screenshots](https://github.com/kahwee/puppertino-table/blob/main/docs/tahoe-finder-review.md).
 
-![Tahoe-inspired Finder with soft toolbar groups and navigation beside the folder title](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/tahoe-toolbar.png)
+![Finder workflow: sort and choose columns, customize grouped tools, and keep selection across views](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/finder-tools.gif)
+
+[Watch the Finder workflow (MP4)](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/finder-tools.mp4) · [Toolbar screenshot](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/tahoe-toolbar.png)
 
 ![Column browser with a selected document and app-owned preview](https://raw.githubusercontent.com/kahwee/puppertino-table/main/docs/media/columns-preview.png)
 

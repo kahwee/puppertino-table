@@ -550,6 +550,46 @@ async function captureExistingMedia() {
   await pause(panes.page);
   await finish(panes.context, panes.page, 'split-panes');
 }
+async function captureFinderTools() {
+  const { context, page } = await open('file-table', true);
+  const table = page.getByRole('table', { name: 'Project files', exact: true });
+  const toolbar = page.getByRole('toolbar', { name: 'Finder toolbar', includeHidden: true });
+  await caption(page, '1 / 3 · Sort and choose columns directly from the header.');
+  await pause(page);
+  const name = table.getByRole('button', { name: 'Column options for Name', exact: true });
+  await pointerClick(page, name);
+  await pointerClick(
+    page,
+    page.getByRole('menuitemcheckbox', { name: 'Sort Descending', exact: true }),
+  );
+  await table.locator('th[aria-sort="descending"]').waitFor();
+  await pointerClick(page, name);
+  await pointerClick(page, page.getByRole('menuitemcheckbox', { name: 'Kind', exact: true }));
+  assert.equal(await table.getByRole('button', { name: 'Sort by Kind', exact: true }).count(), 0);
+  await pause(page);
+  await caption(page, '2 / 3 · Choose your toolbar. Views and commands stay grouped.');
+  await pointerClick(page, toolbar.getByRole('button', { name: 'More tools', exact: true }));
+  await pointerClick(page, page.getByRole('menuitem', { name: 'Customize Toolbar…' }));
+  const customizer = page.getByRole('dialog', { name: 'Customize Toolbar', exact: true });
+  await pointerClick(page, customizer.getByRole('checkbox', { name: 'Outline', exact: true }));
+  assert.equal(await toolbar.getByRole('button', { name: 'Outline', exact: true }).count(), 0);
+  await accessibility(page);
+  await pause(page);
+  await pointerClick(page, customizer.getByRole('button', { name: 'Done', exact: true }));
+  assert.equal(
+    await toolbar
+      .getByRole('button', { name: 'More tools', exact: true })
+      .evaluate((node) => node === document.activeElement),
+    true,
+  );
+  await caption(page, '3 / 3 · Switch views. Keep the same selected file.');
+  await pointerClick(page, table.getByRole('row').filter({ hasText: 'Project brief.pdf' }));
+  await pointerClick(page, toolbar.getByRole('button', { name: 'Gallery', exact: true }));
+  await page.getByRole('region', { name: 'Project file gallery' }).waitFor();
+  assert.equal(await page.locator('.pt-finder-status').textContent(), '1 of 6 selected');
+  await pause(page);
+  await finish(context, page, 'finder-tools');
+}
 async function captureTahoeToolbar() {
   const { context, page } = await open('file-table');
   await accessibility(page);
@@ -562,16 +602,20 @@ async function captureTahoeToolbar() {
 try {
   const tahoeOnly = process.argv.includes('--tahoe');
   const pagedOnly = process.argv.includes('--paged');
-  if (!pagedOnly && !tahoeOnly) await captureExistingMedia();
-  if (!tahoeOnly) await capturePagedWorkspace();
-  if (!pagedOnly) await captureTahoeToolbar();
+  const toolsOnly = process.argv.includes('--tools');
+  if (!pagedOnly && !tahoeOnly && !toolsOnly) await captureExistingMedia();
+  if (!tahoeOnly && !toolsOnly) await capturePagedWorkspace();
+  if (!pagedOnly && !toolsOnly) await captureTahoeToolbar();
+  if (toolsOnly || (!pagedOnly && !tahoeOnly)) await captureFinderTools();
   assert.deepEqual(errors, []);
   console.log(
-    tahoeOnly
-      ? 'README media captured: light/dark Tahoe Finder toolbar.'
-      : pagedOnly
-        ? 'README media captured: asserted Team directory workflow; GIF, MP4 and WebM.'
-        : 'README media captured: twenty-two screenshots and six asserted workflows; GIFs, MP4s and WebMs.',
+    toolsOnly
+      ? 'README media captured: asserted Finder tools workflow; GIF, MP4 and WebM.'
+      : tahoeOnly
+        ? 'README media captured: light/dark Tahoe Finder toolbar.'
+        : pagedOnly
+          ? 'README media captured: asserted Team directory workflow; GIF, MP4 and WebM.'
+          : 'README media captured: twenty-two screenshots and seven asserted workflows; GIFs, MP4s and WebMs.',
   );
 } finally {
   await browser.close();

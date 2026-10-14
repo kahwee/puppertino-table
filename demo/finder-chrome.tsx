@@ -57,6 +57,7 @@ export function DemoToolbar({
         items={[
           ...finderViews.map((item) => ({
             id: item,
+            group: 'View',
             label: item[0].toUpperCase() + item.slice(1),
             icon: <ViewGlyph view={item} selected={view === item} />,
             pressed: view === item,
@@ -64,6 +65,7 @@ export function DemoToolbar({
           })),
           {
             id: 'quick-look',
+            group: 'Preview',
             label: 'Quick Look',
             icon: <ViewGlyph view="preview" />,
             disabled: !canPreview,

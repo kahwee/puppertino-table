@@ -411,13 +411,23 @@
   min-width: 60px;
 }
 .pt-finder-toolbar-items {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-shrink: 1;
   min-width: 40px;
   overflow: hidden;
 }
-.pt-finder-toolbar-items > .p-toolbar-btn {
+.pt-finder-toolbar-items .p-toolbar-btn {
   width: 32px;
   padding: 0;
+}
+.pt-finder-toolbar-items > .p-toolbar-btn {
+  width: 36px;
+  flex-shrink: 0;
 }
 .pt-toolbar-customize {
   position: fixed;
@@ -464,8 +474,19 @@
 .pt-toolbar-customize-row button:disabled {
   opacity: 0.5;
 }
-.pt-toolbar-customize > .p-button {
-  margin-top: 12px;
+.pt-toolbar-customize-icon {
+  display: inline-flex;
+  color: var(--p-toolbar-ink);
+}
+.pt-toolbar-customize-icon svg {
+  width: 16px;
+  height: 16px;
+}
+.pt-toolbar-customize-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 16px;
 }
 @container (max-width: 700px) {
   .pt-finder-toolbar-content:has(.pt-finder-toolbar-items) {
@@ -578,4 +599,16 @@
   ) {
   background: color-mix(in srgb, var(--p-text-secondary) 20%, var(--p-window-bg));
   color: inherit;
+}
+
+/* Keep list headers quiet until a pointer or keyboard enters the column. */
+@media (hover: hover) and (pointer: fine) {
+  .pt-finder-container[data-appearance="tahoe"] .pt-header-menu-trigger {
+    opacity: 0;
+  }
+  .pt-finder-container[data-appearance="tahoe"] th:hover .pt-header-menu-trigger,
+  .pt-finder-container[data-appearance="tahoe"] th:focus-within .pt-header-menu-trigger,
+  .pt-finder-container[data-appearance="tahoe"] .pt-header-menu-trigger[aria-expanded="true"] {
+    opacity: 1;
+  }
 }

@@ -60,5 +60,6 @@ export interface FinderActionsProps {
     label?: string;
     menuLabel?: string;
     disabled?: boolean;
+    buttonClassName?: string;
 }
-export declare function FinderActions({ actions, icon, label, menuLabel, disabled, }: FinderActionsProps): import("react").JSX.Element;
+export declare function FinderActions({ actions, icon, label, menuLabel, disabled, buttonClassName, }: FinderActionsProps): import("react").JSX.Element;

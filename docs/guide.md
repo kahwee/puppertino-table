@@ -634,7 +634,10 @@ const [tools, setTools] = useState(['preview', 'share']);
 `selectedIds` is the display order. Supplying `onSelectedIdsChange` enables
 Customize Toolbar: choose tools, move them earlier/later, and restore defaults.
 The app owns persistence; unknown or repeated IDs are ignored. Omit both props
-for automatic overflow without customization. Keep essential controls outside
+for automatic overflow without customization. Consecutive items with the same
+`group` label share a capsule: use `group: "View"` for view choices and
+`group: "Preview"` for Quick Look. The overflow button appears only when needed
+or when customization is available. Keep essential controls outside
 this group. Very small windows may wrap pinned controls; expanded Search keeps
 its input usable. Navigation and the location title remain available.
 

@@ -75,6 +75,31 @@ export async function checkFinderTools(page: Page, base: string, evidence: strin
   await customize.getByRole('button', { name: 'Restore default tools' }).click();
   await page.keyboard.press('Escape');
   assert.equal(await more.evaluate((node) => node === document.activeElement), true);
+  await toolbar.getByRole('button', { name: 'List', exact: true }).focus();
+  await page.setViewportSize({ width: 390, height: 760 });
+  await page.waitForFunction(
+    () => document.activeElement?.getAttribute('aria-label') === 'More tools',
+  );
+  await more.click();
+  await page.getByRole('menuitem', { name: 'Customize Toolbar…' }).click();
+  await customize.waitFor();
+  await page.setViewportSize({ width: 320, height: 360 });
+  await page.waitForFunction(() => {
+    const panel = document.querySelector('.pt-toolbar-customize')?.getBoundingClientRect();
+    return (
+      panel &&
+      panel.left >= 7 &&
+      panel.right <= innerWidth - 7 &&
+      panel.top >= 7 &&
+      panel.bottom <= innerHeight - 7
+    );
+  });
+  await customize.getByRole('button', { name: 'Done', exact: true }).click();
+  assert.equal(
+    await more.evaluate((node) => node === document.activeElement),
+    true,
+    'Done returns focus to overflow',
+  );
   for (const width of [480, 390]) {
     await page.setViewportSize({ width, height: 760 });
     await more.click();
@@ -121,6 +146,6 @@ export async function checkFinderTools(page: Page, base: string, evidence: strin
   await page.getByRole('menuitemcheckbox', { name: 'Gallery', exact: true }).click();
   await page.getByRole('region', { name: 'Project file gallery' }).waitFor();
   console.log(
-    'Finder tools passed: header sorting/visibility, inactive selection, portaled focus, customization/order/reset, compact overflow and accessibility.',
+    'Finder tools passed: header sorting/visibility, inactive selection, portaled focus, customization/order/reset, resize focus and panel bounds, compact overflow and accessibility.',
   );
 }

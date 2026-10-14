@@ -122,6 +122,7 @@ export function TableHeader<T extends RowData>({
                     aria-label={`Column options for ${label}`}
                     title={`Column options for ${label}`}
                     aria-haspopup="menu"
+                    aria-expanded={!disabled && menu.state?.context.id === column.id}
                     onClick={(event) => menu.open(column, event)}
                   >
                     ⋯

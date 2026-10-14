@@ -49,13 +49,13 @@ export function FinderSearch({ value, onValueChange, icon, ariaLabel = 'Search f
             requestAnimationFrame(() => input.current?.focus());
         }, children: icon }));
 }
-export function FinderActions({ actions, icon, label = 'Actions', menuLabel = 'Finder actions', disabled, }) {
+export function FinderActions({ actions, icon, label = 'Actions', menuLabel = 'Finder actions', disabled, buttonClassName, }) {
     const [menu, setMenu] = useState(null);
     useEffect(() => {
         if (disabled)
             setMenu(null);
     }, [disabled]);
-    return (_jsxs(_Fragment, { children: [_jsx(FinderToolbarButton, { "aria-label": label, title: label, disabled: disabled, "aria-haspopup": "menu", "aria-expanded": !!menu && !disabled, onClick: (event) => {
+    return (_jsxs(_Fragment, { children: [_jsx(FinderToolbarButton, { className: buttonClassName, "aria-label": label, title: label, disabled: disabled, "aria-haspopup": "menu", "aria-expanded": !!menu && !disabled, onClick: (event) => {
                     const target = event.currentTarget;
                     const rect = target.getBoundingClientRect();
                     setMenu(menu

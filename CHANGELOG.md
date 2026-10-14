@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Group optional Finder tools into named capsules, preserve focus when tools enter overflow, reposition customization after resize/scroll, and add icon previews and Done. Reduce resting Tahoe header clutter, refresh the visual audit and record a focused Finder workflow.
+
 - Add responsive, customizable `FinderToolbarItems`, controlled/automatic inactive-window styling, and app-owned table header menus. Finder demonstrates sorting and column choices; context menus support controlled checkmarks.
 
 - Add opt-in Tahoe Finder chrome, labeled toolbar buttons, and roving toolbar keyboard navigation. Keep history controls available in narrow windows and update the composed examples and Apple reference notes.
