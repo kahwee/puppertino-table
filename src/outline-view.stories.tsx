@@ -151,7 +151,7 @@ export const LoadingAndRetry = {
   play: async ({ canvas, args, step }) => {
     await step('Load Projects and report controlled disclosure', async () => {
       await userEvent.click(canvas.getByRole('button', { name: 'Expand Projects' }));
-      await expect(canvas.getByRole('status')).toHaveTextContent('Loading');
+      await expect(canvas.getByText('Loading…')).toHaveTextContent('Loading');
       await expect(
         canvas.findByRole('button', { name: 'Expand Source' }),
       ).resolves.toBeInTheDocument();

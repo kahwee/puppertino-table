@@ -436,14 +436,24 @@ export const Selection: Story = {
 export const KeyboardResize: Story = {
   tags: ['!dev', '!autodocs'],
   parameters: { docs: { source: { code: tableRecipes.controlled } } },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     const edge = canvas.getByRole('separator', { name: 'Resize Name column' });
-    edge.focus();
+    await userEvent.click(edge);
     await userEvent.keyboard('{ArrowRight}');
-    await expect(edge).toHaveAttribute('aria-valuenow', '256');
+    await waitFor(() =>
+      expect(canvas.getByRole('separator', { name: 'Resize Name column' })).toHaveAttribute(
+        'aria-valuenow',
+        '256',
+      ),
+    );
     await userEvent.keyboard('{Enter}');
-    await expect(edge).toHaveAttribute('aria-valuenow', '240');
+    await waitFor(() =>
+      expect(canvas.getByRole('separator', { name: 'Resize Name column' })).toHaveAttribute(
+        'aria-valuenow',
+        '240',
+      ),
+    );
   },
 };
 export const Narrow: Story = {

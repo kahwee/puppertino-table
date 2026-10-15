@@ -21,11 +21,12 @@ export function applySelectionGesture(
   id: string,
   { shift = false, toggle = false }: SelectionModifiers = {},
 ): SelectionGestureResult {
-  const ids = [...new Set(orderedIds)];
-  const end = ids.indexOf(id);
-  if (end === -1) return { selection, anchor };
-  const start = anchor === null ? -1 : ids.indexOf(anchor);
-  if (shift && start !== -1) {
+  if (!orderedIds.includes(id)) return { selection, anchor };
+  // Ordinary clicks need no deduplication or range allocation.
+  if (shift && anchor !== null && orderedIds.includes(anchor)) {
+    const ids = [...new Set(orderedIds)];
+    const start = ids.indexOf(anchor);
+    const end = ids.indexOf(id);
     const range = Object.fromEntries(
       ids.slice(Math.min(start, end), Math.max(start, end) + 1).map((key) => [key, true as const]),
     );

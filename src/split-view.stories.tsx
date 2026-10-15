@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useArgs } from 'storybook/preview-api';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { splitPlaygroundSource } from '../.storybook/playground-source.js';
 import { ResettableExample } from '../.storybook/resettable-example.js';
 import { tableRecipes } from '../.storybook/table-sources.js';
@@ -110,17 +110,24 @@ export const Vertical = {
   args: { orientation: 'vertical' },
   play: async ({ canvas, args, step }) => {
     await step('Commit a keyboard resize on the vertical axis', async () => {
-      await userEvent.click(canvas.getByRole('separator', { name: 'Resize Sidebar pane' }));
+      const divider = canvas.getByRole('separator', { name: 'Resize Sidebar pane' });
+      const initialSize = Number(divider.getAttribute('aria-valuenow'));
+      await userEvent.click(divider);
       await userEvent.keyboard('{ArrowDown}');
-      await expect(canvas.getByLabelText('Committed pane sizes')).toHaveTextContent('216');
-      await expect(args.onSizesCommit).toHaveBeenLastCalledWith(
-        expect.objectContaining({ sidebar: 216 }),
-      );
+      await waitFor(() => {
+        const sizes = JSON.parse(canvas.getByLabelText('Committed pane sizes').textContent ?? '{}');
+        // Coupled panes redistribute available space, so the final delta is normalized.
+        expect(sizes.sidebar).toBeGreaterThan(initialSize);
+        expect(sizes.sidebar).toBeCloseTo(Number(divider.getAttribute('aria-valuenow')));
+        expect(args.onSizesCommit).toHaveBeenLastCalledWith(
+          expect.objectContaining({ sidebar: sizes.sidebar }),
+        );
+      });
     });
     await step('Hide and restore the same pane', async () => {
       await userEvent.click(canvas.getByRole('button', { name: 'Hide sidebar' }));
       await expect(canvas.queryByRole('region', { name: 'Sidebar' })).toBeNull();
-      await expect(args.onSidebarHiddenChange).toHaveBeenLastCalledWith(true);
+      await waitFor(() => expect(args.onSidebarHiddenChange).toHaveBeenLastCalledWith(true));
       await userEvent.click(canvas.getByRole('button', { name: 'Sidebar' }));
       await expect(canvas.getByRole('region', { name: 'Sidebar' })).toBeInTheDocument();
     });
@@ -134,7 +141,7 @@ export const Compact = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('region', { name: 'Sidebar' })).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Detail' }));
-    await expect(canvas.getByRole('region', { name: 'Detail' })).toBeVisible();
+    await waitFor(() => expect(canvas.getByRole('region', { name: 'Detail' })).toBeVisible());
     await expect(canvas.queryByRole('region', { name: 'Sidebar' })).toBeNull();
     await userEvent.click(canvas.getByRole('button', { name: 'Sidebar' }));
   },

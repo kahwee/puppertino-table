@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { useArgs } from 'storybook/preview-api';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { ResettableExample } from '../.storybook/resettable-example.js';
 import { standardOptions, tagOptions, tagPickerSource } from '../.storybook/tag-picker-recipe.js';
 import { type TagOption, TagPicker, type TagPickerProps } from './index.js';
@@ -226,7 +226,7 @@ export const CreateTag: Story = {
       await userEvent.click(canvas.getByRole('button', { name: 'Tags' }));
       await userEvent.type(canvas.getByRole('combobox', { name: 'Tag name' }), 'Client');
       await userEvent.click(canvas.getByRole('option', { name: 'Create tag “Client”' }));
-      await expect(args.onCreate).toHaveBeenLastCalledWith('Client');
+      await waitFor(() => expect(args.onCreate).toHaveBeenLastCalledWith('Client'));
       await expect(await canvas.findByRole('button', { name: 'Remove tag Client' })).toBeVisible();
     });
     await step('Dismiss and restore the trigger', async () => {

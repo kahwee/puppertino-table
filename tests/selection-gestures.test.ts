@@ -62,3 +62,20 @@ test('caller IDs are treated as data, including empty and prototype-like keys', 
     },
   );
 });
+
+test('duplicate IDs retain first-occurrence range order in both directions', () => {
+  const order = Object.freeze(['a', 'b', 'a', 'c', 'b', 'd']);
+  for (const [anchor, target] of [
+    ['a', 'c'],
+    ['c', 'a'],
+  ]) {
+    const result = applySelectionGesture(order, { offPage: true }, anchor, target, {
+      shift: true,
+    });
+    assert.deepEqual(result, { selection: { a: true, b: true, c: true }, anchor });
+  }
+  assert.deepEqual(applySelectionGesture(order, {}, 'missing', 'b', { shift: true }), {
+    selection: { b: true },
+    anchor: 'b',
+  });
+});

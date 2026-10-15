@@ -30,27 +30,32 @@ export async function checkStorybookInteractions(browser: Browser, base: string)
   );
   const failures: { story: string; reports: unknown }[] = [];
   try {
+    await page.goto(`${base}/__interaction-host`);
+    // Routing disables Playwright's HTTP cache. Only the empty host needs a route;
+    // allow shared Storybook assets to be cached across fresh story iframes.
+    await page.unroute(`${base}/__interaction-host`);
+    await page.evaluate(() => {
+      window.addEventListener('message', (event) => {
+        const frame = document.querySelector('iframe');
+        if (!frame || event.source !== frame.contentWindow) return;
+        const state = window as unknown as { storyResults: StoryResult[]; storyErrors: string[] };
+        try {
+          const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+          if (data?.event?.type === 'storyFinished')
+            state.storyResults.push({ ...data.event.args[0], errors: [...state.storyErrors] });
+          if (
+            data?.event?.type === 'playFunctionThrewException' ||
+            data?.event?.type === 'storyThrewException'
+          )
+            state.storyErrors.push(data.event.args[0]?.message ?? 'Unknown story error');
+        } catch {
+          /* Ignore messages that do not use the Storybook channel protocol. */
+        }
+      });
+    });
     for (const story of stories) {
-      await page.goto(`${base}/__interaction-host`);
       await page.evaluate((url) => {
-        const results: StoryResult[] = [];
-        const errors: string[] = [];
-        Object.assign(window, { storyResults: results });
-        window.addEventListener('message', (event) => {
-          if (event.source !== frame.contentWindow) return;
-          try {
-            const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-            if (data?.event?.type === 'storyFinished')
-              results.push({ ...data.event.args[0], errors });
-            if (
-              data?.event?.type === 'playFunctionThrewException' ||
-              data?.event?.type === 'storyThrewException'
-            )
-              errors.push(data.event.args[0]?.message ?? 'Unknown story error');
-          } catch {
-            /* Ignore messages that do not use the Storybook channel protocol. */
-          }
-        });
+        Object.assign(window, { storyResults: [], storyErrors: [] });
         const frame = document.createElement('iframe');
         frame.src = url;
         frame.style.cssText = 'width:1280px;height:900px;border:0';
@@ -79,9 +84,9 @@ export async function checkStorybookInteractions(browser: Browser, base: string)
             targets: violation.nodes.map((node) => node.target),
           })),
         }));
-      if (result?.status !== 'success' || reports?.length)
-        failures.push({ story: story.id, reports: { reports, errors: result?.errors } });
-      console.log(`Storybook interaction ${result?.status}: ${story.id}`);
+      const failed = result?.status !== 'success' || !!result.errors?.length || !!reports?.length;
+      if (failed) failures.push({ story: story.id, reports: { reports, errors: result?.errors } });
+      console.log(`Storybook interaction ${failed ? 'failed' : 'success'}: ${story.id}`);
     }
     assert.deepEqual(
       failures,

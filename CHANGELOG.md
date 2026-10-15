@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Avoid allocating full selection ranges twice per gesture and skip building a row index for the default row order. Ordinary clicks skip order deduplication.
+- Reuse the Storybook test host and allow HTTP caching of shared assets while keeping a fresh iframe for every story and checking all play functions and accessibility reports. Fail on reported play exceptions even when Storybook emits a success status; fix asynchronous story assertions and responsive pane-size expectations.
+
 - Run CI quality, package, demo/hydration and Storybook checks on independent runners through one shared workflow; reuse verified release artifacts and cancel superseded pull-request runs.
 
 - Update the package manager, CI and release checks to pnpm 12.11.2 and refresh the dependency lockfile. Move CI to Node 24.22.0, the latest patch on the existing LTS line.

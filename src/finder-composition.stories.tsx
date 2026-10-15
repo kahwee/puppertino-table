@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useArgs } from 'storybook/preview-api';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { ResettableExample } from '../.storybook/resettable-example.js';
 import { shortWorkspaceRecipe } from '../.storybook/workspace-recipe.js';
 import { Composition, type CompositionProps } from '../demo/document-workspace-example.js';
@@ -163,7 +163,7 @@ export const TagAndTrashWorkflow: Story = {
         'aria-pressed',
         'true',
       );
-      await expect(args.onViewChange).toHaveBeenLastCalledWith('icons');
+      await waitFor(() => expect(args.onViewChange).toHaveBeenLastCalledWith('icons'));
     });
     await step('Move to Trash, then undo the same operation', async () => {
       await userEvent.click(canvas.getByRole('button', { name: 'Actions' }));

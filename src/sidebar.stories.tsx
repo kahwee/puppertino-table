@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useArgs } from 'storybook/preview-api';
-import { expect, fn, userEvent } from 'storybook/test';
+import { expect, fn, userEvent, waitFor } from 'storybook/test';
 import { tableRecipes } from '../.storybook/table-sources.js';
 import { SidebarExample, type SidebarExampleProps } from '../demo/sidebar-example.js';
 import { Sidebar, SidebarGroup, SidebarItem } from './index.js';
@@ -64,11 +64,13 @@ export const Touch = {
   play: async ({ canvas, args, step }) => {
     await step('Navigate and emit the app selection', async () => {
       await userEvent.click(canvas.getByRole('button', { name: /^Archive$/ }));
-      await expect(canvas.getByRole('button', { name: /^Archive$/ })).toHaveAttribute(
-        'aria-current',
-        'page',
+      await waitFor(() =>
+        expect(canvas.getByRole('button', { name: /^Archive$/ })).toHaveAttribute(
+          'aria-current',
+          'page',
+        ),
       );
-      await expect(args.onSectionChange).toHaveBeenLastCalledWith('Archive');
+      await waitFor(() => expect(args.onSectionChange).toHaveBeenLastCalledWith('Archive'));
     });
     await step('Keep disabled commands and native destinations accessible', async () => {
       await expect(canvas.getByRole('button', { name: 'Shared with me' })).toBeDisabled();

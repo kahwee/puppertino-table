@@ -24,17 +24,27 @@ export function useRowSelectionGestures<T extends RowData>(
   const select = useCallback(
     (id: string, modifiers: SelectionModifiers = {}) => {
       if (disabled || table.options.enableRowSelection === false) return;
-      const rows = table.getRowModel().rows;
-      const byId = new Map(table.getRowModel().flatRows.map((row) => [row.id, row]));
-      const ids = (orderedIds ?? rows.map((row) => row.id)).filter((key) => {
-        const row = byId.get(key);
-        // A row predicate cannot decide eligibility for a caller-owned leading item.
-        return row ? row.getCanSelect() : typeof table.options.enableRowSelection !== 'function';
-      });
+      const { rows, flatRows } = table.getRowModel();
+      let ids: string[];
+      if (orderedIds) {
+        const byId = new Map(flatRows.map((row) => [row.id, row]));
+        ids = orderedIds.filter((key) => {
+          const row = byId.get(key);
+          // A row predicate cannot decide eligibility for a caller-owned leading item.
+          return row ? row.getCanSelect() : typeof table.options.enableRowSelection !== 'function';
+        });
+      } else {
+        // Default row order already has the row objects; no lookup index is needed.
+        ids = rows.filter((row) => row.getCanSelect()).map((row) => row.id);
+      }
       if (!ids.includes(id)) return;
       const anchor = selectionAnchorFor(table.atoms.rowSelection);
       const previousAnchor = anchor.current;
-      anchor.current = applySelectionGesture(ids, {}, previousAnchor, id, modifiers).anchor;
+      // Update the anchor synchronously, but build the selection only in the updater.
+      anchor.current =
+        modifiers.shift && previousAnchor !== null && ids.includes(previousAnchor)
+          ? previousAnchor
+          : id;
       table.setRowSelection(
         (previous) => applySelectionGesture(ids, previous, previousAnchor, id, modifiers).selection,
       );
