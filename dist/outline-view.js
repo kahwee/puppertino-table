@@ -4,6 +4,7 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { createElement as _createElement } from "react";
 import { memo, useMemo, useRef } from 'react';
+import { ColumnOrderProvider } from './column-order.js';
 import { DensityScope } from './density.js';
 import { RowSelectionCheckbox } from './row-selection-checkbox.js';
 import { tableBehavior } from './table-behavior.js';
@@ -158,12 +159,12 @@ export function OutlineView(props) {
     const visible = useMemo(() => visibleOutlineRows(rows, outline.expanded), [rows, outline.expanded]);
     const behavior = tableBehavior(table);
     const showSelection = behavior.selectable && behavior.selectionCheckboxes;
-    return (_jsx(DensityScope, { density: props.density, metrics: props.densityMetrics, role: "region", "aria-label": `${props.ariaLabel} scroll area`, tabIndex: 0, className: `pt-scroll pt-outline ${props.className ?? ''}`, children: _jsx(table.Subscribe, { source: table.options.atoms?.columnSizing ?? table.atoms.columnSizing, children: () => (_jsxs("table", { className: "p-table pt-table", role: "treegrid", "aria-label": props.ariaLabel, "aria-multiselectable": behavior.selectable || undefined, style: { width: table.getTotalSize() + (showSelection ? 36 : 0) }, children: [props.caption && _jsx("caption", { children: props.caption }), _jsxs("colgroup", { children: [showSelection && _jsx("col", { style: { width: 36 } }), table.getAllLeafColumns().map((column) => (_jsx("col", { style: { width: column.getSize() } }, column.id)))] }), _jsx(TableHeader, { table: table, getHeaderMenu: props.getHeaderMenu, selectionRows: visible.map(({ row }) => row), resizeOptions: {
-                            storageKey: props.columnSizing === undefined && !props.atoms?.columnSizing
-                                ? props.storageKey
-                                : undefined,
-                            storage: props.storage,
-                            cancelMediaQuery: props.cancelMediaQuery,
-                            onCommit: props.onColumnSizingCommit,
-                        } }), visible.length ? (_jsx(MemoOutlineBody, { table: table, outline: outline, visible: visible, getRowLabel: props.getRowLabel, getRowProps: props.getRowProps, getCellProps: props.getCellProps })) : (_jsx("tbody", { children: _jsx("tr", { children: _jsx("td", { colSpan: table.getAllLeafColumns().length + (showSelection ? 1 : 0), children: props.emptyContent ?? 'No items' }) }) }))] })) }) }));
+    return (_jsx(DensityScope, { density: props.density, metrics: props.densityMetrics, role: "region", "aria-label": `${props.ariaLabel} scroll area`, tabIndex: 0, className: `pt-scroll pt-outline ${props.className ?? ''}`, children: _jsx(table.Subscribe, { source: table.options.atoms?.columnSizing ?? table.atoms.columnSizing, children: () => (_jsx(ColumnOrderProvider, { table: table, onCommit: props.onColumnOrderCommit, children: _jsxs("table", { className: "p-table pt-table", role: "treegrid", "aria-label": props.ariaLabel, "aria-multiselectable": behavior.selectable || undefined, style: { width: table.getTotalSize() + (showSelection ? 36 : 0) }, children: [props.caption && _jsx("caption", { children: props.caption }), _jsxs("colgroup", { children: [showSelection && _jsx("col", { style: { width: 36 } }), table.getAllLeafColumns().map((column) => (_jsx("col", { style: { width: column.getSize() } }, column.id)))] }), _jsx(TableHeader, { table: table, getHeaderMenu: props.getHeaderMenu, onColumnOrderCommit: props.onColumnOrderCommit, selectionRows: visible.map(({ row }) => row), resizeOptions: {
+                                storageKey: props.columnSizing === undefined && !props.atoms?.columnSizing
+                                    ? props.storageKey
+                                    : undefined,
+                                storage: props.storage,
+                                cancelMediaQuery: props.cancelMediaQuery,
+                                onCommit: props.onColumnSizingCommit,
+                            } }), visible.length ? (_jsx(MemoOutlineBody, { table: table, outline: outline, visible: visible, getRowLabel: props.getRowLabel, getRowProps: props.getRowProps, getCellProps: props.getCellProps })) : (_jsx("tbody", { children: _jsx("tr", { children: _jsx("td", { colSpan: table.getAllLeafColumns().length + (showSelection ? 1 : 0), children: props.emptyContent ?? 'No items' }) }) }))] }) })) }) }));
 }

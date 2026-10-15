@@ -1,9 +1,10 @@
 import type { RowData } from '@tanstack/react-table';
-import { type ColumnDef, type ReactTable, type RowSelectionState, type SortingState } from '@tanstack/react-table';
+import { type ColumnDef, type ColumnOrderState, type ReactTable, type RowSelectionState, type SortingState } from '@tanstack/react-table';
 import type { TableBehavior } from './table-behavior.js';
 export declare const puppertinoTableFeatures: {
     rowSortingFeature: import("@tanstack/react-table").TableFeature;
     columnSizingFeature: import("@tanstack/react-table").TableFeature;
+    columnOrderingFeature: import("@tanstack/react-table").TableFeature;
     rowSelectionFeature: import("@tanstack/react-table").TableFeature;
     sortedRowModel: (table: import("@tanstack/react-table").Table<any, any>) => () => import("@tanstack/react-table").RowModel<any, any>;
     sortFns: {
@@ -21,11 +22,13 @@ export declare const puppertinoTableFeatures: {
 export type PuppertinoTableInstance<T extends RowData> = ReactTable<typeof puppertinoTableFeatures, T, {
     sorting: SortingState;
     rowSelection: RowSelectionState;
+    columnOrder: ColumnOrderState;
 }>;
 export type PuppertinoColumnDef<T extends RowData> = ColumnDef<typeof puppertinoTableFeatures, T>;
 export declare function createPuppertinoColumnHelper<T extends RowData>(): import("@tanstack/react-table").ColumnHelper<{
     rowSortingFeature: import("@tanstack/react-table").TableFeature;
     columnSizingFeature: import("@tanstack/react-table").TableFeature;
+    columnOrderingFeature: import("@tanstack/react-table").TableFeature;
     rowSelectionFeature: import("@tanstack/react-table").TableFeature;
     sortedRowModel: (table: import("@tanstack/react-table").Table<any, any>) => () => import("@tanstack/react-table").RowModel<any, any>;
     sortFns: {

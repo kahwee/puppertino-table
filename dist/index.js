@@ -1,6 +1,8 @@
 export { ColumnBrowser, ColumnBrowserItem, } from './column-browser.js';
 export { fitColumnBrowser } from './column-browser-layout.js';
-export { columnLayoutMenu, moveLayoutColumn, normalizeColumnLayout, readColumnLayout, } from './column-layout.js';
+export { columnLayoutMenu, moveLayoutColumn, normalizeColumnLayout, readColumnLayout, readColumnLayoutPresets, } from './column-layout.js';
+export { ColumnLayoutPicker } from './column-layout-picker.js';
+export { reorderColumn } from './column-order.js';
 export { ColumnView, ColumnViewItem, } from './column-view.js';
 export { ContextMenu, useContextMenu, } from './context-menu.js';
 export { DensityScope, } from './density.js';

@@ -1,6 +1,8 @@
 export { ColumnBrowser, ColumnBrowserItem, type ColumnBrowserItemButtonProps, type ColumnBrowserItemLinkProps, type ColumnBrowserItemProps, type ColumnBrowserPanel, type ColumnBrowserProps, type ColumnBrowserWidths, } from './column-browser.js';
 export { type ColumnBrowserLayoutOptions, fitColumnBrowser } from './column-browser-layout.js';
-export { type ColumnLayout, type ColumnLayoutColumn, type ColumnLayoutCommands, columnLayoutMenu, moveLayoutColumn, normalizeColumnLayout, readColumnLayout, } from './column-layout.js';
+export { type ColumnLayout, type ColumnLayoutColumn, type ColumnLayoutCommands, type ColumnLayoutPreset, type ColumnLayoutPresetDefinition, columnLayoutMenu, moveLayoutColumn, normalizeColumnLayout, readColumnLayout, readColumnLayoutPresets, } from './column-layout.js';
+export { ColumnLayoutPicker } from './column-layout-picker.js';
+export { reorderColumn } from './column-order.js';
 export { ColumnView, type ColumnViewColumn, ColumnViewItem, type ColumnViewProps, type ColumnViewWidths, } from './column-view.js';
 export { ContextMenu, type ContextMenuAction, type ContextMenuItem, type ContextMenuLink, type ContextMenuPosition, type ContextMenuProps, type ContextMenuSeparator, type ContextMenuState, type DelegatedContextMenuOptions, useContextMenu, } from './context-menu.js';
 export { type DensityMetrics, DensityScope, type DensityScopeProps, type TableDensity, } from './density.js';

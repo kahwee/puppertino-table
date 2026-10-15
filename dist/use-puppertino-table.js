@@ -1,4 +1,5 @@
 'use client';
+import { useSelector } from '@tanstack/react-store';
 import { makeStateUpdater, useTable } from '@tanstack/react-table';
 import { useMemo, useRef } from 'react';
 import { puppertinoTableFeatures, } from './model.js';
@@ -8,7 +9,7 @@ import { validateAtomIdentity, validateAtomOwnership } from './state-ownership.j
 import { tableDefaults } from './table-behavior.js';
 import { useColumnSizingPersistence } from './use-column-sizing-persistence.js';
 /** Shared state wiring for complete tables and custom semantic layouts. */
-export function usePuppertinoTable({ data, columns, atoms, getRowId, getSubRows, sorting: controlledSorting, onSortingChange, initialSorting = [], initialRowSelection = {}, manualSorting = tableDefaults.manualSorting, rowSelection: controlledSelection, onRowSelectionChange, selectable = tableDefaults.selectable, selectionAnchor, isRowSelectable, disabled = tableDefaults.disabled, columnSizing, onColumnSizingChange, selectionCheckboxes = tableDefaults.selectionCheckboxes, resizable = tableDefaults.resizable, storageKey, storage, }) {
+export function usePuppertinoTable({ data, columns, atoms, getRowId, getSubRows, sorting: controlledSorting, onSortingChange, initialSorting = [], initialRowSelection = {}, manualSorting = tableDefaults.manualSorting, rowSelection: controlledSelection, onRowSelectionChange, selectable = tableDefaults.selectable, selectionAnchor, isRowSelectable, disabled = tableDefaults.disabled, columnSizing, onColumnSizingChange, columnOrder, onColumnOrderChange, initialColumnOrder = [], reorderable = false, lockedColumns = tableDefaults.lockedColumns, selectionCheckboxes = tableDefaults.selectionCheckboxes, resizable = tableDefaults.resizable, storageKey, storage, }) {
     const mountedAtoms = useRef(atoms ? { ...atoms } : undefined);
     validateAtomIdentity(mountedAtoms.current, atoms);
     validateAtomOwnership({
@@ -19,6 +20,8 @@ export function usePuppertinoTable({ data, columns, atoms, getRowId, getSubRows,
         onRowSelectionChange,
         columnSizing,
         onColumnSizingChange,
+        columnOrder,
+        onColumnOrderChange,
     });
     const atomSorting = !!atoms?.sorting;
     const atomSelection = !!atoms?.rowSelection;
@@ -51,6 +54,8 @@ export function usePuppertinoTable({ data, columns, atoms, getRowId, getSubRows,
                 selectable,
                 selectionCheckboxes,
                 disabled,
+                reorderable: reorderable && !disabled && (columnOrder === undefined || !!onColumnOrderChange),
+                lockedColumns,
                 resizable: resizable && !disabled && (columnSizing === undefined || !!onColumnSizingChange),
             },
         },
@@ -59,6 +64,9 @@ export function usePuppertinoTable({ data, columns, atoms, getRowId, getSubRows,
         enableRowSelection: canSelect && (isRowSelectable ? (row) => isRowSelectable(row.original) : true),
         enableSubRowSelection: false,
         initialState: {
+            ...(!atoms?.columnOrder && columnOrder === undefined
+                ? { columnOrder: initialColumnOrder }
+                : {}),
             ...(!atomSorting && controlledSorting === undefined ? { sorting: initialSorting } : {}),
             ...(!atomSelection && controlledSelection === undefined
                 ? { rowSelection: initialRowSelection }
@@ -66,9 +74,15 @@ export function usePuppertinoTable({ data, columns, atoms, getRowId, getSubRows,
             ...(!appOwnedSizing ? { columnSizing: readColumnSizing(bounds) } : {}),
         },
         state: {
+            ...(columnOrder !== undefined ? { columnOrder } : {}),
             ...(controlledSorting !== undefined ? { sorting: controlledSorting } : {}),
             ...(controlledSelection !== undefined ? { rowSelection: controlledSelection } : {}),
             ...(columnSizing !== undefined ? { columnSizing } : {}),
+        },
+        onColumnOrderChange: (update) => {
+            if (columnOrder === undefined)
+                makeStateUpdater('columnOrder', table)(update);
+            onColumnOrderChange?.(update);
         },
         onColumnSizingChange: (update) => {
             if (columnSizing === undefined)
@@ -85,8 +99,23 @@ export function usePuppertinoTable({ data, columns, atoms, getRowId, getSubRows,
                 makeStateUpdater('rowSelection', table)(update);
             onRowSelectionChange?.(update);
         },
-    }, (state) => ({ sorting: state.sorting, rowSelection: state.rowSelection }));
+    }, (state) => ({
+        sorting: state.sorting,
+        rowSelection: state.rowSelection,
+    }));
     selectionAnchorFor(table.atoms.rowSelection, selectionAnchor);
-    useColumnSizingPersistence({ table, bounds, appOwned: appOwnedSizing, storageKey, storage });
-    return table;
+    // Structural order changes must refresh cells as well as the locally updated header.
+    const observedOrder = useSelector(atoms?.columnOrder ?? table.baseAtoms.columnOrder);
+    const instance = {
+        ...table,
+        state: { ...table.state, columnOrder: columnOrder ?? observedOrder },
+    };
+    useColumnSizingPersistence({
+        table: instance,
+        bounds,
+        appOwned: appOwnedSizing,
+        storageKey,
+        storage,
+    });
+    return instance;
 }

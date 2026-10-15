@@ -13,11 +13,16 @@ export {
   type ColumnLayout,
   type ColumnLayoutColumn,
   type ColumnLayoutCommands,
+  type ColumnLayoutPreset,
+  type ColumnLayoutPresetDefinition,
   columnLayoutMenu,
   moveLayoutColumn,
   normalizeColumnLayout,
   readColumnLayout,
+  readColumnLayoutPresets,
 } from './column-layout.js';
+export { ColumnLayoutPicker } from './column-layout-picker.js';
+export { reorderColumn } from './column-order.js';
 export {
   ColumnView,
   type ColumnViewColumn,

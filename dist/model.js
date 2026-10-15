@@ -1,7 +1,8 @@
-import { columnSizingFeature, createColumnHelper, createSortedRowModel, metaHelper, rowSelectionFeature, rowSortingFeature, sortFn_alphanumeric, sortFn_alphanumericCaseSensitive, sortFn_basic, sortFn_datetime, sortFn_text, sortFn_textCaseSensitive, tableFeatures, } from '@tanstack/react-table';
+import { columnOrderingFeature, columnSizingFeature, createColumnHelper, createSortedRowModel, metaHelper, rowSelectionFeature, rowSortingFeature, sortFn_alphanumeric, sortFn_alphanumericCaseSensitive, sortFn_basic, sortFn_datetime, sortFn_text, sortFn_textCaseSensitive, tableFeatures, } from '@tanstack/react-table';
 export const puppertinoTableFeatures = tableFeatures({
     rowSortingFeature,
     columnSizingFeature,
+    columnOrderingFeature,
     rowSelectionFeature,
     sortedRowModel: createSortedRowModel(),
     sortFns: {

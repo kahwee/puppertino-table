@@ -251,19 +251,25 @@ Install `@tanstack/react-store` for atom-owned examples. The Paged workspace fil
 
 **Unreleased:** these layout helpers are available from Git main.
 
-`useColumnLayout({ columns: schema, storageKey })` saves visibility, order and completed widths. Keep `schema` stable, give each field a label and width bounds, and mark Name `pinned: true`. Project definitions through `layout.order` and `layout.hidden`, then connect:
+`useColumnLayout({ columns: schema, storageKey })` saves visibility, order and completed widths. Keep `schema` stable, give each field a label and width bounds, and mark Name `pinned: true`. Filter definitions through `layout.hidden`; TanStack owns the order through `layout.columnOrder`. Then connect:
 
 ```tsx
 <PuppertinoTable
   data={rows} columns={visibleColumns}
   getRowId={row => row.id} ariaLabel="Items"
-  atoms={{ columnSizing: layout.columnSizing }}
+  atoms={{ columnSizing: layout.columnSizing, columnOrder: layout.columnOrder }}
   onColumnSizingCommit={layout.commitWidths}
+  onColumnOrderCommit={layout.commitOrder}
+  reorderable={layout.ready} lockedColumns={['name']}
   resizable={layout.ready}
   getHeaderMenu={column => layout.ready
     ? columnLayoutMenu({ ...layout, columns: schema }, column.id) : []}
 />
 ```
+
+Drag headers to reorder; Escape or dropping outside the headers cancels. Name stays first. Keyboard reordering remains in column options. Grouped headers keep their declared structure. Sorting and resizing retain their separate gestures.
+
+Pass named `presets` to `useColumnLayout` and render `<ColumnLayoutPicker controller={layout} />` for a compact picker with save, rename and delete. Built-ins are protected; personal snapshots persist separately from the current layout. Unsaved edits show Custom layout.
 
 Restore defaults resets visibility, order and widths. Hidden fields retain widths; stale IDs and malformed preferences are discarded. Restoration runs after hydration. Optional `legacyWidthsKey` migrates width-only preferences. The app owns selection and sorting, including recovery when the sorted field is hidden.
 

@@ -83,3 +83,42 @@ export function columnLayoutMenu(commands, columnId) {
     }), { id: 'layout-reset-separator', type: 'separator' }, { id: 'layout-reset', label: 'Restore default layout', onSelect: commands.reset });
     return actions;
 }
+/** Ignore corrupt/retired schemas; normalize every snapshot before it reaches a table. */
+export function readColumnLayoutPresets(columns, text, reserved = []) {
+    try {
+        const saved = JSON.parse(text ?? 'null');
+        if (!saved ||
+            typeof saved !== 'object' ||
+            !('version' in saved) ||
+            saved.version !== 1 ||
+            !('presets' in saved) ||
+            !Array.isArray(saved.presets))
+            return [];
+        const ids = new Set(reserved.map((preset) => preset.id)), names = new Set(reserved.map((preset) => preset.name.toLowerCase()));
+        return saved.presets.slice(0, 30).flatMap((preset) => {
+            if (!preset ||
+                typeof preset !== 'object' ||
+                !('id' in preset) ||
+                typeof preset.id !== 'string' ||
+                !preset.id ||
+                !('name' in preset) ||
+                typeof preset.name !== 'string' ||
+                !('layout' in preset))
+                return [];
+            if (!preset.layout ||
+                typeof preset.layout !== 'object' ||
+                !('version' in preset.layout) ||
+                preset.layout.version !== 1)
+                return [];
+            const name = preset.name.trim().replace(/\s+/g, ' ').slice(0, 64);
+            if (!name || ids.has(preset.id) || names.has(name.toLowerCase()))
+                return [];
+            ids.add(preset.id);
+            names.add(name.toLowerCase());
+            return [{ id: preset.id, name, layout: normalizeColumnLayout(columns, preset.layout) }];
+        });
+    }
+    catch {
+        return [];
+    }
+}

@@ -1,4 +1,4 @@
-import type { Cell, Row, RowData } from '@tanstack/react-table';
+import type { Cell, ColumnOrderState, Row, RowData } from '@tanstack/react-table';
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import type { ContextMenuItem } from './context-menu.js';
 import type { DensityMetrics, TableDensity } from './density.js';
@@ -39,6 +39,8 @@ export interface PuppertinoBodyOptions<T extends RowData> {
     leadingRows?: ReactNode | ((table: PuppertinoTableInstance<T>, context: PuppertinoBodyContext<T>) => ReactNode);
 }
 export type PuppertinoTableProps<T extends RowData> = PuppertinoTableOptions<T> & PuppertinoBodyOptions<T> & {
+    /** Completed header drop; cancelled drags never commit. */
+    onColumnOrderCommit?: (order: ColumnOrderState) => void;
     /** Completed resize/reset snapshot; previews and cancelled gestures never commit. */
     onColumnSizingCommit?: ColumnResizeOptions['onCommit'];
     /** Cancel an unfinished drag when this media query matches. */
@@ -61,6 +63,7 @@ export interface TableHeaderProps<T extends RowData> {
     resizeOptions?: ColumnResizeOptions;
     /** Override bulk-selection scope with the visible outline rows. */
     selectionRows?: readonly PuppertinoRow<T>[];
+    onColumnOrderCommit?: (order: ColumnOrderState) => void;
     getHeaderMenu?: PuppertinoHeaderMenu<T>;
 }
 export interface TableBodyProps<T extends RowData> extends PuppertinoBodyOptions<T> {

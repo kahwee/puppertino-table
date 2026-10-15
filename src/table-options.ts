@@ -1,4 +1,5 @@
 import type {
+  ColumnOrderState,
   ColumnSizingState,
   ExternalAtoms,
   OnChangeFn,
@@ -47,6 +48,13 @@ interface TableOptions<T extends RowData> {
   selectionCheckboxes?: boolean;
   /** Enable resizing across complete and primitive layouts. Default: true. */
   resizable?: boolean;
+  /** Header drag ordering is opt-in. Grouped headers retain their declared structure. */
+  reorderable?: boolean;
+  /** Identity columns stay at the leading edge and cannot be dragged. */
+  lockedColumns?: readonly string[];
+  columnOrder?: ColumnOrderState;
+  onColumnOrderChange?: OnChangeFn<ColumnOrderState>;
+  initialColumnOrder?: ColumnOrderState;
   /** App-owned widths; saved preferences are ignored in controlled mode. */
   columnSizing?: ColumnSizingState;
   /** Receives a value or updater; observes internal changes when widths are omitted.
@@ -60,7 +68,7 @@ interface TableOptions<T extends RowData> {
 
 /** One owner per slice; other slices may use a different ownership mode. */
 type SliceOwnership<
-  K extends 'sorting' | 'rowSelection' | 'columnSizing',
+  K extends 'sorting' | 'rowSelection' | 'columnSizing' | 'columnOrder',
   C extends keyof TableOptions<RowData>,
 > =
   | ({ atoms?: { [P in K]?: never } } & Pick<TableOptions<RowData>, K | C>)
@@ -69,4 +77,5 @@ type SliceOwnership<
 export type PuppertinoTableOptions<T extends RowData> = TableOptions<T> &
   SliceOwnership<'sorting', 'onSortingChange'> &
   SliceOwnership<'rowSelection', 'onRowSelectionChange'> &
-  SliceOwnership<'columnSizing', 'onColumnSizingChange'>;
+  SliceOwnership<'columnSizing', 'onColumnSizingChange'> &
+  SliceOwnership<'columnOrder', 'onColumnOrderChange'>;

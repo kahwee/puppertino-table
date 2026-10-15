@@ -5,6 +5,7 @@ import {
   moveLayoutColumn,
   normalizeColumnLayout,
   readColumnLayout,
+  readColumnLayoutPresets,
 } from '../src/column-layout.js';
 
 const columns = [
@@ -66,4 +67,40 @@ test('header menus expose protected choices, visible ordering and defaults', () 
   const reset = menu.find((item) => item.id === 'layout-reset');
   if (reset && 'onSelect' in reset) reset.onSelect?.();
   assert.deepEqual(calls, [['kind', false], 'reset']);
+});
+
+test('saved presets reject duplicate/reserved names and IDs and reconcile their snapshots', () => {
+  const defaults = normalizeColumnLayout(columns);
+  const reserved = [{ id: 'review', name: 'Review', layout: defaults, readOnly: true }];
+  const parsed = readColumnLayoutPresets(
+    columns,
+    JSON.stringify({
+      version: 1,
+      presets: [
+        {
+          id: 'mine',
+          name: '  My   layout ',
+          layout: {
+            version: 1,
+            order: ['size', 'removed'],
+            hidden: ['name', 'kind'],
+            widths: { size: 99999 },
+          },
+        },
+        { id: 'duplicate', name: 'MY LAYOUT', layout: defaults },
+        { id: 'mine', name: 'Another', layout: defaults },
+        { id: 'reserved', name: 'review', layout: defaults },
+        { id: 'review', name: 'Other', layout: defaults },
+        { id: 'future', name: 'Future', layout: { version: 2 } },
+      ],
+    }),
+    reserved,
+  );
+  assert.equal(parsed.length, 1);
+  assert.equal(parsed[0].name, 'My layout');
+  assert.equal(parsed[0].layout.order[0], 'name');
+  assert.equal(parsed[0].layout.widths.size, 300);
+  assert.deepEqual(parsed[0].layout.hidden, ['kind']);
+  for (const text of ['broken', 'null', '[]', '{"version":2,"presets":[]}'])
+    assert.deepEqual(readColumnLayoutPresets(columns, text), []);
 });

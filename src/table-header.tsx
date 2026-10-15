@@ -1,6 +1,8 @@
 'use client';
+
 import { type RowData, Subscribe } from '@tanstack/react-table';
 import { useEffect, useRef } from 'react';
+import { OrderableHeaderCell, reorderColumn } from './column-order.js';
 import { ContextMenu, useContextMenu } from './context-menu.js';
 import { ColumnResizeHandle } from './resize-handle.js';
 import { selectionAnchorFor } from './selection-anchor.js';
@@ -15,6 +17,7 @@ export function TableHeader<T extends RowData>({
   resizeOptions,
   selectionRows,
   getHeaderMenu,
+  onColumnOrderCommit,
 }: TableHeaderProps<T>) {
   const menu = useContextMenu<ReturnType<typeof table.getAllLeafColumns>[number]>();
   const behavior = tableBehavior(table);
@@ -22,10 +25,37 @@ export function TableHeader<T extends RowData>({
   const disabled = behavior.disabled || !!disabledOverride;
   const root = useRef<HTMLTableSectionElement>(null);
   useEffect(() => {
-    if (disabled || !getHeaderMenu) menu.close();
-  }, [disabled, getHeaderMenu, menu.close]);
+    if (disabled || (!getHeaderMenu && !behavior.reorderable)) menu.close();
+  }, [disabled, getHeaderMenu, behavior.reorderable, menu.close]);
   const resizable = behavior.resizable && resizeOverride !== false;
   const groups = table.getHeaderGroups();
+  const headerMenu =
+    getHeaderMenu ??
+    (behavior.reorderable && groups.length === 1
+      ? (column: ReturnType<typeof table.getAllLeafColumns>[number]) => {
+          const visible = table.getAllLeafColumns().map((item) => item.id);
+          const index = visible.indexOf(column.id);
+          return ([-1, 1] as const).map((direction) => ({
+            id: `move-${direction}`,
+            label: `Move ${typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id} ${direction === -1 ? 'earlier' : 'later'}`,
+            disabled:
+              behavior.lockedColumns.includes(column.id) ||
+              !visible[index + direction] ||
+              behavior.lockedColumns.includes(visible[index + direction]),
+            onSelect: () => {
+              const next = reorderColumn(
+                table.atoms.columnOrder.get(),
+                visible,
+                behavior.lockedColumns,
+                column.id,
+                visible[index + direction],
+              );
+              table.setColumnOrder(next);
+              onColumnOrderCommit?.(next);
+            },
+          }));
+        }
+      : undefined);
   const options = {
     ...resizeOptions,
     enabled: resizable && !disabled && resizeOptions?.enabled !== false,
@@ -86,15 +116,18 @@ export function TableHeader<T extends RowData>({
             const label =
               typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id;
             const sorted = column.getIsSorted();
-            const hasMenu = !disabled && !!getHeaderMenu?.(column).length;
-            return (
-              <th
-                {...(hasMenu ? menu.getTriggerProps(column) : {})}
-                key={header.id}
-                colSpan={header.colSpan}
-                scope={column.columns.length === 0 ? 'col' : 'colgroup'}
-                aria-sort={sorted ? (sorted === 'asc' ? 'ascending' : 'descending') : undefined}
-              >
+            const hasMenu = !disabled && !!headerMenu?.(column).length;
+            const triggerProps = hasMenu ? menu.getTriggerProps(column) : {};
+            const headerProps = {
+              ...triggerProps,
+              colSpan: header.colSpan,
+              scope: (column.columns.length === 0 ? 'col' : 'colgroup') as 'col' | 'colgroup',
+              'aria-sort': sorted
+                ? ((sorted === 'asc' ? 'ascending' : 'descending') as 'ascending' | 'descending')
+                : undefined,
+            };
+            const contents = (
+              <>
                 {column.getCanSort() ? (
                   <button
                     type="button"
@@ -136,6 +169,20 @@ export function TableHeader<T extends RowData>({
                     options={options}
                   />
                 )}
+              </>
+            );
+            return behavior.reorderable && groups.length === 1 ? (
+              <OrderableHeaderCell
+                key={header.id}
+                id={column.id}
+                locked={behavior.lockedColumns.includes(column.id)}
+                {...headerProps}
+              >
+                {contents}
+              </OrderableHeaderCell>
+            ) : (
+              <th key={header.id} {...headerProps}>
+                {contents}
               </th>
             );
           })}
@@ -150,7 +197,7 @@ export function TableHeader<T extends RowData>({
             : root.current?.querySelector('button')
         }
         onClose={menu.close}
-        actions={menu.state && getHeaderMenu ? getHeaderMenu(menu.state.context) : []}
+        actions={menu.state && headerMenu ? headerMenu(menu.state.context) : []}
       />
     </thead>
   );

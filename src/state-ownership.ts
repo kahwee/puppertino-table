@@ -12,12 +12,15 @@ export function validateAtomOwnership<T extends RowData>(
     | 'onRowSelectionChange'
     | 'columnSizing'
     | 'onColumnSizingChange'
+    | 'columnOrder'
+    | 'onColumnOrderChange'
   >,
 ) {
   for (const [slice, callback] of [
     ['sorting', 'onSortingChange'],
     ['rowSelection', 'onRowSelectionChange'],
     ['columnSizing', 'onColumnSizingChange'],
+    ['columnOrder', 'onColumnOrderChange'],
   ] as const) {
     if (options.atoms?.[slice] && (options[slice] !== undefined || options[callback] !== undefined))
       throw new Error(
@@ -31,7 +34,7 @@ export function validateAtomIdentity(
   initial: PuppertinoTableAtoms | undefined,
   next: PuppertinoTableAtoms | undefined,
 ) {
-  for (const slice of ['sorting', 'rowSelection', 'columnSizing'] as const) {
+  for (const slice of ['sorting', 'rowSelection', 'columnSizing', 'columnOrder'] as const) {
     if (initial?.[slice] !== next?.[slice])
       throw new Error(
         `atoms.${slice} cannot change after mount; remount the table with a new React key.`,

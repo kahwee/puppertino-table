@@ -1,4 +1,4 @@
-import type { ColumnSizingState, ExternalAtoms, OnChangeFn, RowData, RowSelectionState, SortingState } from '@tanstack/react-table';
+import type { ColumnOrderState, ColumnSizingState, ExternalAtoms, OnChangeFn, RowData, RowSelectionState, SortingState } from '@tanstack/react-table';
 import type { RefObject } from 'react';
 import type { PuppertinoColumnDef, puppertinoTableFeatures } from './model.js';
 /** App-owned writable atoms for the registered table state slices. */
@@ -39,6 +39,13 @@ interface TableOptions<T extends RowData> {
     selectionCheckboxes?: boolean;
     /** Enable resizing across complete and primitive layouts. Default: true. */
     resizable?: boolean;
+    /** Header drag ordering is opt-in. Grouped headers retain their declared structure. */
+    reorderable?: boolean;
+    /** Identity columns stay at the leading edge and cannot be dragged. */
+    lockedColumns?: readonly string[];
+    columnOrder?: ColumnOrderState;
+    onColumnOrderChange?: OnChangeFn<ColumnOrderState>;
+    initialColumnOrder?: ColumnOrderState;
     /** App-owned widths; saved preferences are ignored in controlled mode. */
     columnSizing?: ColumnSizingState;
     /** Receives a value or updater; observes internal changes when widths are omitted.
@@ -50,7 +57,7 @@ interface TableOptions<T extends RowData> {
     storage?: Pick<Storage, 'getItem' | 'setItem'>;
 }
 /** One owner per slice; other slices may use a different ownership mode. */
-type SliceOwnership<K extends 'sorting' | 'rowSelection' | 'columnSizing', C extends keyof TableOptions<RowData>> = ({
+type SliceOwnership<K extends 'sorting' | 'rowSelection' | 'columnSizing' | 'columnOrder', C extends keyof TableOptions<RowData>> = ({
     atoms?: {
         [P in K]?: never;
     };
@@ -59,5 +66,5 @@ type SliceOwnership<K extends 'sorting' | 'rowSelection' | 'columnSizing', C ext
 } & {
     [P in K | C]?: never;
 });
-export type PuppertinoTableOptions<T extends RowData> = TableOptions<T> & SliceOwnership<'sorting', 'onSortingChange'> & SliceOwnership<'rowSelection', 'onRowSelectionChange'> & SliceOwnership<'columnSizing', 'onColumnSizingChange'>;
+export type PuppertinoTableOptions<T extends RowData> = TableOptions<T> & SliceOwnership<'sorting', 'onSortingChange'> & SliceOwnership<'rowSelection', 'onRowSelectionChange'> & SliceOwnership<'columnSizing', 'onColumnSizingChange'> & SliceOwnership<'columnOrder', 'onColumnOrderChange'>;
 export {};

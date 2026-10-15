@@ -1,8 +1,10 @@
 // biome-ignore-all lint/a11y/noNoninteractiveElementToInteractiveRole: ARIA treegrids use native table/cell elements with interactive hierarchy semantics.
 // biome-ignore-all lint/a11y/useFocusableInteractive: This treegrid uses row focus, so cells are reached through their parent row.
 'use client';
+
 import type { RowData } from '@tanstack/react-table';
 import { type KeyboardEvent, memo, useMemo, useRef } from 'react';
+import { ColumnOrderProvider } from './column-order.js';
 import { DensityScope } from './density.js';
 import { RowSelectionCheckbox } from './row-selection-checkbox.js';
 import { tableBehavior } from './table-behavior.js';
@@ -278,53 +280,56 @@ export function OutlineView<T extends RowData>(props: OutlineViewProps<T>) {
     >
       <table.Subscribe source={table.options.atoms?.columnSizing ?? table.atoms.columnSizing}>
         {() => (
-          <table
-            className="p-table pt-table"
-            role="treegrid"
-            aria-label={props.ariaLabel}
-            aria-multiselectable={behavior.selectable || undefined}
-            style={{ width: table.getTotalSize() + (showSelection ? 36 : 0) }}
-          >
-            {props.caption && <caption>{props.caption}</caption>}
-            <colgroup>
-              {showSelection && <col style={{ width: 36 }} />}
-              {table.getAllLeafColumns().map((column) => (
-                <col key={column.id} style={{ width: column.getSize() }} />
-              ))}
-            </colgroup>
-            <TableHeader
-              table={table}
-              getHeaderMenu={props.getHeaderMenu}
-              selectionRows={visible.map(({ row }) => row)}
-              resizeOptions={{
-                storageKey:
-                  props.columnSizing === undefined && !props.atoms?.columnSizing
-                    ? props.storageKey
-                    : undefined,
-                storage: props.storage,
-                cancelMediaQuery: props.cancelMediaQuery,
-                onCommit: props.onColumnSizingCommit,
-              }}
-            />
-            {visible.length ? (
-              <MemoOutlineBody
+          <ColumnOrderProvider table={table} onCommit={props.onColumnOrderCommit}>
+            <table
+              className="p-table pt-table"
+              role="treegrid"
+              aria-label={props.ariaLabel}
+              aria-multiselectable={behavior.selectable || undefined}
+              style={{ width: table.getTotalSize() + (showSelection ? 36 : 0) }}
+            >
+              {props.caption && <caption>{props.caption}</caption>}
+              <colgroup>
+                {showSelection && <col style={{ width: 36 }} />}
+                {table.getAllLeafColumns().map((column) => (
+                  <col key={column.id} style={{ width: column.getSize() }} />
+                ))}
+              </colgroup>
+              <TableHeader
                 table={table}
-                outline={outline}
-                visible={visible}
-                getRowLabel={props.getRowLabel}
-                getRowProps={props.getRowProps}
-                getCellProps={props.getCellProps}
+                getHeaderMenu={props.getHeaderMenu}
+                onColumnOrderCommit={props.onColumnOrderCommit}
+                selectionRows={visible.map(({ row }) => row)}
+                resizeOptions={{
+                  storageKey:
+                    props.columnSizing === undefined && !props.atoms?.columnSizing
+                      ? props.storageKey
+                      : undefined,
+                  storage: props.storage,
+                  cancelMediaQuery: props.cancelMediaQuery,
+                  onCommit: props.onColumnSizingCommit,
+                }}
               />
-            ) : (
-              <tbody>
-                <tr>
-                  <td colSpan={table.getAllLeafColumns().length + (showSelection ? 1 : 0)}>
-                    {props.emptyContent ?? 'No items'}
-                  </td>
-                </tr>
-              </tbody>
-            )}
-          </table>
+              {visible.length ? (
+                <MemoOutlineBody
+                  table={table}
+                  outline={outline}
+                  visible={visible}
+                  getRowLabel={props.getRowLabel}
+                  getRowProps={props.getRowProps}
+                  getCellProps={props.getCellProps}
+                />
+              ) : (
+                <tbody>
+                  <tr>
+                    <td colSpan={table.getAllLeafColumns().length + (showSelection ? 1 : 0)}>
+                      {props.emptyContent ?? 'No items'}
+                    </td>
+                  </tr>
+                </tbody>
+              )}
+            </table>
+          </ColumnOrderProvider>
         )}
       </table.Subscribe>
     </DensityScope>

@@ -1,6 +1,8 @@
 import type { RowData } from '@tanstack/react-table';
 import {
   type ColumnDef,
+  type ColumnOrderState,
+  columnOrderingFeature,
   columnSizingFeature,
   createColumnHelper,
   createSortedRowModel,
@@ -22,6 +24,7 @@ import type { TableBehavior } from './table-behavior.js';
 export const puppertinoTableFeatures = tableFeatures({
   rowSortingFeature,
   columnSizingFeature,
+  columnOrderingFeature,
   rowSelectionFeature,
   sortedRowModel: createSortedRowModel(),
   sortFns: {
@@ -37,7 +40,7 @@ export const puppertinoTableFeatures = tableFeatures({
 export type PuppertinoTableInstance<T extends RowData> = ReactTable<
   typeof puppertinoTableFeatures,
   T,
-  { sorting: SortingState; rowSelection: RowSelectionState }
+  { sorting: SortingState; rowSelection: RowSelectionState; columnOrder: ColumnOrderState }
 >;
 export type PuppertinoColumnDef<T extends RowData> = ColumnDef<typeof puppertinoTableFeatures, T>;
 

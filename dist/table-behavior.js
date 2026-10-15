@@ -4,6 +4,8 @@ export const tableDefaults = {
     selectionCheckboxes: true,
     disabled: false,
     resizable: true,
+    reorderable: false,
+    lockedColumns: [],
 };
 export function tableBehavior(table) {
     return (table.options.meta?.puppertino ?? {

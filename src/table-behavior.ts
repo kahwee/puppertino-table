@@ -7,6 +7,8 @@ export const tableDefaults = {
   selectionCheckboxes: true,
   disabled: false,
   resizable: true,
+  reorderable: false,
+  lockedColumns: [] as readonly string[],
 } as const;
 
 /** Shared UI policy; writable selection is resolved independently by TanStack. */
@@ -15,6 +17,8 @@ export interface TableBehavior {
   selectionCheckboxes: boolean;
   disabled: boolean;
   resizable: boolean;
+  reorderable: boolean;
+  lockedColumns: readonly string[];
 }
 
 export function tableBehavior<T extends RowData>(table: PuppertinoTableInstance<T>): TableBehavior {

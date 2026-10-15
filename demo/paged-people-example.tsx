@@ -7,7 +7,12 @@ import {
   Subscribe,
 } from '@tanstack/react-table';
 import { useId, useMemo, useRef, useState } from 'react';
-import { columnLayoutMenu, PuppertinoTable, type TableDensity } from '../src/index.js';
+import {
+  ColumnLayoutPicker,
+  columnLayoutMenu,
+  PuppertinoTable,
+  type TableDensity,
+} from '../src/index.js';
 import { personColumns } from './fixtures.js';
 import { peopleColumnChoices, peopleLayoutColumns } from './people-layout.js';
 import { peoplePage } from './people-page.js';
@@ -37,13 +42,13 @@ export function PagedPeopleExample({
   const layout = usePeopleLayout();
   const columns = useMemo(
     () =>
-      layout.order.flatMap((id) => {
-        const column = personColumns.find(
-          (column) => ('accessorKey' in column ? column.accessorKey : column.id) === id,
-        );
-        return column && !layout.hidden.includes(id) ? [column] : [];
-      }),
-    [layout.order, layout.hidden],
+      personColumns.filter(
+        (column) =>
+          !layout.hidden.includes(
+            ('accessorKey' in column ? column.accessorKey : column.id) as string,
+          ),
+      ),
+    [layout.hidden],
   );
   const columnsId = useId();
   const columnsPanel = useRef<HTMLDivElement>(null);
@@ -148,6 +153,7 @@ export function PagedPeopleExample({
           </span>
         </div>
       </header>
+      <ColumnLayoutPicker controller={layout} disabled={disabled} />
       <PuppertinoTable
         data={page.rows}
         columns={columns}
@@ -165,8 +171,11 @@ export function PagedPeopleExample({
           onSortingChange?.(update);
         }}
         selectable
-        atoms={{ rowSelection, columnSizing: layout.columnSizing }}
+        atoms={{ rowSelection, columnSizing: layout.columnSizing, columnOrder: layout.columnOrder }}
         onColumnSizingCommit={layout.commitWidths}
+        onColumnOrderCommit={layout.commitOrder}
+        reorderable={layout.ready}
+        lockedColumns={['name']}
         getHeaderMenu={(column) =>
           disabled || !layout.ready
             ? []

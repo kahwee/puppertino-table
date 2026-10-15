@@ -1,18 +1,22 @@
 'use client';
 import { useCreateAtom } from '@tanstack/react-store';
-import type { ColumnSizingState } from '@tanstack/react-table';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ColumnOrderState, ColumnSizingState, Updater } from '@tanstack/react-table';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   type ColumnLayout,
   type ColumnLayoutColumn,
+  type ColumnLayoutPreset,
+  type ColumnLayoutPresetDefinition,
   moveLayoutColumn,
   normalizeColumnLayout,
   readColumnLayout,
+  readColumnLayoutPresets,
 } from './column-layout.js';
 
 export interface ColumnLayoutOptions {
   columns: readonly ColumnLayoutColumn[];
   storageKey: string;
+  presets?: readonly ColumnLayoutPresetDefinition[];
   storage?: Pick<Storage, 'getItem' | 'setItem'>;
   /** Read existing width-only preferences when no saved layout exists. */
   legacyWidthsKey?: string;
@@ -24,16 +28,45 @@ export function useColumnLayout({
   storageKey,
   storage,
   legacyWidthsKey,
+  presets: definitions,
 }: ColumnLayoutOptions) {
   const committed = useRef<ColumnLayout>(normalizeColumnLayout(columns));
   const columnSizing = useCreateAtom<ColumnSizingState>(committed.current.widths);
+  const columnOrder = useCreateAtom<ColumnOrderState>(committed.current.order);
+  const persistence = useCreateAtom<'saved' | 'session'>('saved');
+  const builtins = useMemo(
+    () =>
+      (definitions ?? []).map((preset) => ({
+        id: preset.id,
+        name: preset.name,
+        layout: normalizeColumnLayout(columns, { version: 1, ...preset.layout }),
+        readOnly: true,
+      })),
+    [columns, definitions],
+  );
+  const [userPresets, setUserPresets] = useState<ColumnLayoutPreset[]>([]);
+  const profiles = useRef<ColumnLayoutPreset[]>([]);
+  const preferred = useRef<string | null>(null);
   const [layout, setLayout] = useState(committed.current);
   const [ready, setReady] = useState(false);
   const adapter = useCallback(() => storage ?? window.localStorage, [storage]);
   useEffect(() => {
     let restored = normalizeColumnLayout(columns);
+    let restoredPresets: ColumnLayoutPreset[] = [];
     try {
       const text = adapter().getItem(storageKey);
+      try {
+        const record = JSON.parse(adapter().getItem(`${storageKey}.presets.v1`) ?? 'null');
+        preferred.current = typeof record?.activeId === 'string' ? record.activeId : null;
+      } catch {
+        preferred.current = null;
+      }
+      restoredPresets = readColumnLayoutPresets(
+        columns,
+        adapter().getItem(`${storageKey}.presets.v1`),
+        builtins,
+      );
+
       restored = readColumnLayout(columns, text);
       if (text === null && legacyWidthsKey) {
         const widths: unknown = JSON.parse(adapter().getItem(legacyWidthsKey) ?? '{}');
@@ -42,23 +75,30 @@ export function useColumnLayout({
     } catch {
       /* Storage is optional; restore safe defaults. */
     }
+    profiles.current = restoredPresets;
+    setUserPresets(restoredPresets);
     committed.current = restored;
     columnSizing.set(restored.widths);
+    columnOrder.set(restored.order);
     setLayout(restored);
     setReady(true);
-  }, [columns, adapter, storageKey, legacyWidthsKey, columnSizing]);
+  }, [columns, adapter, storageKey, legacyWidthsKey, columnSizing, columnOrder, builtins]);
   const save = useCallback(
     (next: ColumnLayout, structural: boolean) => {
       committed.current = next;
       columnSizing.set(next.widths);
-      if (structural) setLayout(next);
+      if (structural) {
+        columnOrder.set(next.order);
+        setLayout(next);
+      }
       try {
         adapter().setItem(storageKey, JSON.stringify(next));
+        persistence.set('saved');
       } catch {
-        /* Keep this visit's layout. */
+        persistence.set('session');
       }
     },
-    [adapter, storageKey, columnSizing],
+    [adapter, storageKey, columnSizing, columnOrder, persistence],
   );
   const setVisible = useCallback(
     (id: string, visible: boolean) => {
@@ -93,9 +133,99 @@ export function useColumnLayout({
     [columns, ready, save],
   );
   const reset = useCallback(() => {
-    if (ready) save(normalizeColumnLayout(columns), true);
-  }, [columns, ready, save]);
+    if (ready) {
+      preferred.current = null;
+      save(normalizeColumnLayout(columns), true);
+      try {
+        adapter().setItem(
+          `${storageKey}.presets.v1`,
+          JSON.stringify({ version: 1, activeId: null, presets: profiles.current }),
+        );
+      } catch {
+        persistence.set('session');
+      }
+    }
+  }, [columns, ready, save, adapter, storageKey, persistence]);
+  const commitOrder = useCallback(
+    (update: Updater<ColumnOrderState>) => {
+      if (!ready) return;
+      const order = typeof update === 'function' ? update(committed.current.order) : update;
+      save(normalizeColumnLayout(columns, { ...committed.current, order }), true);
+    },
+    [columns, ready, save],
+  );
+  const allPresets = [...builtins, ...userPresets];
+  const storePresets = (next: ColumnLayoutPreset[]) => {
+    profiles.current = next;
+    setUserPresets(next);
+    try {
+      adapter().setItem(
+        `${storageKey}.presets.v1`,
+        JSON.stringify({ version: 1, activeId: preferred.current, presets: next }),
+      );
+      persistence.set('saved');
+    } catch {
+      persistence.set('session');
+    }
+  };
+  const validName = (name: string, id?: string) => {
+    const clean = name.trim().replace(/\s+/g, ' ');
+    return clean &&
+      clean.length <= 64 &&
+      ![...builtins, ...profiles.current].some(
+        (preset) => preset.id !== id && preset.name.toLowerCase() === clean.toLowerCase(),
+      )
+      ? clean
+      : null;
+  };
+  const getActivePresetId = () => {
+    const matches = [...builtins, ...profiles.current].filter(
+      (preset) => JSON.stringify(preset.layout) === JSON.stringify(committed.current),
+    );
+    return matches.find((preset) => preset.id === preferred.current)?.id ?? matches[0]?.id ?? '';
+  };
   return {
+    presets: allPresets,
+    getActivePresetId,
+    get activePresetId() {
+      return getActivePresetId();
+    },
+    applyPreset(id: string) {
+      const preset = [...builtins, ...profiles.current].find((item) => item.id === id);
+      if (ready && preset) {
+        preferred.current = id;
+        save(normalizeColumnLayout(columns, preset.layout), true);
+        storePresets(profiles.current);
+      }
+    },
+    savePreset(name: string): string | null {
+      const clean = validName(name);
+      if (!ready || !clean || profiles.current.length >= 30) return null;
+      const id =
+        globalThis.crypto?.randomUUID?.() ??
+        `layout-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+      preferred.current = id;
+      storePresets([
+        ...profiles.current,
+        { id, name: clean, layout: normalizeColumnLayout(columns, committed.current) },
+      ]);
+      return id;
+    },
+    renamePreset(id: string, name: string): boolean {
+      const clean = validName(name, id);
+      if (!ready || !clean || !profiles.current.some((preset) => preset.id === id)) return false;
+      storePresets(
+        profiles.current.map((preset) => (preset.id === id ? { ...preset, name: clean } : preset)),
+      );
+      return true;
+    },
+    deletePreset(id: string) {
+      if (ready && profiles.current.some((preset) => preset.id === id))
+        storePresets(profiles.current.filter((preset) => preset.id !== id));
+    },
+    columnOrder,
+    commitOrder,
+    persistence,
     get layout() {
       return committed.current;
     },
