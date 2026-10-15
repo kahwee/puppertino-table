@@ -31,7 +31,7 @@ export function validateRelease({ event, sha, head, tagSha, manifest }) {
   assert.equal(manifest.name, packageName, 'Wrong npm package');
   assert.equal(manifest.version, version, 'Tag/version mismatch');
   assert.equal(manifest.repository.url, `https://github.com/${repository}.git`);
-  assert.equal(manifest.packageManager, 'pnpm@11.25.0');
+  assert.equal(manifest.packageManager, 'pnpm@12.11.2');
   assert.deepEqual(manifest.publishConfig, { access: 'public', registry });
   assert.equal(manifest.private, false);
   return { version, sha, tarball: `puppertino-table-${version}.tgz` };

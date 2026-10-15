@@ -22,7 +22,7 @@ const valid = () => ({
     version: '0.1.1',
     repository: { url: 'https://github.com/kahwee/puppertino-table.git' },
     private: false,
-    packageManager: 'pnpm@11.25.0',
+    packageManager: 'pnpm@12.11.2',
     publishConfig: { access: 'public', registry: 'https://registry.npmjs.org/' },
   },
 });

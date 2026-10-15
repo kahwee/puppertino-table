@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update the package manager, CI and release checks to pnpm 12.11.2 and refresh the dependency lockfile. Move CI to Node 24.22.0, the latest patch on the existing LTS line.
+
 - Add native TanStack column-order atoms and DnD Kit header dragging, with protected columns, insertion markers, cancelled-drop safety and keyboard menus.
 - Add named layout presets and `ColumnLayoutPicker`: built-ins, personal save/rename/delete, reload restoration and session-only fallback.
 - Keep selection-checkbox label clicks inside the control, preventing row/header actions from firing alongside selection. Native checkbox and keyboard activation still toggle once.
