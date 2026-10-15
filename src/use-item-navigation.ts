@@ -30,7 +30,7 @@ export function useItemNavigation({
 }: ItemNavigationHookOptions) {
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const typed = useRef({ text: '', time: 0 });
-  const eligible = orderedIds.filter((id) => !isItemDisabled?.(id));
+  const eligible = isItemDisabled ? orderedIds.filter((id) => !isItemDisabled(id)) : orderedIds;
   const activeId = focusedId !== null && eligible.includes(focusedId) ? focusedId : eligible[0];
   const focus = useCallback(
     (id: string) => {

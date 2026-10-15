@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Split Storybook interactions, table behavior, Finder workflows and docs into independent CI suites, with bounded local concurrency and per-suite timing reports.
+- Skip order processing for ignored navigation keys and Home; reuse navigation indexes for frozen orders without caching mutable arrays.
+- Add repeatable collection benchmarks with median samples, environment metadata and CI artifacts.
+
 - Avoid allocating full selection ranges twice per gesture and skip building a row index for the default row order. Ordinary clicks skip order deduplication.
 - Reuse the Storybook test host and allow HTTP caching of shared assets while keeping a fresh iframe for every story and checking all play functions and accessibility reports. Fail on reported play exceptions even when Storybook emits a success status; fix asynchronous story assertions and responsive pane-size expectations.
 

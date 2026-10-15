@@ -5,7 +5,7 @@ import { nextItemId } from './item-navigation.js';
 export function useItemNavigation({ orderedIds, getItemElement, orientation = 'vertical', columns = 1, disabled = false, isItemDisabled, onNavigate, getItemLabel, }) {
     const [focusedId, setFocusedId] = useState(null);
     const typed = useRef({ text: '', time: 0 });
-    const eligible = orderedIds.filter((id) => !isItemDisabled?.(id));
+    const eligible = isItemDisabled ? orderedIds.filter((id) => !isItemDisabled(id)) : orderedIds;
     const activeId = focusedId !== null && eligible.includes(focusedId) ? focusedId : eligible[0];
     const focus = useCallback((id) => {
         if (disabled || !orderedIds.includes(id) || isItemDisabled?.(id))

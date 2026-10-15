@@ -45,7 +45,8 @@
     "lint": "biome ci . --error-on-warnings",
     "format": "biome check --write .",
     "profile:pointer": "tsx scripts/profile-pointer.ts",
-    "capture:readme": "pnpm build:storybook && node scripts/capture-readme.mjs"
+    "capture:readme": "pnpm build:storybook && node scripts/capture-readme.mjs",
+    "profile:collections": "tsx scripts/profile-collections.ts"
   },
   "peerDependencies": {
     "@codedgar/puppertino": "^2.0.0",

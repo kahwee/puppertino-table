@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import path from 'node:path';
 import axe from 'axe-core';
@@ -56,7 +56,9 @@ async function serve(directory: string, mount = '/') {
 }
 const suite =
   process.env.PUPPERTINO_BROWSER_SUITE ?? (process.env.PUPPERTINO_STORIES_ONLY ? 'stories' : 'all');
-if (!['all', 'demo', 'stories'].includes(suite)) throw new Error(`Unknown browser suite: ${suite}`);
+const storySuites = ['stories-interactions', 'stories-table', 'stories-finder', 'stories-docs'];
+if (!['all', 'demo', 'stories', ...storySuites].includes(suite))
+  throw new Error(`Unknown browser suite: ${suite}`);
 const demo = await serve('demo-dist');
 const stories = await serve('storybook-static', '/puppertino-table/');
 const browser = await chromium.launch({
@@ -271,7 +273,6 @@ async function checkDemo() {
 
 async function checkStories() {
   const started = performance.now();
-  await checkStorybookInteractions(browser, stories.base);
   const page = await browser.newPage({
     viewport: { width: 1280, height: 900 },
     reducedMotion: 'reduce',
@@ -725,25 +726,60 @@ async function checkStories() {
   await checkOutlineViews(page, stories.base, evidence);
   await checkResizeEvents(page, stories.base);
   await checkResourceWorkspaces(page, stories.base, evidence);
-  await checkFinderStories(page, stories.base, evidence);
-  await checkStorybookDocs(page, stories.base, evidence);
   await page.close();
   console.log(
     `Storybook browser checks completed in ${((performance.now() - started) / 1000).toFixed(1)}s`,
   );
 }
 
+async function checkIsolatedStoryPage(check: typeof checkFinderStories) {
+  const page = await browser.newPage({
+    viewport: { width: 1280, height: 900 },
+    reducedMotion: 'reduce',
+  });
+  page.on('pageerror', (error) => errors.push(error.message));
+  try {
+    await check(page, stories.base, evidence);
+  } finally {
+    await page.close();
+  }
+}
+
+const timings: { suite: string; durationMs: number; status: string }[] = [];
+const tasks = [
+  { name: 'demo', run: checkDemo },
+  { name: 'stories-interactions', run: () => checkStorybookInteractions(browser, stories.base) },
+  { name: 'stories-table', run: checkStories },
+  { name: 'stories-finder', run: () => checkIsolatedStoryPage(checkFinderStories) },
+  { name: 'stories-docs', run: () => checkIsolatedStoryPage(checkStorybookDocs) },
+].filter(
+  ({ name }) =>
+    suite === 'all' || name === suite || (suite === 'stories' && name.startsWith('stories-')),
+);
+
 try {
-  // Each suite owns separate contexts and screenshot paths. Keep concurrency at two
-  // so pointer gestures and accessibility scans do not overwhelm a hosted runner.
-  // Wait for both before closing Chromium, including when either suite fails.
-  const results = await Promise.allSettled([
-    ...(suite !== 'stories' ? [checkDemo()] : []),
-    ...(suite !== 'demo' ? [checkStories()] : []),
-  ]);
-  const failures = results
-    .filter((result) => result.status === 'rejected')
-    .map((result) => result.reason);
+  // Each task owns its browser contexts. Bound local concurrency to two, and
+  // drain all tasks after a failure before closing shared browser/server resources.
+  const failures: unknown[] = [];
+  await Promise.all(
+    Array.from({ length: Math.min(2, tasks.length) }, async () => {
+      while (tasks.length) {
+        const task = tasks.shift()!;
+        const started = performance.now();
+        let status = 'passed';
+        try {
+          await task.run();
+        } catch (error) {
+          status = 'failed';
+          failures.push(error);
+        } finally {
+          const durationMs = performance.now() - started;
+          timings.push({ suite: task.name, durationMs, status });
+          console.log(`${task.name}: ${status} in ${(durationMs / 1000).toFixed(1)}s`);
+        }
+      }
+    }),
+  );
   if (failures.length) throw new AggregateError(failures, 'Browser verification failed');
   assert.deepEqual(errors, []);
   console.log(
@@ -755,4 +791,8 @@ try {
   await browser.close();
   await demo.close();
   await stories.close();
+  await writeFile(
+    `${evidence}/timings-${suite}.json`,
+    JSON.stringify({ node: process.version, suite, timings, errors }, null, 2),
+  );
 }
