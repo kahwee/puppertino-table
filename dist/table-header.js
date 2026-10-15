@@ -28,7 +28,7 @@ export function TableHeader({ table, selectable: selectionOverride, disabled: di
                                 const selected = rows.filter((row) => selection[row.id]).length;
                                 const checked = rows.length > 0 && selected === rows.length;
                                 const mixed = selected > 0 && !checked;
-                                return (_jsxs("label", { className: "p-checkbox pt-selection-control", children: [_jsx("input", { type: "checkbox", "aria-label": "Select all visible rows", "aria-checked": mixed ? 'mixed' : checked, checked: checked, disabled: disabled || rows.length === 0, ref: (input) => {
+                                return (_jsxs("label", { className: "p-checkbox pt-selection-control", onClick: (event) => event.stopPropagation(), children: [_jsx("input", { type: "checkbox", "aria-label": "Select all visible rows", "aria-checked": mixed ? 'mixed' : checked, checked: checked, disabled: disabled || rows.length === 0, ref: (input) => {
                                                 if (input)
                                                     input.indeterminate = mixed;
                                             }, onClick: (event) => event.stopPropagation(), onChange: (event) => {

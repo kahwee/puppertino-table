@@ -113,6 +113,29 @@ try {
   await width(265);
   await page.evaluate(() => window.sizing.select());
   assert.deepEqual(await page.evaluate(() => window.sizing.atoms().selection), { ada: true });
+  await page.evaluate(() => {
+    document.body.dataset.selectionClicks = '0';
+    document.body.addEventListener('click', () => {
+      document.body.dataset.selectionClicks = String(
+        Number(document.body.dataset.selectionClicks) + 1,
+      );
+    });
+  });
+  const checkbox = page.getByRole('checkbox');
+  await checkbox.locator('..').dispatchEvent('click');
+  assert.equal(await checkbox.isChecked(), false, 'label activation toggles exactly once');
+  assert.equal(
+    await page.locator('body').getAttribute('data-selection-clicks'),
+    '0',
+    'label activation stays inside the selection control',
+  );
+  await checkbox.press('Space');
+  assert.equal(await checkbox.isChecked(), true, 'keyboard activation remains native');
+  assert.equal(
+    await page.locator('body').getAttribute('data-selection-clicks'),
+    '0',
+    'keyboard selection does not activate a parent',
+  );
   await page.evaluate(() => window.sizing.sort());
   assert.deepEqual(await page.evaluate(() => window.sizing.atoms().sorting), [
     { id: 'name', desc: true },

@@ -45,7 +45,11 @@ export function TableHeader<T extends RowData>({
                   const checked = rows.length > 0 && selected === rows.length;
                   const mixed = selected > 0 && !checked;
                   return (
-                    <label className="p-checkbox pt-selection-control">
+                    // biome-ignore lint/a11y/useKeyWithClickEvents: The native input owns keyboard activation; this label only isolates bubbling.
+                    <label
+                      className="p-checkbox pt-selection-control"
+                      onClick={(event) => event.stopPropagation()}
+                    >
                       <input
                         type="checkbox"
                         aria-label="Select all visible rows"
