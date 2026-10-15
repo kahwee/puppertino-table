@@ -3,6 +3,7 @@ import { type ComponentPropsWithoutRef, type ReactNode } from 'react';
 import type { PuppertinoTableInstance } from './model.js';
 /** Preserve absent/hidden IDs while moving visible leaf columns through native table state. */
 export declare function reorderColumn(order: readonly string[], visible: readonly string[], locked: readonly string[], active: string, over: string): string[];
+export declare const ColumnOrderScope: import("react").Context<boolean>;
 /** DnD Kit contexts and announcements stay outside the semantic table. */
 export declare function ColumnOrderProvider<T extends RowData>({ table, onCommit, children, }: {
     table: PuppertinoTableInstance<T>;

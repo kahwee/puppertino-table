@@ -20,6 +20,7 @@ export function reorderColumn(order, visible, locked, active, over) {
         ...next.filter((id) => !locked.includes(id)),
     ];
 }
+export const ColumnOrderScope = createContext(false);
 const DragPreview = createContext({
     active: null,
     over: null,
@@ -56,8 +57,15 @@ export function ColumnOrderProvider({ table, onCommit, children, }) {
     const enabled = behavior.reorderable && table.getHeaderGroups().length === 1;
     const schema = JSON.stringify([visible, behavior.lockedColumns]);
     const startedSchema = useRef(schema);
+    const cancelled = useRef(false);
+    const [wasEnabled, setWasEnabled] = useState(enabled);
+    useEffect(() => {
+        if (enabled)
+            setWasEnabled(true);
+    }, [enabled]);
     useEffect(() => {
         if (active && (!enabled || startedSchema.current !== schema)) {
+            cancelled.current = true;
             setActive(null);
             setOver(null);
         }
@@ -72,7 +80,7 @@ export function ColumnOrderProvider({ table, onCommit, children, }) {
     };
     const finish = (event) => {
         clear();
-        if (!behavior.reorderable || !event.over)
+        if (cancelled.current || !enabled || startedSchema.current !== schema || !event.over)
             return;
         const target = event.over.rect, cursor = point.current;
         if (!cursor ||
@@ -88,9 +96,11 @@ export function ColumnOrderProvider({ table, onCommit, children, }) {
         table.setColumnOrder(next);
         onCommit?.(next);
     };
-    if (!enabled)
+    // Keep the boundary after activation so column changes and busy mode preserve row DOM.
+    if (!enabled && !wasEnabled)
         return children;
-    return (_jsxs(DndContext, { id: id, sensors: sensors, collisionDetection: closestCenter, modifiers: [restrictToHorizontalAxis], onDragStart: (event) => {
+    return (_jsxs(DndContext, { id: id, sensors: sensors, cancelDrop: () => cancelled.current || !enabled || startedSchema.current !== schema, collisionDetection: closestCenter, modifiers: [restrictToHorizontalAxis], onDragStart: (event) => {
+            cancelled.current = false;
             startedSchema.current = schema;
             point.current = null;
             setActive(String(event.active.id));
@@ -106,11 +116,11 @@ export function ColumnOrderProvider({ table, onCommit, children, }) {
                 onDragEnd: () => 'Column drag finished.',
                 onDragCancel: () => 'Column drag cancelled. Order unchanged.',
             },
-        }, children: [_jsx(SortableContext, { items: visible.filter((key) => !behavior.lockedColumns.includes(key)), strategy: horizontalListSortingStrategy, children: _jsx(DragPreview, { value: {
-                        active,
-                        over,
-                        after: !!active && !!over && visible.indexOf(active) < visible.indexOf(over),
-                    }, children: children }) }), _jsx(DragOverlay, { dropAnimation: null, children: active ? _jsx("div", { className: "pt-column-drag-preview", children: label(active) }) : null })] }, schema));
+        }, children: [_jsx(SortableContext, { items: visible.filter((key) => !behavior.lockedColumns.includes(key)), disabled: !enabled, strategy: horizontalListSortingStrategy, children: _jsx(ColumnOrderScope, { value: true, children: _jsx(DragPreview, { value: {
+                            active,
+                            over,
+                            after: !!active && !!over && visible.indexOf(active) < visible.indexOf(over),
+                        }, children: children }) }) }), _jsx(DragOverlay, { dropAnimation: null, children: active ? _jsx("div", { className: "pt-column-drag-preview", children: label(active) }) : null })] }));
 }
 export function OrderableHeaderCell({ id, locked, children, ...props }) {
     const { listeners, setNodeRef, attributes, isDragging } = useSortable({ id, disabled: locked });

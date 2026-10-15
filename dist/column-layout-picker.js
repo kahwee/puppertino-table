@@ -22,10 +22,10 @@ export function ColumnLayoutPicker({ controller, disabled = false, label = 'Colu
         if (unavailable)
             setOpen(false);
     }, [unavailable]);
-    return (_jsxs("div", { className: "pt-layout-picker", children: [_jsx("label", { htmlFor: id, children: label }), _jsxs("select", { id: id, className: "p-button", value: selected, disabled: unavailable, onChange: (event) => {
-                    controller.applyPreset(event.target.value);
-                    setNotice('Column layout applied.');
-                }, children: [_jsx("option", { value: "", disabled: true, children: "Custom layout" }), controller.presets.map((item) => (_jsx("option", { value: item.id, children: item.name }, item.id)))] }), _jsxs(Popover.Root, { open: !unavailable && open, onOpenChange: (value) => {
+    return (_jsxs("div", { className: "pt-layout-picker", children: [_jsx("label", { htmlFor: id, children: label }), _jsx("span", { className: "p-select", children: _jsxs("select", { id: id, value: selected, disabled: unavailable, onChange: (event) => {
+                        controller.applyPreset(event.target.value);
+                        setNotice('Column layout applied.');
+                    }, children: [_jsx("option", { value: "", disabled: true, children: "Custom layout" }), controller.presets.map((item) => (_jsx("option", { value: item.id, children: item.name }, item.id)))] }) }), _jsxs(Popover.Root, { open: !unavailable && open, onOpenChange: (value) => {
                     setOpen(value);
                     setError('');
                     setMode('save');
@@ -42,7 +42,7 @@ export function ColumnLayoutPicker({ controller, disabled = false, label = 'Colu
                                             }
                                             setNotice(mode === 'rename' ? 'Layout renamed.' : 'Layout saved.');
                                             setOpen(false);
-                                        }, children: [_jsx("label", { htmlFor: `${id}-name`, children: "Name" }), _jsx("input", { ref: input, id: `${id}-name`, className: "p-form-text", value: name, maxLength: 64, required: true, "aria-invalid": !!error || undefined, "aria-describedby": error ? `${id}-error` : undefined, onChange: (event) => {
+                                        }, children: [_jsx("label", { htmlFor: `${id}-name`, children: "Name" }), _jsx("input", { ref: input, id: `${id}-name`, className: "p-field", autoComplete: "off", value: name, maxLength: 64, required: true, "aria-invalid": !!error || undefined, "aria-describedby": error ? `${id}-error` : undefined, onChange: (event) => {
                                                     setName(event.target.value);
                                                     setError('');
                                                 } }), error && (_jsx("p", { id: `${id}-error`, role: "alert", children: error })), _jsxs("div", { className: "pt-layout-form-actions", children: [_jsx(Popover.Close, { className: "p-button", type: "button", children: "Cancel" }), _jsx("button", { className: "p-button p-button-primary", type: "submit", children: mode === 'rename' ? 'Rename' : 'Save' })] })] }), preset && !preset.readOnly && (_jsxs("div", { className: "pt-layout-manage", children: [_jsx("button", { className: "p-button p-button-borderless", type: "button", onClick: () => {

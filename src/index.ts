@@ -22,7 +22,7 @@ export {
   readColumnLayoutPresets,
 } from './column-layout.js';
 export { ColumnLayoutPicker } from './column-layout-picker.js';
-export { reorderColumn } from './column-order.js';
+export { ColumnOrderProvider, reorderColumn } from './column-order.js';
 export {
   ColumnView,
   type ColumnViewColumn,

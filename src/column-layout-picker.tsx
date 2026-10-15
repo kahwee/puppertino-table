@@ -33,25 +33,26 @@ export function ColumnLayoutPicker({
   return (
     <div className="pt-layout-picker">
       <label htmlFor={id}>{label}</label>
-      <select
-        id={id}
-        className="p-button"
-        value={selected}
-        disabled={unavailable}
-        onChange={(event) => {
-          controller.applyPreset(event.target.value);
-          setNotice('Column layout applied.');
-        }}
-      >
-        <option value="" disabled>
-          Custom layout
-        </option>
-        {controller.presets.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.name}
+      <span className="p-select">
+        <select
+          id={id}
+          value={selected}
+          disabled={unavailable}
+          onChange={(event) => {
+            controller.applyPreset(event.target.value);
+            setNotice('Column layout applied.');
+          }}
+        >
+          <option value="" disabled>
+            Custom layout
           </option>
-        ))}
-      </select>
+          {controller.presets.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.name}
+            </option>
+          ))}
+        </select>
+      </span>
       <Popover.Root
         open={!unavailable && open}
         onOpenChange={(value) => {
@@ -97,7 +98,8 @@ export function ColumnLayoutPicker({
                 <input
                   ref={input}
                   id={`${id}-name`}
-                  className="p-form-text"
+                  className="p-field"
+                  autoComplete="off"
                   value={name}
                   maxLength={64}
                   required

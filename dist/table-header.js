@@ -1,8 +1,8 @@
 'use client';
 import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { Subscribe } from '@tanstack/react-table';
-import { useEffect, useRef } from 'react';
-import { OrderableHeaderCell, reorderColumn } from './column-order.js';
+import { useContext, useEffect, useRef } from 'react';
+import { ColumnOrderScope, OrderableHeaderCell, reorderColumn } from './column-order.js';
 import { ContextMenu, useContextMenu } from './context-menu.js';
 import { ColumnResizeHandle } from './resize-handle.js';
 import { selectionAnchorFor } from './selection-anchor.js';
@@ -10,6 +10,7 @@ import { tableBehavior } from './table-behavior.js';
 export function TableHeader({ table, selectable: selectionOverride, disabled: disabledOverride, resizable: resizeOverride, resizeOptions, selectionRows, getHeaderMenu, onColumnOrderCommit, }) {
     const menu = useContextMenu();
     const behavior = tableBehavior(table);
+    const orderScope = useContext(ColumnOrderScope);
     const selectable = selectionOverride ?? (behavior.selectable && behavior.selectionCheckboxes);
     const disabled = behavior.disabled || !!disabledOverride;
     const root = useRef(null);
@@ -86,7 +87,7 @@ export function TableHeader({ table, selectable: selectionOverride, disabled: di
                                 : undefined,
                         };
                         const contents = (_jsxs(_Fragment, { children: [column.getCanSort() ? (_jsxs("button", { type: "button", className: "pt-sort", "aria-label": `Sort by ${label}`, disabled: disabled, onClick: () => column.toggleSorting(), children: [_jsx(table.FlexRender, { header: header }), _jsx("span", { className: "pt-sort-arrow", "aria-hidden": "true", "data-direction": sorted || 'none', children: "\u2304" })] })) : (_jsx(table.FlexRender, { header: header })), hasMenu && (_jsx("button", { type: "button", className: "pt-header-menu-trigger", "aria-label": `Column options for ${label}`, title: `Column options for ${label}`, "aria-haspopup": "menu", "aria-expanded": !disabled && menu.state?.context.id === column.id, onClick: (event) => menu.open(column, event), children: "\u22EF" })), options.enabled && (_jsx(ColumnResizeHandle, { table: table, header: header, label: label, options: options }))] }));
-                        return behavior.reorderable && groups.length === 1 ? (_jsx(OrderableHeaderCell, { id: column.id, locked: behavior.lockedColumns.includes(column.id), ...headerProps, children: contents }, header.id)) : (_jsx("th", { ...headerProps, children: contents }, header.id));
+                        return (behavior.reorderable || orderScope) && groups.length === 1 ? (_jsx(OrderableHeaderCell, { id: column.id, locked: !behavior.reorderable || behavior.lockedColumns.includes(column.id), ...headerProps, children: contents }, header.id)) : (_jsx("th", { ...headerProps, children: contents }, header.id));
                     })] }, group.id))), _jsx(ContextMenu, { ariaLabel: "Column options", position: disabled ? null : (menu.state?.position ?? null), returnFocus: menu.state?.returnFocus?.isConnected
                     ? menu.state.returnFocus
                     : root.current?.querySelector('button'), onClose: menu.close, actions: menu.state && headerMenu ? headerMenu(menu.state.context) : [] })] }));

@@ -54,6 +54,7 @@ export function reorderColumn(
     ...next.filter((id) => !locked.includes(id)),
   ];
 }
+export const ColumnOrderScope = createContext(false);
 const DragPreview = createContext<{ active: string | null; over: string | null; after: boolean }>({
   active: null,
   over: null,
@@ -100,8 +101,14 @@ export function ColumnOrderProvider<T extends RowData>({
   const enabled = behavior.reorderable && table.getHeaderGroups().length === 1;
   const schema = JSON.stringify([visible, behavior.lockedColumns]);
   const startedSchema = useRef(schema);
+  const cancelled = useRef(false);
+  const [wasEnabled, setWasEnabled] = useState(enabled);
+  useEffect(() => {
+    if (enabled) setWasEnabled(true);
+  }, [enabled]);
   useEffect(() => {
     if (active && (!enabled || startedSchema.current !== schema)) {
+      cancelled.current = true;
       setActive(null);
       setOver(null);
     }
@@ -116,7 +123,7 @@ export function ColumnOrderProvider<T extends RowData>({
   };
   const finish = (event: DragEndEvent) => {
     clear();
-    if (!behavior.reorderable || !event.over) return;
+    if (cancelled.current || !enabled || startedSchema.current !== schema || !event.over) return;
     const target = event.over.rect,
       cursor = point.current;
     if (
@@ -142,15 +149,17 @@ export function ColumnOrderProvider<T extends RowData>({
     table.setColumnOrder(next);
     onCommit?.(next);
   };
-  if (!enabled) return children;
+  // Keep the boundary after activation so column changes and busy mode preserve row DOM.
+  if (!enabled && !wasEnabled) return children;
   return (
     <DndContext
-      key={schema}
       id={id}
       sensors={sensors}
+      cancelDrop={() => cancelled.current || !enabled || startedSchema.current !== schema}
       collisionDetection={closestCenter}
       modifiers={[restrictToHorizontalAxis]}
       onDragStart={(event) => {
+        cancelled.current = false;
         startedSchema.current = schema;
         point.current = null;
         setActive(String(event.active.id));
@@ -176,17 +185,20 @@ export function ColumnOrderProvider<T extends RowData>({
     >
       <SortableContext
         items={visible.filter((key) => !behavior.lockedColumns.includes(key))}
+        disabled={!enabled}
         strategy={horizontalListSortingStrategy}
       >
-        <DragPreview
-          value={{
-            active,
-            over,
-            after: !!active && !!over && visible.indexOf(active) < visible.indexOf(over),
-          }}
-        >
-          {children}
-        </DragPreview>
+        <ColumnOrderScope value={true}>
+          <DragPreview
+            value={{
+              active,
+              over,
+              after: !!active && !!over && visible.indexOf(active) < visible.indexOf(over),
+            }}
+          >
+            {children}
+          </DragPreview>
+        </ColumnOrderScope>
       </SortableContext>
       <DragOverlay dropAnimation={null}>
         {active ? <div className="pt-column-drag-preview">{label(active)}</div> : null}

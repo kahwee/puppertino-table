@@ -269,7 +269,7 @@ Install `@tanstack/react-store` for atom-owned examples. The Paged workspace fil
 
 Drag headers to reorder; Escape or dropping outside the headers cancels. Name stays first. Keyboard reordering remains in column options. Grouped headers keep their declared structure. Sorting and resizing retain their separate gestures.
 
-Pass named `presets` to `useColumnLayout` and render `<ColumnLayoutPicker controller={layout} />` for a compact picker with save, rename and delete. Built-ins are protected; personal snapshots persist separately from the current layout. Unsaved edits show Custom layout.
+Import Puppertino’s forms and buttons CSS for the picker. Pass named `presets` to `useColumnLayout` and render `<ColumnLayoutPicker controller={layout} />` for a compact picker with save, rename and delete. Built-ins are protected; personal snapshots persist separately from the current layout. Unsaved edits show Custom layout.
 
 Restore defaults resets visibility, order and widths. Hidden fields retain widths; stale IDs and malformed preferences are discarded. Restoration runs after hydration. Optional `legacyWidthsKey` migrates width-only preferences. The app owns selection and sorting, including recovery when the sorted field is hidden.
 

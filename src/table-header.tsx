@@ -1,8 +1,8 @@
 'use client';
 
 import { type RowData, Subscribe } from '@tanstack/react-table';
-import { useEffect, useRef } from 'react';
-import { OrderableHeaderCell, reorderColumn } from './column-order.js';
+import { useContext, useEffect, useRef } from 'react';
+import { ColumnOrderScope, OrderableHeaderCell, reorderColumn } from './column-order.js';
 import { ContextMenu, useContextMenu } from './context-menu.js';
 import { ColumnResizeHandle } from './resize-handle.js';
 import { selectionAnchorFor } from './selection-anchor.js';
@@ -21,6 +21,7 @@ export function TableHeader<T extends RowData>({
 }: TableHeaderProps<T>) {
   const menu = useContextMenu<ReturnType<typeof table.getAllLeafColumns>[number]>();
   const behavior = tableBehavior(table);
+  const orderScope = useContext(ColumnOrderScope);
   const selectable = selectionOverride ?? (behavior.selectable && behavior.selectionCheckboxes);
   const disabled = behavior.disabled || !!disabledOverride;
   const root = useRef<HTMLTableSectionElement>(null);
@@ -175,11 +176,11 @@ export function TableHeader<T extends RowData>({
                 )}
               </>
             );
-            return behavior.reorderable && groups.length === 1 ? (
+            return (behavior.reorderable || orderScope) && groups.length === 1 ? (
               <OrderableHeaderCell
                 key={header.id}
                 id={column.id}
-                locked={behavior.lockedColumns.includes(column.id)}
+                locked={!behavior.reorderable || behavior.lockedColumns.includes(column.id)}
                 {...headerProps}
               >
                 {contents}
