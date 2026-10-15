@@ -287,6 +287,7 @@ Each component opens with a typed Playground that stays at its declared defaults
 pnpm install --frozen-lockfile
 pnpm storybook       # interactive examples
 pnpm check           # lint, types, unit/browser/hydration and packed-consumer checks
+pnpm profile:columns # production drag/resize profile and render-count assertions
 pnpm capture:readme  # regenerate screenshots and screencasts; Chromium + ffmpeg
 ```
 

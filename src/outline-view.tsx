@@ -269,6 +269,24 @@ export function OutlineView<T extends RowData>(props: OutlineViewProps<T>) {
   );
   const behavior = tableBehavior(table);
   const showSelection = behavior.selectable && behavior.selectionCheckboxes;
+  // Sizing subscribers update geometry; header controls keep their own narrow subscriptions.
+  const header = (
+    <TableHeader
+      table={table}
+      getHeaderMenu={props.getHeaderMenu}
+      onColumnOrderCommit={props.onColumnOrderCommit}
+      selectionRows={visible.map(({ row }) => row)}
+      resizeOptions={{
+        storageKey:
+          props.columnSizing === undefined && !props.atoms?.columnSizing
+            ? props.storageKey
+            : undefined,
+        storage: props.storage,
+        cancelMediaQuery: props.cancelMediaQuery,
+        onCommit: props.onColumnSizingCommit,
+      }}
+    />
+  );
   return (
     <DensityScope
       density={props.density}
@@ -278,9 +296,9 @@ export function OutlineView<T extends RowData>(props: OutlineViewProps<T>) {
       tabIndex={0}
       className={`pt-scroll pt-outline ${props.className ?? ''}`}
     >
-      <table.Subscribe source={table.options.atoms?.columnSizing ?? table.atoms.columnSizing}>
-        {() => (
-          <ColumnOrderProvider table={table} onCommit={props.onColumnOrderCommit}>
+      <ColumnOrderProvider table={table} onCommit={props.onColumnOrderCommit}>
+        <table.Subscribe source={table.options.atoms?.columnSizing ?? table.atoms.columnSizing}>
+          {() => (
             <table
               className="p-table pt-table"
               role="treegrid"
@@ -295,21 +313,7 @@ export function OutlineView<T extends RowData>(props: OutlineViewProps<T>) {
                   <col key={column.id} style={{ width: column.getSize() }} />
                 ))}
               </colgroup>
-              <TableHeader
-                table={table}
-                getHeaderMenu={props.getHeaderMenu}
-                onColumnOrderCommit={props.onColumnOrderCommit}
-                selectionRows={visible.map(({ row }) => row)}
-                resizeOptions={{
-                  storageKey:
-                    props.columnSizing === undefined && !props.atoms?.columnSizing
-                      ? props.storageKey
-                      : undefined,
-                  storage: props.storage,
-                  cancelMediaQuery: props.cancelMediaQuery,
-                  onCommit: props.onColumnSizingCommit,
-                }}
-              />
+              {header}
               {visible.length ? (
                 <MemoOutlineBody
                   table={table}
@@ -329,9 +333,9 @@ export function OutlineView<T extends RowData>(props: OutlineViewProps<T>) {
                 </tbody>
               )}
             </table>
-          </ColumnOrderProvider>
-        )}
-      </table.Subscribe>
+          )}
+        </table.Subscribe>
+      </ColumnOrderProvider>
     </DensityScope>
   );
 }

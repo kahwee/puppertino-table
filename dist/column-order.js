@@ -1,9 +1,9 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { closestCenter, DndContext, DragOverlay, MouseSensor, TouchSensor, useDndContext, useSensor, useSensors, } from '@dnd-kit/core';
+import { closestCenter, DndContext, DragOverlay, MouseSensor, TouchSensor, useDraggable, useDroppable, useSensor, useSensors, } from '@dnd-kit/core';
 import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
-import { arrayMove, horizontalListSortingStrategy, SortableContext, useSortable, } from '@dnd-kit/sortable';
-import { createContext, useContext, useEffect, useId, useRef, useState, } from 'react';
+import { arrayMove } from '@dnd-kit/sortable';
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, } from 'react';
 import { tableBehavior } from './table-behavior.js';
 /** Preserve absent/hidden IDs while moving visible leaf columns through native table state. */
 export function reorderColumn(order, visible, locked, active, over) {
@@ -116,16 +116,22 @@ export function ColumnOrderProvider({ table, onCommit, children, }) {
                 onDragEnd: () => 'Column drag finished.',
                 onDragCancel: () => 'Column drag cancelled. Order unchanged.',
             },
-        }, children: [_jsx(SortableContext, { items: visible.filter((key) => !behavior.lockedColumns.includes(key)), disabled: !enabled, strategy: horizontalListSortingStrategy, children: _jsx(ColumnOrderScope, { value: true, children: _jsx(DragPreview, { value: {
-                            active,
-                            over,
-                            after: !!active && !!over && visible.indexOf(active) < visible.indexOf(over),
-                        }, children: children }) }) }), _jsx(DragOverlay, { dropAnimation: null, children: active ? _jsx("div", { className: "pt-column-drag-preview", children: label(active) }) : null })] }));
+        }, children: [_jsx(ColumnOrderScope, { value: true, children: _jsx(DragPreview, { value: {
+                        active,
+                        over,
+                        after: !!active && !!over && visible.indexOf(active) < visible.indexOf(over),
+                    }, children: children }) }), _jsx(DragOverlay, { dropAnimation: null, children: active ? _jsx("div", { className: "pt-column-drag-preview", children: label(active) }) : null })] }));
 }
 export function OrderableHeaderCell({ id, locked, children, ...props }) {
-    const { listeners, setNodeRef, attributes, isDragging } = useSortable({ id, disabled: locked });
+    // Headers stay in place until drop. Sortable transforms/public motion context would
+    // subscribe every header to every ghost movement, even though none use those values.
+    const { listeners, setNodeRef: setDragRef, attributes, isDragging, active: nativeActive, } = useDraggable({ id, disabled: locked });
+    const { setNodeRef: setDropRef } = useDroppable({ id, disabled: locked });
+    const setNodeRef = useCallback((node) => {
+        setDragRef(node);
+        setDropRef(node);
+    }, [setDragRef, setDropRef]);
     const drag = useContext(DragPreview);
-    const { active: nativeActive } = useDndContext();
     const eligible = (target) => target instanceof Element && !target.closest('.pt-resizer, .pt-header-menu-trigger, input, a');
     return (_jsx("th", { ...props, ref: setNodeRef, "data-pt-orderable": !locked || undefined, "data-pt-dragging": isDragging || undefined, "data-pt-drop": nativeActive && drag.active && drag.over === id && drag.active !== id
             ? drag.after

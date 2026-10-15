@@ -37,6 +37,20 @@ export function PuppertinoTable<T extends RowData>(props: PuppertinoTableProps<T
   const table = usePuppertinoTable(props);
   const behavior = tableBehavior(table);
   const showSelection = behavior.selectable && behavior.selectionCheckboxes;
+  // Sizing subscribers update geometry; header controls keep their own narrow subscriptions.
+  const header = (
+    <TableHeader
+      table={table}
+      getHeaderMenu={getHeaderMenu}
+      onColumnOrderCommit={onColumnOrderCommit}
+      resizeOptions={{
+        storageKey: columnSizing === undefined && !atoms?.columnSizing ? storageKey : undefined,
+        storage,
+        cancelMediaQuery,
+        onCommit: onColumnSizingCommit,
+      }}
+    />
+  );
   return (
     <DensityScope
       density={density}
@@ -46,9 +60,9 @@ export function PuppertinoTable<T extends RowData>(props: PuppertinoTableProps<T
       role="region"
       aria-label={`${ariaLabel} scroll area`}
     >
-      <table.Subscribe source={table.options.atoms?.columnSizing ?? table.atoms.columnSizing}>
-        {() => (
-          <ColumnOrderProvider table={table} onCommit={onColumnOrderCommit}>
+      <ColumnOrderProvider table={table} onCommit={onColumnOrderCommit}>
+        <table.Subscribe source={table.options.atoms?.columnSizing ?? table.atoms.columnSizing}>
+          {() => (
             <table
               className="p-table pt-table"
               aria-label={ariaLabel}
@@ -62,18 +76,7 @@ export function PuppertinoTable<T extends RowData>(props: PuppertinoTableProps<T
                   <col key={column.id} style={{ width: column.getSize() }} />
                 ))}
               </colgroup>
-              <TableHeader
-                table={table}
-                getHeaderMenu={getHeaderMenu}
-                onColumnOrderCommit={onColumnOrderCommit}
-                resizeOptions={{
-                  storageKey:
-                    columnSizing === undefined && !atoms?.columnSizing ? storageKey : undefined,
-                  storage,
-                  cancelMediaQuery,
-                  onCommit: onColumnSizingCommit,
-                }}
-              />
+              {header}
               <TableBody
                 table={table}
                 getRowLabel={getRowLabel}
@@ -86,9 +89,9 @@ export function PuppertinoTable<T extends RowData>(props: PuppertinoTableProps<T
                 leadingRows={leadingRows}
               />
             </table>
-          </ColumnOrderProvider>
-        )}
-      </table.Subscribe>
+          )}
+        </table.Subscribe>
+      </ColumnOrderProvider>
     </DensityScope>
   );
 }

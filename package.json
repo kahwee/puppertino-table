@@ -45,6 +45,7 @@
     "lint": "biome ci . --error-on-warnings",
     "format": "biome check --write .",
     "profile:pointer": "tsx scripts/profile-pointer.ts",
+    "profile:columns": "tsx scripts/profile-columns.ts",
     "capture:readme": "pnpm build:storybook && node scripts/capture-readme.mjs",
     "profile:collections": "tsx scripts/profile-collections.ts"
   },

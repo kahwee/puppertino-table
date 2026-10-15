@@ -12,10 +12,12 @@ export function PuppertinoTable(props) {
     const table = usePuppertinoTable(props);
     const behavior = tableBehavior(table);
     const showSelection = behavior.selectable && behavior.selectionCheckboxes;
-    return (_jsx(DensityScope, { density: density, metrics: densityMetrics, className: `pt-scroll ${className}`, tabIndex: 0, role: "region", "aria-label": `${ariaLabel} scroll area`, children: _jsx(table.Subscribe, { source: table.options.atoms?.columnSizing ?? table.atoms.columnSizing, children: () => (_jsx(ColumnOrderProvider, { table: table, onCommit: onColumnOrderCommit, children: _jsxs("table", { className: "p-table pt-table", "aria-label": ariaLabel, "aria-busy": status === 'loading' || undefined, style: { width: table.getTotalSize() + (showSelection ? 36 : 0) }, children: [caption && _jsx("caption", { children: caption }), _jsxs("colgroup", { children: [showSelection && _jsx("col", { style: { width: 36 } }), table.getAllLeafColumns().map((column) => (_jsx("col", { style: { width: column.getSize() } }, column.id)))] }), _jsx(TableHeader, { table: table, getHeaderMenu: getHeaderMenu, onColumnOrderCommit: onColumnOrderCommit, resizeOptions: {
-                                storageKey: columnSizing === undefined && !atoms?.columnSizing ? storageKey : undefined,
-                                storage,
-                                cancelMediaQuery,
-                                onCommit: onColumnSizingCommit,
-                            } }), _jsx(TableBody, { table: table, getRowLabel: getRowLabel, emptyContent: emptyContent, status: status, loadingContent: loadingContent, errorContent: errorContent, getRowProps: getRowProps, getCellProps: getCellProps, leadingRows: leadingRows })] }) })) }) }));
+    // Sizing subscribers update geometry; header controls keep their own narrow subscriptions.
+    const header = (_jsx(TableHeader, { table: table, getHeaderMenu: getHeaderMenu, onColumnOrderCommit: onColumnOrderCommit, resizeOptions: {
+            storageKey: columnSizing === undefined && !atoms?.columnSizing ? storageKey : undefined,
+            storage,
+            cancelMediaQuery,
+            onCommit: onColumnSizingCommit,
+        } }));
+    return (_jsx(DensityScope, { density: density, metrics: densityMetrics, className: `pt-scroll ${className}`, tabIndex: 0, role: "region", "aria-label": `${ariaLabel} scroll area`, children: _jsx(ColumnOrderProvider, { table: table, onCommit: onColumnOrderCommit, children: _jsx(table.Subscribe, { source: table.options.atoms?.columnSizing ?? table.atoms.columnSizing, children: () => (_jsxs("table", { className: "p-table pt-table", "aria-label": ariaLabel, "aria-busy": status === 'loading' || undefined, style: { width: table.getTotalSize() + (showSelection ? 36 : 0) }, children: [caption && _jsx("caption", { children: caption }), _jsxs("colgroup", { children: [showSelection && _jsx("col", { style: { width: 36 } }), table.getAllLeafColumns().map((column) => (_jsx("col", { style: { width: column.getSize() } }, column.id)))] }), header, _jsx(TableBody, { table: table, getRowLabel: getRowLabel, emptyContent: emptyContent, status: status, loadingContent: loadingContent, errorContent: errorContent, getRowProps: getRowProps, getCellProps: getCellProps, leadingRows: leadingRows })] })) }) }) }));
 }

@@ -5,8 +5,8 @@ import { useSelector } from '@tanstack/react-store';
 import { useEffect, useId, useRef, useState } from 'react';
 /** Small native preset picker with an anchored, explicit save/rename workflow. */
 export function ColumnLayoutPicker({ controller, disabled = false, label = 'Column layout', }) {
-    // Only this control observes width changes; rows and the workspace keep their subscriptions.
-    useSelector(controller.columnSizing);
+    // Preview widths leave the committed preset unchanged. Render only when its ID changes.
+    const selected = useSelector(controller.columnSizing, () => controller.getActivePresetId());
     const persistence = useSelector(controller.persistence);
     const id = useId();
     const input = useRef(null);
@@ -15,7 +15,6 @@ export function ColumnLayoutPicker({ controller, disabled = false, label = 'Colu
     const [name, setName] = useState('');
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
-    const selected = controller.getActivePresetId();
     const preset = controller.presets.find((item) => item.id === selected);
     const unavailable = disabled || !controller.ready;
     useEffect(() => {

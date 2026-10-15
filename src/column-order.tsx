@@ -6,22 +6,19 @@ import {
   DragOverlay,
   MouseSensor,
   TouchSensor,
-  useDndContext,
+  useDraggable,
+  useDroppable,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
 import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
-import {
-  arrayMove,
-  horizontalListSortingStrategy,
-  SortableContext,
-  useSortable,
-} from '@dnd-kit/sortable';
+import { arrayMove } from '@dnd-kit/sortable';
 import type { ColumnOrderState, RowData } from '@tanstack/react-table';
 import {
   type ComponentPropsWithoutRef,
   createContext,
   type ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useId,
@@ -183,23 +180,17 @@ export function ColumnOrderProvider<T extends RowData>({
         },
       }}
     >
-      <SortableContext
-        items={visible.filter((key) => !behavior.lockedColumns.includes(key))}
-        disabled={!enabled}
-        strategy={horizontalListSortingStrategy}
-      >
-        <ColumnOrderScope value={true}>
-          <DragPreview
-            value={{
-              active,
-              over,
-              after: !!active && !!over && visible.indexOf(active) < visible.indexOf(over),
-            }}
-          >
-            {children}
-          </DragPreview>
-        </ColumnOrderScope>
-      </SortableContext>
+      <ColumnOrderScope value={true}>
+        <DragPreview
+          value={{
+            active,
+            over,
+            after: !!active && !!over && visible.indexOf(active) < visible.indexOf(over),
+          }}
+        >
+          {children}
+        </DragPreview>
+      </ColumnOrderScope>
       <DragOverlay dropAnimation={null}>
         {active ? <div className="pt-column-drag-preview">{label(active)}</div> : null}
       </DragOverlay>
@@ -213,9 +204,24 @@ export function OrderableHeaderCell({
   children,
   ...props
 }: Omit<ComponentPropsWithoutRef<'th'>, 'id'> & { id: string; locked: boolean }) {
-  const { listeners, setNodeRef, attributes, isDragging } = useSortable({ id, disabled: locked });
+  // Headers stay in place until drop. Sortable transforms/public motion context would
+  // subscribe every header to every ghost movement, even though none use those values.
+  const {
+    listeners,
+    setNodeRef: setDragRef,
+    attributes,
+    isDragging,
+    active: nativeActive,
+  } = useDraggable({ id, disabled: locked });
+  const { setNodeRef: setDropRef } = useDroppable({ id, disabled: locked });
+  const setNodeRef = useCallback(
+    (node: HTMLTableCellElement | null) => {
+      setDragRef(node);
+      setDropRef(node);
+    },
+    [setDragRef, setDropRef],
+  );
   const drag = useContext(DragPreview);
-  const { active: nativeActive } = useDndContext();
   const eligible = (target: EventTarget | null) =>
     target instanceof Element && !target.closest('.pt-resizer, .pt-header-menu-trigger, input, a');
   return (

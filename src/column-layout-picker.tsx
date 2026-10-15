@@ -14,8 +14,8 @@ export function ColumnLayoutPicker({
   disabled?: boolean;
   label?: string;
 }) {
-  // Only this control observes width changes; rows and the workspace keep their subscriptions.
-  useSelector(controller.columnSizing);
+  // Preview widths leave the committed preset unchanged. Render only when its ID changes.
+  const selected = useSelector(controller.columnSizing, () => controller.getActivePresetId());
   const persistence = useSelector(controller.persistence);
   const id = useId();
   const input = useRef<HTMLInputElement>(null);
@@ -24,7 +24,6 @@ export function ColumnLayoutPicker({
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const selected = controller.getActivePresetId();
   const preset = controller.presets.find((item) => item.id === selected);
   const unavailable = disabled || !controller.ready;
   useEffect(() => {

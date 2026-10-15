@@ -178,12 +178,39 @@ export function useColumnLayout({
       ? clean
       : null;
   };
-  const getActivePresetId = () => {
-    const matches = [...builtins, ...profiles.current].filter(
-      (preset) => JSON.stringify(preset.layout) === JSON.stringify(committed.current),
-    );
-    return matches.find((preset) => preset.id === preferred.current)?.id ?? matches[0]?.id ?? '';
-  };
+  const getActivePresetId = useMemo(() => {
+    let previous:
+      | {
+          layout: ColumnLayout;
+          profiles: ColumnLayoutPreset[];
+          preferred: string | null;
+          id: string;
+        }
+      | undefined;
+    return () => {
+      // Live width previews do not change the committed snapshot. Match presets only
+      // after a completed edit or profile change, even when a selector checks each tick.
+      if (
+        previous?.layout === committed.current &&
+        previous.profiles === profiles.current &&
+        previous.preferred === preferred.current
+      )
+        return previous.id;
+      const snapshot = JSON.stringify(committed.current);
+      const matches = [...builtins, ...profiles.current].filter(
+        (preset) => JSON.stringify(preset.layout) === snapshot,
+      );
+      const id =
+        matches.find((preset) => preset.id === preferred.current)?.id ?? matches[0]?.id ?? '';
+      previous = {
+        layout: committed.current,
+        profiles: profiles.current,
+        preferred: preferred.current,
+        id,
+      };
+      return id;
+    };
+  }, [builtins]);
   return {
     presets: allPresets,
     getActivePresetId,
