@@ -228,6 +228,15 @@ async function checkTableRecipes(page: Page, base: string) {
       },
       { id: canvasId, marker },
     );
+    // Supporting recipes render separately from the primary source panel. A cold
+    // docs context must wait for them too, rather than relying on earlier stories.
+    if (['default', 'paginated-selection'].includes(story)) {
+      await page.waitForFunction(() =>
+        [...document.querySelectorAll('details.storybook-supporting pre')].some((source) =>
+          source.textContent?.includes('createPuppertinoColumnHelper<'),
+        ),
+      );
+    }
     const source = await preview.locator('pre').innerText();
     const supporting = ['default', 'paginated-selection'].includes(story)
       ? (await page.locator('details.storybook-supporting pre').allTextContents()).join('\n')
