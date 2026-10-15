@@ -54,6 +54,9 @@ async function serve(directory: string, mount = '/') {
     close: () => new Promise<void>((resolve) => server.close(() => resolve())),
   };
 }
+const suite =
+  process.env.PUPPERTINO_BROWSER_SUITE ?? (process.env.PUPPERTINO_STORIES_ONLY ? 'stories' : 'all');
+if (!['all', 'demo', 'stories'].includes(suite)) throw new Error(`Unknown browser suite: ${suite}`);
 const demo = await serve('demo-dist');
 const stories = await serve('storybook-static', '/puppertino-table/');
 const browser = await chromium.launch({
@@ -66,7 +69,7 @@ await mkdir(evidence, { recursive: true });
 const errors: string[] = [];
 async function checkDemo() {
   const started = performance.now();
-  for (const theme of process.env.PUPPERTINO_STORIES_ONLY ? [] : ['light', 'dark']) {
+  for (const theme of ['light', 'dark']) {
     const page = await browser.newPage({
       viewport: { width: 1440, height: 1000 },
       reducedMotion: 'reduce',
@@ -734,15 +737,18 @@ try {
   // Each suite owns separate contexts and screenshot paths. Keep concurrency at two
   // so pointer gestures and accessibility scans do not overwhelm a hosted runner.
   // Wait for both before closing Chromium, including when either suite fails.
-  const results = await Promise.allSettled([checkDemo(), checkStories()]);
+  const results = await Promise.allSettled([
+    ...(suite !== 'stories' ? [checkDemo()] : []),
+    ...(suite !== 'demo' ? [checkStories()] : []),
+  ]);
   const failures = results
     .filter((result) => result.status === 'rejected')
     .map((result) => result.reason);
   if (failures.length) throw new AggregateError(failures, 'Browser verification failed');
   assert.deepEqual(errors, []);
   console.log(
-    process.env.PUPPERTINO_STORIES_ONLY
-      ? 'Storybook stories, customization, hook layouts, shared resize controllers and anchored gestures with controlled/local/atom selection, shared density, resizable browser panels and keyboard/context-menu workflows passed.'
+    suite !== 'all'
+      ? `${suite} browser verification passed.`
       : '512 repeated pointer drags, geometry, limits, keyboard/reset/cancellation/persistence, selection, disabled/unmount recovery, standalone-control cancellation, 267 rows across six pages, six light/dark axe layouts, Storybook customization and anchored gestures with controlled/local/atom selection, shared density, resizable browser panels and keyboard/context-menu workflows passed.',
   );
 } finally {

@@ -8,65 +8,12 @@ permissions:
   contents: read
 concurrency:
   group: storybook-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   check:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-        with:
-          version: 12.11.2
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 24.22.0
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Cache Chromium
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: chromium-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
-      # Keep OS dependencies current; cache hits skip the browser download.
-      - run: pnpm exec playwright install --with-deps chromium --no-shell
-      - name: Select installed Chromium
-        run: pnpm exec node -e "const {chromium}=require('playwright'); require('node:fs').appendFileSync(process.env.GITHUB_ENV, 'PLAYWRIGHT_CHROMIUM_EXECUTABLE=' + chromium.executablePath() + '\n')"
-      # Same gates as pnpm check; each native parallel group waits and propagates failures.
-      - parallel:
-          - name: Lint
-            run: pnpm lint
-          - name: Type-check
-            run: pnpm typecheck
-          - name: Unit and release tests
-            run: pnpm test
-      - parallel:
-          - name: Build library
-            run: pnpm build
-          - name: Build demo
-            run: pnpm build:demo
-          - name: Build Storybook
-            run: pnpm build:storybook
-      # Browser checks use built demo/Storybook and source; package checks own dist/prepack.
-      - parallel:
-          - name: Browser verification
-            run: pnpm test:browser
-          - name: Packed-consumer verification
-            run: pnpm test:package
-      - name: Verify checked-in build
-        run: git diff --exit-code -- dist
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: always()
-        with:
-          name: storybook-and-browser-evidence
-          path: |
-            storybook-static/
-            test-results/
-      - name: Package Storybook for Pages
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        with:
-          path: storybook-static/
+    uses: ./.github/workflows/verify.yml
+    with:
+      pages: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: check

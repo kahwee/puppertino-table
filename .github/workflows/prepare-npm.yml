@@ -4,7 +4,10 @@ on:
 permissions:
   contents: read
 jobs:
+  check:
+    uses: ./.github/workflows/verify.yml
   prepare:
+    needs: check
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -17,39 +20,10 @@ jobs:
           node-version: 24.22.0
           cache: pnpm
           registry-url: https://registry.npmjs.org
-      - run: pnpm install --frozen-lockfile
-      - name: Cache Chromium
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          path: ~/.cache/ms-playwright
-          key: chromium-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
-      # Keep OS dependencies current; cache hits skip the browser download.
-      - run: pnpm exec playwright install --with-deps chromium --no-shell
-      - name: Select installed Chromium
-        run: pnpm exec node -e "const {chromium}=require('playwright'); require('node:fs').appendFileSync(process.env.GITHUB_ENV, 'PLAYWRIGHT_CHROMIUM_EXECUTABLE=' + chromium.executablePath() + '\n')"
-      # Same gates as pnpm check; each native parallel group waits and propagates failures.
-      - parallel:
-          - name: Lint
-            run: pnpm lint
-          - name: Type-check
-            run: pnpm typecheck
-          - name: Unit and release tests
-            run: pnpm test
-      - parallel:
-          - name: Build library
-            run: pnpm build
-          - name: Build demo
-            run: pnpm build:demo
-          - name: Build Storybook
-            run: pnpm build:storybook
-      # Browser checks use built demo/Storybook and source; package checks own dist/prepack.
-      - parallel:
-          - name: Browser verification
-            run: pnpm test:browser
-          - name: Packed-consumer verification
-            run: pnpm test:package
-      - name: Verify checked-in build
-        run: git diff --exit-code -- dist
+          name: verified-package-${{ github.run_id }}
+          path: test-results/package/
       - name: Preview public npm publication
         run: npm publish test-results/package/*.tgz --dry-run --ignore-scripts --access public
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

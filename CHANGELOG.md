@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Run CI quality, package, demo/hydration and Storybook checks on independent runners through one shared workflow; reuse verified release artifacts and cancel superseded pull-request runs.
+
 - Update the package manager, CI and release checks to pnpm 12.11.2 and refresh the dependency lockfile. Move CI to Node 24.22.0, the latest patch on the existing LTS line.
 
 - Add native TanStack column-order atoms and DnD Kit header dragging, with protected columns, insertion markers, cancelled-drop safety and keyboard menus.
