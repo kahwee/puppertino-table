@@ -101,6 +101,24 @@ async function checkDemo() {
     });
     for (const [property, [actual, expected]] of Object.entries(nativeGeometry))
       assert.equal(actual, expected, `${theme}: shared ${property} matches Puppertino`);
+    await page.evaluate(() => {
+      document.body.dataset.checkboxBubbles = '0';
+      document.body.addEventListener('click', () => {
+        document.body.dataset.checkboxBubbles = String(
+          Number(document.body.dataset.checkboxBubbles) + 1,
+        );
+      });
+    });
+    const selectAll = page.getByRole('checkbox', { name: 'Select all visible rows' });
+    await selectAll.locator('..').dispatchEvent('click');
+    assert.equal(await selectAll.isChecked(), true, 'header label selects the visible page');
+    await selectAll.locator('..').dispatchEvent('click');
+    assert.equal(await selectAll.isChecked(), false, 'header label clears the visible page');
+    assert.equal(
+      await page.locator('body').getAttribute('data-checkbox-bubbles'),
+      '0',
+      'header label activation does not reach parent commands',
+    );
     const checks = page.getByRole('checkbox', { name: /^Select Person/ });
     await checks.nth(1).click();
     await checks.nth(4).click({ modifiers: ['Shift'] });

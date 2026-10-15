@@ -4,6 +4,7 @@
 
 - Add native TanStack column-order atoms and DnD Kit header dragging, with protected columns, insertion markers, cancelled-drop safety and keyboard menus.
 - Add named layout presets and `ColumnLayoutPicker`: built-ins, personal save/rename/delete, reload restoration and session-only fallback.
+- Keep selection-checkbox label clicks inside the control, preventing row/header actions from firing alongside selection. Native checkbox and keyboard activation still toggle once.
 
 - Add `useColumnLayout`, validated saved visibility/order/widths and reusable header-menu commands. Name can be protected and pinned; hidden widths survive other resizes, and cancelled gestures never persist.
 - Subscribe directly to externally owned sizing atoms so drag previews remain live after switching table views.

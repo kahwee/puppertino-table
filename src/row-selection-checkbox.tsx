@@ -14,7 +14,11 @@ export function RowSelectionCheckbox<T extends RowData>({
   return (
     <Subscribe source={row.table.atoms.rowSelection} selector={(selection) => !!selection[row.id]}>
       {(selected) => (
-        <label className="p-checkbox pt-selection-control">
+        // biome-ignore lint/a11y/useKeyWithClickEvents: The native input owns keyboard activation; this label only isolates bubbling.
+        <label
+          className="p-checkbox pt-selection-control"
+          onClick={(event) => event.stopPropagation()}
+        >
           <input
             type="checkbox"
             aria-label={`Select ${label ?? row.id}`}
