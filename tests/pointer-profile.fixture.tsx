@@ -1,6 +1,11 @@
 import { createRoot } from 'react-dom/client';
 import { type PuppertinoColumnDef, PuppertinoTable } from '../src/index.js';
+import { resizeEnvironment } from '../src/resize-dom.js';
 import '../demo/style.css';
+
+// Profiling-only switch: compare identical browser workloads with immediate previews.
+if (new URLSearchParams(location.search).get('mode') === 'immediate')
+  resizeEnvironment.schedulePreview = undefined;
 
 type Item = { id: string; values: number[] };
 const count = Number(new URLSearchParams(location.search).get('columns') || 10);
@@ -17,24 +22,34 @@ const data: Item[] = Array.from({ length: 100 }, (_, index) => ({
   values: Array.from({ length: count }, (_, column) => index + column),
 }));
 let cells = 0;
+let updates = 0;
+let commits = 0;
 let active = false;
 const starts = new WeakMap<Event, number>();
 let durations: number[] = [];
 declare global {
   interface Window {
-    pointerProfile: { reset(): void; snapshot(): { durations: number[]; cells: number } };
+    pointerProfile: {
+      pointerId: number;
+      reset(): void;
+      snapshot(): { durations: number[]; cells: number; updates: number; commits: number };
+    };
   }
 }
 window.pointerProfile = {
+  pointerId: 0,
   reset: () => {
     cells = 0;
+    updates = 0;
+    commits = 0;
     durations = [];
   },
-  snapshot: () => ({ durations, cells }),
+  snapshot: () => ({ durations, cells, updates, commits }),
 };
 document.addEventListener(
   'pointerdown',
-  () => {
+  (event) => {
+    window.pointerProfile.pointerId = event.pointerId;
     active = true;
   },
   true,
@@ -65,6 +80,12 @@ createRoot(root).render(
     columns={columns}
     getRowId={(row) => row.id}
     ariaLabel="Resize profiling"
+    onColumnSizingChange={() => {
+      updates++;
+    }}
+    onColumnSizingCommit={() => {
+      commits++;
+    }}
     getCellProps={() => {
       cells++;
       return undefined;

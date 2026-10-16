@@ -4,11 +4,30 @@ export function createResizeController(environment, persist) {
     const members = new Set();
     let stopListening;
     let drag = null;
+    const applyPreview = (active) => {
+        if (active.pendingX === undefined)
+            return;
+        const x = active.pendingX;
+        active.pendingX = undefined;
+        active.latest = {
+            ...active.member.adapter.snapshot(),
+            [active.id]: clampSize(active.width + x - active.x, active.member.adapter.bounds(active.id)),
+        };
+        const applied = active.member.adapter.apply(active.latest);
+        if (active.member.adapter.coupled)
+            active.latest = { ...(applied ?? active.member.adapter.snapshot()) };
+    };
     const finish = (cancel) => {
         const active = drag;
         if (!active)
             return false;
+        active.cancelFrame?.();
+        active.cancelFrame = undefined;
+        // Pointer release can precede the queued frame. Flush its latest position
+        // synchronously on completion; cancellation discards it without persisting.
         drag = null;
+        if (!cancel)
+            applyPreview(active);
         active.cleanup();
         if (cancel) {
             active.member.adapter.apply(active.member.adapter.coupled
@@ -97,13 +116,24 @@ export function createResizeController(environment, persist) {
         move(member, pointer, x) {
             if (!owns(member, pointer) || !drag)
                 return;
-            drag.latest = {
-                ...member.adapter.snapshot(),
-                [drag.id]: clampSize(drag.width + x - drag.x, member.adapter.bounds(drag.id)),
-            };
-            const applied = member.adapter.apply(drag.latest);
-            if (member.adapter.coupled)
-                drag.latest = { ...(applied ?? member.adapter.snapshot()) };
+            const active = drag;
+            active.pendingX = x;
+            // Coupled panes normalize each step against other panes. Preserve that
+            // sequence until a separate coupled-layout profile establishes equivalence.
+            if (member.adapter.coupled || !environment.schedulePreview) {
+                applyPreview(active);
+            }
+            else if (!active.cancelFrame) {
+                active.cancelFrame = environment.schedulePreview(() => {
+                    active.cancelFrame = undefined;
+                    if (drag !== active)
+                        return;
+                    if (member.options.enabled === false || environment.isCompact(active.query))
+                        finish(true);
+                    else
+                        applyPreview(active);
+                });
+            }
         },
         end(member, pointer) {
             if (owns(member, pointer))

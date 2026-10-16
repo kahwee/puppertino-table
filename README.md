@@ -287,6 +287,7 @@ Each component opens with a typed Playground that stays at its declared defaults
 pnpm install --frozen-lockfile
 pnpm storybook       # interactive examples
 pnpm check           # lint, types, unit/browser/hydration and packed-consumer checks
+pnpm profile:resize-bursts # compare immediate and frame-batched pointer previews
 pnpm profile:columns # production drag/resize profile and render-count assertions
 pnpm capture:readme  # regenerate screenshots and screencasts; Chromium + ffmpeg
 ```
@@ -296,5 +297,8 @@ GitHub Actions runs the same gates as `pnpm check` in seven independent runner j
 Collection benchmarks: run `pnpm profile:collections` to record seven warmed samples for selection and navigation at 100, 1,000 and 10,000 rows. Results include medians and environment details in `test-results/performance/collections.json`; CI uploads them as `collection-performance`. Compare reports on equivalent machines rather than treating shared-runner timings as pass/fail thresholds. Browser runs also write `test-results/browser/timings-<suite>.json`, including failed phases, alongside the browser evidence artifacts.
 
 For repeated `nextItemId` calls with an unchanged order, pass a stable frozen array (`Object.freeze(ids)`) to reuse its deduplicated navigation index. Replace the array when the order changes. Mutable arrays remain supported and are recomputed on each navigation; ignored keys and Home do not build an index. The first supported navigation through a frozen array still pays the preparation cost; the benchmark measures warmed calls.
+
+
+Outline keeps its navigation index until the visible hierarchy changes and uses a linear wrapped typeahead search. Column resize previews are applied at most once per animation frame; completion flushes the latest position before persistence, and cancellation discards queued previews. Keyboard resize, reset and coupled-pane normalization remain immediate. See [pointer profiling](docs/pointer-performance.md) for the synthetic burst comparison and its limits.
 
 MIT. React, React DOM, TanStack Table, Puppertino, Base UI and Phosphor retain their respective licenses.

@@ -8,7 +8,11 @@ import {
 } from '../src/resize-controller.js';
 import { persistResize } from '../src/resize-persistence.js';
 
-function fixture() {
+function fixture(batched = false) {
+  const frames = new Map<number, () => void>();
+  let frameId = 0,
+    applies = 0,
+    snapshots = 0;
   let widths = { name: 200, score: 100 };
   let listens = 0,
     unlistens = 0,
@@ -19,6 +23,17 @@ function fixture() {
   let compact = false;
   const saved: string[] = [];
   const environment: ResizeEnvironment = {
+    ...(batched
+      ? {
+          schedulePreview(flush: () => void) {
+            const id = ++frameId;
+            frames.set(id, flush);
+            return () => {
+              frames.delete(id);
+            };
+          },
+        }
+      : {}),
     listenCancel(callback) {
       listens++;
       cancel = callback;
@@ -39,9 +54,13 @@ function fixture() {
     },
   };
   const adapter = {
-    snapshot: () => ({ ...widths }),
+    snapshot: () => {
+      snapshots++;
+      return { ...widths };
+    },
     bounds: (id: string) => ({ id, size: id === 'name' ? 200 : 100, minSize: 50, maxSize: 400 }),
     apply: (next: Record<string, number>) => {
+      applies++;
       widths = { name: next.name, score: next.score };
     },
     reset: (id: string) => {
@@ -73,6 +92,13 @@ function fixture() {
   const controller = createResizeController(environment, persistResize);
   return {
     controller,
+    flushFrames: () => {
+      const callbacks = [...frames.values()];
+      frames.clear();
+      for (const flush of callbacks) flush();
+    },
+    pendingFrames: () => [...frames.values()],
+    work: () => ({ applies, snapshots }),
     member,
     target,
     saved,
@@ -335,4 +361,83 @@ test('coupled commit snapshots retain normalized intent when a controlled owner 
   f.controller.key(owner, 'name', 'End', false);
   assert.deepEqual(JSON.parse(f.saved[1]), { name: 220, score: 80 });
   stop();
+});
+
+test('batched previews apply only the latest position and flush release before paint', () => {
+  const f = fixture(true),
+    member = f.member();
+  f.controller.retain(member);
+  f.controller.begin(member, 'name', 0, 1, f.target, 0);
+  for (let x = 1; x <= 120; x++) f.controller.move(member, 1, x);
+  assert.deepEqual(f.work(), { applies: 0, snapshots: 1 });
+  assert.equal(f.pendingFrames().length, 1);
+  f.flushFrames();
+  assert.equal(f.widths().name, 320);
+  assert.deepEqual(f.work(), { applies: 1, snapshots: 2 });
+  assert.equal(f.saved.length, 0);
+  f.controller.move(member, 1, 150);
+  member.adapter.apply({ ...f.widths(), score: 175 });
+  f.controller.end(member, 1);
+  assert.deepEqual(f.widths(), { name: 350, score: 175 });
+  assert.deepEqual(JSON.parse(f.saved[0]), { name: 350, score: 175 });
+  assert.equal(f.saved.length, 1);
+  assert.equal(f.pendingFrames().length, 0);
+  f.flushFrames();
+  assert.equal(f.saved.length, 1);
+});
+
+test('queued previews cannot survive cancellation, unmount, disable or compact transitions', () => {
+  for (const reason of ['escape', 'pointer', 'unmount', 'disabled', 'compact']) {
+    const f = fixture(true),
+      member = f.member();
+    member.options.cancelMediaQuery = '(max-width: 500px)';
+    const release = f.controller.retain(member);
+    f.controller.begin(member, 'name', 0, 1, f.target, 0);
+    f.controller.move(member, 1, 50);
+    f.flushFrames();
+    f.controller.move(member, 1, 100);
+    const staleFrame = f.pendingFrames()[0];
+    if (reason === 'escape') f.cancel();
+    if (reason === 'pointer') f.controller.cancel(member, 1);
+    if (reason === 'unmount') release();
+    if (reason === 'disabled') {
+      member.options.enabled = false;
+      f.flushFrames();
+    }
+    if (reason === 'compact') {
+      f.compact();
+      f.flushFrames();
+    }
+    staleFrame();
+    assert.equal(f.widths().name, 200, reason);
+    assert.equal(f.pendingFrames().length, 0, reason);
+    assert.equal(f.saved.length, 0, reason);
+  }
+});
+
+test('an old frame cannot mutate a new gesture and coupled panes preserve immediate normalization', () => {
+  const f = fixture(true),
+    member = f.member();
+  f.controller.retain(member);
+  f.controller.begin(member, 'name', 0, 1, f.target, 0);
+  f.controller.move(member, 1, 100);
+  const staleFrame = f.pendingFrames()[0];
+  f.controller.cancel(member, 1);
+  const apply = member.adapter.apply;
+  member.adapter.coupled = true;
+  member.adapter.apply = (widths) => {
+    const normalized = { name: widths.name, score: 400 - widths.name };
+    apply(normalized);
+    return normalized;
+  };
+  f.controller.begin(member, 'name', 0, 2, f.target, 0);
+  staleFrame();
+  assert.equal(f.widths().name, 200);
+  f.controller.move(member, 2, 25);
+  assert.deepEqual(f.widths(), { name: 225, score: 175 });
+  f.controller.move(member, 2, 50);
+  assert.deepEqual(f.widths(), { name: 250, score: 150 });
+  assert.equal(f.pendingFrames().length, 0);
+  f.controller.end(member, 2);
+  assert.deepEqual(JSON.parse(f.saved[0]), { name: 250, score: 150 });
 });

@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useRef, useState } from 'react';
 import { nextItemId } from './item-navigation.js';
+import { findTypeaheadMatch } from './typeahead.js';
 /** Roving focus for native rows, buttons and links. Activation and commands remain app-owned. */
 export function useItemNavigation({ orderedIds, getItemElement, orientation = 'vertical', columns = 1, disabled = false, isItemDisabled, onNavigate, getItemLabel, }) {
     const [focusedId, setFocusedId] = useState(null);
@@ -44,10 +45,8 @@ export function useItemNavigation({ orderedIds, getItemElement, orientation = 'v
                 const text = now - typed.current.time > 700 ? char : typed.current.text + char;
                 typed.current = { text, time: now };
                 const prefix = [...text].every((letter) => letter === char) ? char : text;
-                const start = eligible.indexOf(id);
-                const search = [...eligible.slice(start + 1), ...eligible.slice(0, start + 1)];
-                next = search.find((item) => getItemLabel(item).toLocaleLowerCase().startsWith(prefix));
-                if (!next)
+                next = findTypeaheadMatch(eligible, id, prefix, getItemLabel);
+                if (next === undefined)
                     return;
             }
             if (next === undefined)

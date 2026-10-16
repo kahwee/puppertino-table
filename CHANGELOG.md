@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Make Outline typeahead linear with indexed row lookup and allocation-free wrapped search; reuse a frozen visible order for navigation until sorting or expansion changes it.
+- Batch column resize previews once per animation frame, synchronously flush the latest position on completion and discard pending work on cancellation. Keyboard resizing and coupled-pane normalization remain immediate.
+- Add a reproducible immediate-versus-batched pointer-burst profile with preview, commit and cell-render assertions.
+
 - Split Storybook interactions, table behavior, Finder workflows and docs into independent CI suites, with bounded local concurrency and per-suite timing reports.
 - Skip order processing for ignored navigation keys and Home; reuse navigation indexes for frozen orders without caching mutable arrays.
 - Add repeatable collection benchmarks with median samples, environment metadata and CI artifacts.

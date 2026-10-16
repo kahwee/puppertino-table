@@ -22,6 +22,8 @@ export interface ResizeTarget {
   releasePointerCapture(pointer: number): void;
 }
 export interface ResizeEnvironment {
+  /** Queue one preview before paint; return a cancellation function. */
+  schedulePreview?(flush: () => void): () => void;
   listenCancel(cancel: () => boolean): () => void;
   isCompact(query?: string): boolean;
   startGesture(
@@ -33,6 +35,20 @@ export interface ResizeEnvironment {
   ): () => void;
 }
 
+interface ActiveResize {
+  member: ResizeMember;
+  id: string;
+  x: number;
+  width: number;
+  before: ResizeWidths;
+  latest: ResizeWidths;
+  pointer: number;
+  query?: string;
+  cleanup: () => void;
+  pendingX?: number;
+  cancelFrame?: () => void;
+}
+
 /** Gesture ownership and width transitions. No React or browser globals. */
 export function createResizeController(
   environment: ResizeEnvironment,
@@ -40,21 +56,28 @@ export function createResizeController(
 ) {
   const members = new Set<ResizeMember>();
   let stopListening: (() => void) | undefined;
-  let drag: {
-    member: ResizeMember;
-    id: string;
-    x: number;
-    width: number;
-    before: ResizeWidths;
-    latest: ResizeWidths;
-    pointer: number;
-    query?: string;
-    cleanup: () => void;
-  } | null = null;
+  let drag: ActiveResize | null = null;
+  const applyPreview = (active: ActiveResize) => {
+    if (active.pendingX === undefined) return;
+    const x = active.pendingX;
+    active.pendingX = undefined;
+    active.latest = {
+      ...active.member.adapter.snapshot(),
+      [active.id]: clampSize(active.width + x - active.x, active.member.adapter.bounds(active.id)),
+    };
+    const applied = active.member.adapter.apply(active.latest);
+    if (active.member.adapter.coupled)
+      active.latest = { ...(applied ?? active.member.adapter.snapshot()) };
+  };
   const finish = (cancel: boolean) => {
     const active = drag;
     if (!active) return false;
+    active.cancelFrame?.();
+    active.cancelFrame = undefined;
+    // Pointer release can precede the queued frame. Flush its latest position
+    // synchronously on completion; cancellation discards it without persisting.
     drag = null;
+    if (!cancel) applyPreview(active);
     active.cleanup();
     if (cancel) {
       active.member.adapter.apply(
@@ -131,7 +154,7 @@ export function createResizeController(
         return false;
       const before = member.adapter.snapshot();
       if (!Number.isFinite(before[id])) return false;
-      const active = {
+      const active: ActiveResize = {
         member,
         id,
         x,
@@ -159,12 +182,20 @@ export function createResizeController(
     },
     move(member: ResizeMember, pointer: number, x: number) {
       if (!owns(member, pointer) || !drag) return;
-      drag.latest = {
-        ...member.adapter.snapshot(),
-        [drag.id]: clampSize(drag.width + x - drag.x, member.adapter.bounds(drag.id)),
-      };
-      const applied = member.adapter.apply(drag.latest);
-      if (member.adapter.coupled) drag.latest = { ...(applied ?? member.adapter.snapshot()) };
+      const active = drag;
+      active.pendingX = x;
+      // Coupled panes normalize each step against other panes. Preserve that
+      // sequence until a separate coupled-layout profile establishes equivalence.
+      if (member.adapter.coupled || !environment.schedulePreview) {
+        applyPreview(active);
+      } else if (!active.cancelFrame) {
+        active.cancelFrame = environment.schedulePreview(() => {
+          active.cancelFrame = undefined;
+          if (drag !== active) return;
+          if (member.options.enabled === false || environment.isCompact(active.query)) finish(true);
+          else applyPreview(active);
+        });
+      }
     },
     end(member: ResizeMember, pointer: number) {
       if (owns(member, pointer))

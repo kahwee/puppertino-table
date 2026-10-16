@@ -62,7 +62,13 @@ function OutlineBody<T extends RowData>({
   getCellProps,
 }: OutlineBodyProps<T>) {
   const elements = useRef(new Map<string, HTMLTableRowElement>());
-  const orderedIds = visible.map(({ row }) => row.id);
+  const { orderedIds, rowsById } = useMemo(
+    () => ({
+      orderedIds: Object.freeze(visible.map(({ row }) => row.id)),
+      rowsById: new Map(visible.map(({ row }) => [row.id, row])),
+    }),
+    [visible],
+  );
   const behavior = tableBehavior(table);
   const gestures = useRowSelectionGestures(table, { orderedIds, disabled: behavior.disabled });
   const navigation = useItemNavigation({
@@ -70,8 +76,8 @@ function OutlineBody<T extends RowData>({
     disabled: behavior.disabled,
     getItemElement: (id) => elements.current.get(id),
     getItemLabel: (id) => {
-      const item = visible.find((item) => item.row.id === id);
-      return item ? getRowLabel(item.row.original) : '';
+      const row = rowsById.get(id);
+      return row ? getRowLabel(row.original) : '';
     },
     onNavigate: gestures.select,
   });

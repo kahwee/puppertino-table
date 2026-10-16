@@ -2,6 +2,7 @@
 import { type KeyboardEvent, useCallback, useRef, useState } from 'react';
 import { type ItemNavigationOrientation, nextItemId } from './item-navigation.js';
 import type { SelectionModifiers } from './selection-gestures.js';
+import { findTypeaheadMatch } from './typeahead.js';
 
 export interface ItemNavigationHookOptions {
   orderedIds: readonly string[];
@@ -71,10 +72,8 @@ export function useItemNavigation({
         const text = now - typed.current.time > 700 ? char : typed.current.text + char;
         typed.current = { text, time: now };
         const prefix = [...text].every((letter) => letter === char) ? char : text;
-        const start = eligible.indexOf(id);
-        const search = [...eligible.slice(start + 1), ...eligible.slice(0, start + 1)];
-        next = search.find((item) => getItemLabel(item).toLocaleLowerCase().startsWith(prefix));
-        if (!next) return;
+        next = findTypeaheadMatch(eligible, id, prefix, getItemLabel);
+        if (next === undefined) return;
       }
       if (next === undefined) return;
       event.preventDefault();

@@ -75,6 +75,23 @@ export async function checkOutlineViews(page: Page, base: string, evidence: stri
   );
   const child = grid.getByRole('row', { name: /index.ts/ });
   await child.focus();
+  await child.press('p');
+  assert.equal(
+    await grid
+      .getByRole('row', { name: /Projects/ })
+      .evaluate((node) => node === document.activeElement),
+    true,
+    'typeahead wraps through the current sorted visible order',
+  );
+  await page.keyboard.press('p');
+  assert.equal(
+    await grid
+      .getByRole('row', { name: /package.json/ })
+      .evaluate((node) => node === document.activeElement),
+    true,
+    'repeated prefix characters cycle to the next match',
+  );
+  await child.focus();
   await child.press('ArrowLeft');
   const source = grid.getByRole('row', { name: /Source/ });
   assert.equal(await source.evaluate((node) => node === document.activeElement), true);

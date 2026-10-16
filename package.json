@@ -47,7 +47,8 @@
     "profile:pointer": "tsx scripts/profile-pointer.ts",
     "profile:columns": "tsx scripts/profile-columns.ts",
     "capture:readme": "pnpm build:storybook && node scripts/capture-readme.mjs",
-    "profile:collections": "tsx scripts/profile-collections.ts"
+    "profile:collections": "tsx scripts/profile-collections.ts",
+    "profile:resize-bursts": "PUPPERTINO_POINTER_BURSTS=1 tsx scripts/profile-pointer.ts"
   },
   "peerDependencies": {
     "@codedgar/puppertino": "^2.0.0",

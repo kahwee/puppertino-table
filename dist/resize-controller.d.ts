@@ -20,6 +20,8 @@ export interface ResizeTarget {
     releasePointerCapture(pointer: number): void;
 }
 export interface ResizeEnvironment {
+    /** Queue one preview before paint; return a cancellation function. */
+    schedulePreview?(flush: () => void): () => void;
     listenCancel(cancel: () => boolean): () => void;
     isCompact(query?: string): boolean;
     startGesture(target: ResizeTarget, pointer: number, className: string, query: string | undefined, cancel: () => void): () => void;

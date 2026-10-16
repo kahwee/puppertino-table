@@ -9,6 +9,10 @@ function markDrag(name, delta) {
 }
 /** Browser effects are installed only when a mounted hook retains a controller. */
 export const resizeEnvironment = {
+    schedulePreview(flush) {
+        const frame = requestAnimationFrame(flush);
+        return () => cancelAnimationFrame(frame);
+    },
     listenCancel(cancel) {
         const onEscape = (event) => {
             if (event.key === 'Escape' && cancel())
