@@ -2,29 +2,20 @@
 
 ## Unreleased
 
-- Make Outline typeahead linear with indexed row lookup and allocation-free wrapped search; reuse a frozen visible order for navigation until sorting or expansion changes it.
-- Batch column resize previews once per animation frame, synchronously flush the latest position on completion and discard pending work on cancellation. Keyboard resizing and coupled-pane normalization remain immediate.
-- Add a reproducible immediate-versus-batched pointer-burst profile with preview, commit and cell-render assertions.
+## 0.14.0 — 2026-10-15
 
-- Split Storybook interactions, table behavior, Finder workflows and docs into independent CI suites, with bounded local concurrency and per-suite timing reports.
-- Skip order processing for ignored navigation keys and Home; reuse navigation indexes for frozen orders without caching mutable arrays.
-- Add repeatable collection benchmarks with median samples, environment metadata and CI artifacts.
-
-- Avoid allocating full selection ranges twice per gesture and skip building a row index for the default row order. Ordinary clicks skip order deduplication.
-- Reuse the Storybook test host and allow HTTP caching of shared assets while keeping a fresh iframe for every story and checking all play functions and accessibility reports. Fail on reported play exceptions even when Storybook emits a success status; fix asynchronous story assertions and responsive pane-size expectations.
-- Keep stationary headers out of continuous drag motion, isolate header controls from resize geometry, and update the layout picker only when its committed preset changes. Add a production column-interaction profile with render-count regression checks.
-
-- Run CI quality, package, demo/hydration and Storybook checks on independent runners through one shared workflow; reuse verified release artifacts and cancel superseded pull-request runs.
-
-- Update the package manager, CI and release checks to pnpm 12.11.2 and refresh the dependency lockfile. Move CI to Node 24.22.0, the latest patch on the existing LTS line.
-
-- Add native TanStack column-order atoms and DnD Kit header dragging, with protected columns, insertion markers, cancelled-drop safety and keyboard menus.
-- Add named layout presets and `ColumnLayoutPicker`: built-ins, personal save/rename/delete, reload restoration and session-only fallback.
-- Keep selection-checkbox label clicks inside the control, preventing row/header actions from firing alongside selection. Native checkbox and keyboard activation still toggle once.
-
-- Add `useColumnLayout`, validated saved visibility/order/widths and reusable header-menu commands. Name can be protected and pinned; hidden widths survive other resizes, and cancelled gestures never persist.
-- Subscribe directly to externally owned sizing atoms so drag previews remain live after switching table views.
-- Demonstrate saved column ordering in the existing Paged workspace.
+- Add `useColumnLayout` for saved visibility, order and widths, with protected columns, reusable header-menu commands and widths retained while columns are hidden.
+- Add native TanStack column-order atoms and DnD Kit header dragging, including insertion markers, cancelled-drop safety and keyboard menus.
+- Add named layout presets and `ColumnLayoutPicker`: built-ins, personal save/rename/delete, reload restoration and session-only fallback. Demonstrate saved layouts in the Paged workspace.
+- Subscribe directly to externally owned sizing atoms so resize previews stay live across table-view switches.
+- Keep selection-checkbox label clicks inside the control, preventing unintended row/header actions while preserving native checkbox and keyboard activation.
+- Reduce selection allocations, skip processing for ignored navigation keys and Home, and reuse navigation indexes for frozen orders without caching mutable arrays.
+- Make Outline typeahead linear with indexed row lookup and wrapped search; reuse its navigation order until sorting or expansion changes it.
+- Isolate stationary headers and layout controls from continuous drag/resize previews. Batch column resize previews per animation frame, flush completion before persistence and discard queued work on cancellation. Keyboard resizing and coupled-pane normalization remain immediate.
+- Add repeatable collection, column-render and pointer-burst profiles with timing artifacts and regression checks.
+- Split CI verification into independent jobs, including four Storybook suites, with bounded local concurrency and per-suite timing reports. Reuse verified release packages and cancel superseded pull-request runs.
+- Cache shared Storybook assets while retaining isolated story frames. Fail on reported play exceptions even when Storybook emits a success status; fix asynchronous assertions, responsive pane expectations and supporting-code readiness.
+- Update pnpm to 12.11.2, CI Node to 24.22.0 and transitive dependencies.
 
 ## 0.13.0 — 2026-10-14
 

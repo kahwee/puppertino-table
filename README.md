@@ -43,7 +43,7 @@ Import Puppertino's sidebar CSS and `puppertino-table/style.css`. Use `size="sma
 ## Install
 
 ```sh
-pnpm add puppertino-table@0.13.0 @tanstack/react-table@9.3.1 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
+pnpm add puppertino-table@0.14.0 @tanstack/react-table@9.3.1 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
 ```
 
 React and React DOM (`^19.3.0`), TanStack Table and Puppertino are peer dependencies. Base UI is included as a runtime dependency for shared context-menu behavior. Import the Puppertino styles used by your components, followed by the library stylesheet:
@@ -249,7 +249,7 @@ Code starts with a short integration; expand Supporting code in Docs for the com
 
 Install `@tanstack/react-store` for atom-owned examples. The Paged workspace filters and sorts before paging, keeps selection by stable ID, and subscribes to footer counts. Actions shows callbacks; Interactions checks each workflow.
 
-**Unreleased:** these layout helpers are available from Git main.
+**Added in 0.14.0:** saved layouts, named presets and column ordering.
 
 `useColumnLayout({ columns: schema, storageKey })` saves visibility, order and completed widths. Keep `schema` stable, give each field a label and width bounds, and mark Name `pinned: true`. Filter definitions through `layout.hidden`; TanStack owns the order through `layout.columnOrder`. Then connect:
 
