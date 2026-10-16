@@ -47,3 +47,9 @@ Measured October 15, 2026 (Pacific), Chromium 154.0.8037.57 on the Linux develop
 | 100 | 240 → 30 | 54.13 → 54.02 |
 
 All measured samples committed once and rendered zero row cells. Batching removes seven out of eight preview updates in this workload. The wide-table browser-task difference is negligible: batching does not eliminate layout/paint costs or establish improved frame rate. These task metrics include browser work beyond event dispatch and should not be presented as end-to-end input latency.
+
+## Opt-in row virtualization
+
+The Large inventory Storybook example compares identical loaded data with ordinary and virtual rendering. `pnpm test:browser` includes desktop/phone light/dark checks at 10,000 rows × 100 columns, plus keyboard/IME handling, logical row indices, focus retention, last-row geometry and axe. A separate SSR/hydration fixture checks the first mount. Raw DOM-count comparisons are written to `test-results/browser/virtual-table-results.json`.
+
+In the focused Chromium check on October 16, 2026 (UTC), the wide 10,000-row case mounted 26 rows and 2,626 cells (including selection cells). At the same 100-row × 100-column dataset, ordinary rendering created about 10,100 body cells including selection and the request row; virtualization mounted 2,020 data cells. These are DOM counts, not frame-rate or end-to-end latency measurements. All columns remain rendered per mounted row; data/model memory is not virtualized. The existing pointer profiles above still describe ordinary rendering.

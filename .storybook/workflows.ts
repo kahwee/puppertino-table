@@ -1,6 +1,10 @@
 /** Link to existing stories and open their native Interactions panel. */
 export const workflows: Readonly<Record<string, readonly { name: string; story: string }[]>> = {
   'Puppertino/Table': [
+    {
+      name: 'Scroll, navigate and recover an inventory',
+      story: 'puppertino-table--large-inventory-workflow',
+    },
     { name: 'Select across pages', story: 'puppertino-table--paginated-selection' },
     { name: 'Commit and reset widths', story: 'puppertino-table--resize-events' },
   ],

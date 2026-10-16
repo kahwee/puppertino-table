@@ -6,6 +6,7 @@ import { createElement as _createElement } from "react";
 import { memo, useMemo, useRef } from 'react';
 import { ColumnOrderProvider } from './column-order.js';
 import { DensityScope } from './density.js';
+import { isCompositionKey } from './item-navigation.js';
 import { RowSelectionCheckbox } from './row-selection-checkbox.js';
 import { tableBehavior } from './table-behavior.js';
 import { TableHeader } from './table-header.js';
@@ -48,6 +49,8 @@ function OutlineBody({ table, outline, visible, getRowLabel, getRowProps, getCel
         void outline.setExpanded(row.original, outline.expanded[row.id] !== true, recursive);
     };
     const keyDown = (event, item) => {
+        if (event.defaultPrevented || isCompositionKey(event.nativeEvent))
+            return;
         if (event.target === event.currentTarget &&
             !behavior.disabled &&
             !event.altKey &&

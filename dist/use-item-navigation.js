@@ -1,9 +1,9 @@
 'use client';
 import { useCallback, useRef, useState } from 'react';
-import { nextItemId } from './item-navigation.js';
+import { isCompositionKey, itemPageSize, nextItemId, } from './item-navigation.js';
 import { findTypeaheadMatch } from './typeahead.js';
 /** Roving focus for native rows, buttons and links. Activation and commands remain app-owned. */
-export function useItemNavigation({ orderedIds, getItemElement, orientation = 'vertical', columns = 1, disabled = false, isItemDisabled, onNavigate, getItemLabel, }) {
+export function useItemNavigation({ orderedIds, getItemElement, orientation = 'vertical', columns = 1, disabled = false, pageSize, isItemDisabled, onNavigate, getItemLabel, }) {
     const [focusedId, setFocusedId] = useState(null);
     const typed = useRef({ text: '', time: 0 });
     const eligible = isItemDisabled ? orderedIds.filter((id) => !isItemDisabled(id)) : orderedIds;
@@ -26,18 +26,25 @@ export function useItemNavigation({ orderedIds, getItemElement, orientation = 'v
         onFocus: () => setFocusedId(id),
         onKeyDown: (event) => {
             if (disabled ||
+                isCompositionKey(event.nativeEvent) ||
                 event.defaultPrevented ||
                 event.target !== event.currentTarget ||
                 event.metaKey ||
                 event.ctrlKey ||
                 event.altKey)
                 return;
+            const paging = event.key === 'PageUp' || event.key === 'PageDown';
             let next = nextItemId({
                 orderedIds: eligible,
                 currentId: id,
                 key: event.key,
                 orientation,
                 columns: typeof columns === 'function' ? columns() : columns,
+                pageSize: paging
+                    ? typeof pageSize === 'function'
+                        ? pageSize()
+                        : (pageSize ?? itemPageSize(getItemElement(id)))
+                    : undefined,
             });
             if (next === undefined && getItemLabel && event.key.length === 1 && event.key.trim()) {
                 const now = Date.now();

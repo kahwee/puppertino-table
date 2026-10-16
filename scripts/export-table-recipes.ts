@@ -85,7 +85,24 @@ await Promise.all([
   writeFile(path.join(directory, 'split-example.tsx'), recipes.split),
   writeFile(path.join(directory, 'document-workspace.tsx'), workspace),
 ]);
+await Promise.all([
+  ...['large-inventory.ts', 'large-table-example.tsx'].map(async (filename) =>
+    writeFile(
+      path.join(directory, filename === 'large-table-example.tsx' ? 'large-table.tsx' : filename),
+      (await readFile(`demo/${filename}`, 'utf8')).replace(
+        "'../src/index.js'",
+        "'puppertino-table'",
+      ),
+    ),
+  ),
+  writeFile(
+    path.join(directory, 'large-table.css'),
+    await readFile('demo/large-table.css', 'utf8'),
+  ),
+]);
 const files = Object.entries({
+  'inventory-virtual': `import { LargeTableExample } from './large-table'; export function Inventory() { return <LargeTableExample rowCount={10000} columnCount={100} virtualized />; }`,
+  'inventory-ordinary': `import { LargeTableExample } from './large-table'; export function Inventory() { return <LargeTableExample rowCount={100} columnCount={100} virtualized={false} density="comfortable" />; }`,
   'paged-large': pagedPeopleSource({ dataPreset: 'large', query: 'engineering', pageSize: 25 }),
   'paged-read-only': pagedPeopleSource({ dataPreset: 'readOnly', disabled: true }),
   'paged-empty': pagedPeopleSource({ dataPreset: 'empty', pageSize: 5 }),
@@ -147,7 +164,8 @@ await Promise.all(files.map(({ name, source }) => writeFile(path.join(directory,
 // Styles are resolved by the app's bundler; give the TS-only consumer exact CSS declarations.
 await writeFile(
   path.join(directory, 'recipe-styles.d.ts'),
-  `declare module '*/paged-people.css';
+  `declare module '*/large-table.css';
+declare module '*/paged-people.css';
 declare module '@codedgar/puppertino/colors';
 declare module '@codedgar/puppertino/buttons';
 declare module '@codedgar/puppertino/lists';

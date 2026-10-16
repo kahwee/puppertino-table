@@ -1,4 +1,11 @@
 /* Scoped enhancements; import Puppertino's table/color/control styles separately. */
+/* Virtual stripes follow the logical row, not spacer positions in the DOM. */
+:where(.pt-virtual-table tbody tr[data-virtual-stripe="true"]) td {
+  background: var(--p-table-stripe);
+}
+:where(.pt-virtual-table tbody tr[data-virtual-stripe="false"]) td {
+  background: none;
+}
 .pt-scroll {
   max-width: 100%;
   min-width: 0;
@@ -944,6 +951,24 @@
   .pt-layout-popup :where(input) {
     font-size: 16px;
   }
+}
+
+/* Spacer rows represent omitted records, never decoration or data. */
+.pt-virtual-table {
+  border-spacing: 0;
+  overflow-anchor: none;
+}
+.pt-table.pt-virtual-table tbody tr.pt-virtual-spacer,
+.pt-table.pt-virtual-table tbody tr.pt-virtual-spacer td {
+  padding: 0;
+  border: 0;
+  font-size: 0;
+  line-height: 0;
+  background: transparent;
+}
+.pt-virtual-table [data-virtual-row]:focus-visible {
+  outline: 2px solid var(--p-control-accent);
+  outline-offset: -2px;
 }
 
 .pt-finder-container,

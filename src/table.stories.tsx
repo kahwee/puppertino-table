@@ -11,6 +11,7 @@ import { tableRecipes } from '../.storybook/table-sources.js';
 import { DateTableExample } from '../demo/date-table-example.js';
 import { type Person, people, personColumns, productColumns, products } from '../demo/fixtures.js';
 import { KeyboardNavigationExample } from '../demo/keyboard-navigation-example.js';
+import { LargeTableExample, type LargeTableProps } from '../demo/large-table-example.js';
 import { PagedPeopleExample, type PagedPeopleProps } from '../demo/paged-people-example.js';
 import { type TableDataPreset, tableData } from '../demo/table-data-presets.js';
 import {
@@ -151,6 +152,9 @@ const meta = {
     stateOwner?: 'react' | 'atoms';
     dataPreset?: TableDataPreset;
     pageSize?: PagedPeopleProps['pageSize'];
+    rowCount?: number;
+    columnCount?: number;
+    virtualized?: boolean;
     query?: string;
     onQueryChange?: PagedPeopleProps['onQueryChange'];
   }
@@ -1089,6 +1093,23 @@ export const KeyboardItems: Story = {
     const first = files.getByRole('button', { name: 'Project brief.pdf' });
     const second = files.getByRole('button', { name: 'Research notes.txt' });
     await userEvent.click(first);
+    const composition = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      isComposing: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    first.dispatchEvent(composition);
+    await expect(first).toHaveFocus();
+    await expect(composition.defaultPrevented).toBe(false);
+    first.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'z', keyCode: 229, bubbles: true, cancelable: true }),
+    );
+    await expect(first).toHaveFocus();
+    await userEvent.keyboard('{PageDown}');
+    await expect(files.getByRole('button', { name: 'Launch timeline.pdf' })).toHaveFocus();
+    await userEvent.keyboard('{PageUp}');
+    await expect(first).toHaveFocus();
     await userEvent.keyboard('{ArrowDown}');
     await expect(second).toHaveFocus();
     await expect(second).toHaveAttribute('aria-pressed', 'true');
@@ -1103,5 +1124,127 @@ export const KeyboardItems: Story = {
     await expect(files.getByRole('button', { name: 'Budget.xlsx' })).toHaveFocus();
     await userEvent.click(canvas.getByRole('checkbox', { name: 'Disable navigation' }));
     await expect(first).toBeDisabled();
+  },
+};
+
+function renderLargeInventory(args: LargeTableProps) {
+  return <LargeTableExample {...args} />;
+}
+
+export const LargeInventory: Story = {
+  name: 'Large inventory',
+  args: { rowCount: 10000, columnCount: 10, virtualized: true, density: 'native', status: 'ready' },
+  argTypes: {
+    rowCount: {
+      control: 'select',
+      options: [0, 100, 1000, 10000],
+      description: 'Loaded rows; filtering happens before rendering.',
+      table: { category: 'Dataset' },
+    },
+    columnCount: {
+      control: 'select',
+      options: [10, 40, 100],
+      description: 'Compare narrow and wide schemas using the same renderer.',
+      table: { category: 'Dataset' },
+    },
+    status: {
+      control: 'radio',
+      options: ['ready', 'loading', 'error'],
+      description: 'Existing rows stay visible during refresh and errors.',
+      table: { category: 'Request' },
+    },
+    virtualized: {
+      control: 'boolean',
+      description: 'Render a measured window of rows. Turn off to compare ordinary rendering.',
+      table: { category: 'Rendering' },
+    },
+  },
+  parameters: {
+    controls: { include: ['rowCount', 'columnCount', 'virtualized', 'density', 'status'] },
+    docs: {
+      description: {
+        story:
+          'One loaded inventory, two rendering modes. Use Controls to compare 100–10,000 rows and 10–100 columns. Virtualization bounds the mounted rows; every column remains available horizontally. Data, filtering, sorting and selection keep the same ownership. For server-paged screens, ordinary rendering is often sufficient.',
+      },
+      source: {
+        transform: (
+          _code: string,
+          context: { args: LargeTableProps },
+        ) => `import '@codedgar/puppertino/colors';
+import '@codedgar/puppertino/buttons';
+import '@codedgar/puppertino/lists';
+import '@codedgar/puppertino/forms';
+import 'puppertino-table/style.css';
+import { LargeTableExample } from './large-table';
+
+export function Inventory() {
+  return <LargeTableExample rowCount={${context.args.rowCount ?? 10000}} columnCount={${context.args.columnCount ?? 10}}
+    virtualized={${context.args.virtualized !== false}} density=${JSON.stringify(context.args.density ?? 'native')} status=${JSON.stringify(context.args.status ?? 'ready')} />;
+}`,
+      },
+    },
+  },
+  render: renderLargeInventory,
+};
+
+export const LargeInventoryWorkflow: Story = {
+  name: 'Large inventory workflow',
+  args: { rowCount: 10000, columnCount: 10, virtualized: true, density: 'native', status: 'ready' },
+  render: renderLargeInventory,
+  tags: ['!dev', '!autodocs'],
+  parameters: { controls: { disable: true } },
+  play: async ({ canvasElement, args, step }) => {
+    if (!args.virtualized || args.rowCount === 0 || (args.status && args.status !== 'ready'))
+      return;
+    const canvas = within(canvasElement);
+    const table = canvas.getByRole('table', { name: 'Resource inventory' });
+    await step('Bound the mounted rows and select a resource', async () => {
+      await waitFor(() =>
+        expect(table.querySelectorAll('[data-virtual-row]').length).toBeGreaterThan(0),
+      );
+      await expect(table.querySelectorAll('[data-virtual-row]').length).toBeLessThan(60);
+      await userEvent.click(within(table).getAllByRole('checkbox')[1]);
+      await expect(canvas.getByLabelText('Inventory summary')).toHaveTextContent('1 selected');
+    });
+    await step('Navigate to an unmounted row and back', async () => {
+      const first = table.querySelector<HTMLElement>('[data-virtual-row]');
+      if (!first) throw new Error('The first virtual row did not mount.');
+      first.focus();
+      await userEvent.keyboard('{End}');
+      await waitFor(() =>
+        expect(canvasElement.ownerDocument.activeElement).toHaveAttribute(
+          'data-virtual-row',
+          `resource-${args.rowCount}`,
+        ),
+      );
+      await userEvent.keyboard('{Home}');
+      await waitFor(() =>
+        expect(canvasElement.ownerDocument.activeElement).toHaveAttribute(
+          'data-virtual-row',
+          'resource-1',
+        ),
+      );
+      await userEvent.keyboard('{PageDown}');
+      await waitFor(() =>
+        expect(canvasElement.ownerDocument.activeElement).not.toHaveAttribute(
+          'data-virtual-row',
+          'resource-1',
+        ),
+      );
+    });
+    await step('Recover an empty search without clearing selection', async () => {
+      await userEvent.type(
+        canvas.getByRole('searchbox', { name: 'Find resources' }),
+        'no such resource',
+      );
+      await expect(
+        canvas.getByText('No matching resources. Clear search to restore the inventory.'),
+      ).toBeVisible();
+      await userEvent.click(canvas.getByRole('button', { name: 'Clear search' }));
+      await waitFor(() =>
+        expect(table.querySelectorAll('[data-virtual-row]').length).toBeGreaterThan(0),
+      );
+      await expect(canvas.getByLabelText('Inventory summary')).toHaveTextContent('1 selected');
+    });
   },
 };

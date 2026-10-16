@@ -2,3 +2,6 @@ packages:
   - .
 allowBuilds:
   esbuild: true
+minimumReleaseAgeExclude:
+  - '@tanstack/react-virtual@3.14.20'
+  - '@tanstack/virtual-core@3.19.5'

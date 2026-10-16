@@ -6,6 +6,7 @@ import type { RowData } from '@tanstack/react-table';
 import { type KeyboardEvent, memo, useMemo, useRef } from 'react';
 import { ColumnOrderProvider } from './column-order.js';
 import { DensityScope } from './density.js';
+import { isCompositionKey } from './item-navigation.js';
 import { RowSelectionCheckbox } from './row-selection-checkbox.js';
 import { tableBehavior } from './table-behavior.js';
 import { TableHeader } from './table-header.js';
@@ -16,7 +17,10 @@ import { usePuppertinoTable } from './use-puppertino-table.js';
 import { useRowSelectionGestures } from './use-row-selection-gestures.js';
 
 type OutlineTableProps<P> = P extends unknown
-  ? Omit<P, 'getSubRows' | 'leadingRows' | 'status' | 'loadingContent' | 'errorContent'>
+  ? Omit<
+      P,
+      'virtualization' | 'getSubRows' | 'leadingRows' | 'status' | 'loadingContent' | 'errorContent'
+    >
   : never;
 export type OutlineViewProps<T extends RowData> = OutlineTableProps<PuppertinoTableProps<T>> &
   Omit<OutlineOptions<T>, 'getItemId'> & {
@@ -86,6 +90,7 @@ function OutlineBody<T extends RowData>({
     void outline.setExpanded(row.original, outline.expanded[row.id] !== true, recursive);
   };
   const keyDown = (event: KeyboardEvent<HTMLTableRowElement>, item: OutlineRow<T>) => {
+    if (event.defaultPrevented || isCompositionKey(event.nativeEvent)) return;
     if (
       event.target === event.currentTarget &&
       !behavior.disabled &&

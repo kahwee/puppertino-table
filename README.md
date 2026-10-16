@@ -110,6 +110,23 @@ Command/Ctrl-click toggles an item; Shift-click extends a range from a fixed anc
 
 [Compare comfortable spacing](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--file-table&args=initialDensity:comfortable) · [Dark columns](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--file-table&args=initialView:columns&globals=theme:dark) · [Narrow columns](https://kahwee.github.io/puppertino-table/?path=/story/examples-finder--narrow-columns)
 
+### Large loaded tables (unreleased)
+
+Opt in to TanStack row virtualization when the loaded collection is large:
+
+```tsx
+<PuppertinoTable
+  data={rows} columns={columns} getRowId={row => row.id}
+  ariaLabel="Inventory" virtualization={{ height: 400, overscan: 5 }}
+/>
+```
+
+Rows are measured, including density changes. Arrow keys, Page Up/Down and Home/End can reach unmounted rows; a focused row stays mounted while scrolling. Selection and sorting retain their existing ownership. IME composition is left to the input method, including legacy key-code 229 events. `useItemNavigation` also supports viewport-sized page jumps, with an optional `pageSize` override measured in visual rows.
+
+This bounds mounted rows, not loaded data or columns: each mounted row still renders all its columns, and fetching/pagination remain app-owned. Keep ordinary rendering for small server pages. `leadingRows` is unsupported with virtualization; use the ordinary body for custom leading content. Print/export and browser Find only see mounted content, so use an app-owned full-data export or search.
+
+Try **Table → Large inventory** in Storybook. One example controls rows, columns, density, request status and rendering mode. Its Code panel follows args; supporting files contain the complete data/schema and integration. The workflow checks selection, offscreen navigation and empty-search recovery.
+
 ## Hierarchy and split views
 
 Finder’s Outline view groups the current file collection into expandable Documents, PDFs, Notes, Spreadsheets and Artwork. It shares file IDs, selection, commands and sorting with the other views; List and Outline also share column widths. The demo groups are app-owned collections, not filesystem access.

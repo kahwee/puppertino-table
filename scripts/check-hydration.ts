@@ -13,19 +13,32 @@ declare global {
 const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'custom' });
 const fixture = await vite.ssrLoadModule('/tests/sizing-hydration.fixture.tsx');
 const html = fixture.serverHTML() as string;
+const virtualFixture = await vite.ssrLoadModule('/tests/virtual-hydration.fixture.tsx');
+const virtualHTML = virtualFixture.serverHTML() as string;
+assert.match(virtualHTML, /aria-rowcount="1001"/);
+assert.ok((virtualHTML.match(/data-virtual-row=/g) ?? []).length > 0);
+assert.ok((virtualHTML.match(/data-virtual-row=/g) ?? []).length < 50);
 const browserFixture = await vite.ssrLoadModule('/tests/browser-preferences.fixture.tsx');
 assert.match(html, />150</);
 const server = createServer(async (req, res) => {
   if (req.url === '/__sizing') {
-    res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.end(
       await vite.transformIndexHtml(
         '/__sizing',
         `<div id="root">${html}</div><script type="module">import { hydrate } from '/tests/sizing-hydration.fixture.tsx'; window.sizing = await hydrate();</script>`,
       ),
     );
+  } else if (req.url === '/__virtual') {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.end(
+      await vite.transformIndexHtml(
+        '/__virtual',
+        `<div id="root">${virtualHTML}</div><script type="module">import { hydrate } from '/tests/virtual-hydration.fixture.tsx'; window.virtualHydration = await hydrate();</script>`,
+      ),
+    );
   } else if (req.url === '/__browser') {
-    res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.end(
       await vite.transformIndexHtml(
         '/__browser',
@@ -158,6 +171,21 @@ try {
   assert.equal(await blocked.locator('#width').textContent(), '150');
   assert.deepEqual(await blocked.evaluate(() => window.sizing.errors), []);
   await blocked.close();
+  await page.goto(`http://127.0.0.1:${address.port}/__virtual`);
+  await page.waitForFunction(() => document.querySelectorAll('[data-virtual-row]').length > 0);
+  assert.ok((await page.locator('[data-virtual-row]').count()) < 50);
+  await page.locator('[data-virtual-row="row-1"]').focus();
+  await page.keyboard.press('End');
+  await page.waitForFunction(
+    () => document.activeElement?.getAttribute('data-virtual-row') === 'row-1000',
+  );
+  assert.deepEqual(
+    await page.evaluate(
+      () =>
+        (window as unknown as { virtualHydration: { errors: string[] } }).virtualHydration.errors,
+    ),
+    [],
+  );
   await checkBrowserPreferences(page, `http://127.0.0.1:${address.port}`);
   assert.deepEqual(errors, []);
   console.log(

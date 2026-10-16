@@ -50,8 +50,18 @@ export interface PuppertinoBodyOptions<T extends RowData> {
     | ReactNode
     | ((table: PuppertinoTableInstance<T>, context: PuppertinoBodyContext<T>) => ReactNode);
 }
+export interface TableVirtualizationOptions {
+  /** Bounded vertical scroll viewport in pixels. */
+  height: number;
+  /** Initial estimate; actual row heights are measured, including density changes. Default 32. */
+  estimateRowHeight?: number;
+  /** Extra rows above/below the viewport. Default 5. */
+  overscan?: number;
+}
 export type PuppertinoTableProps<T extends RowData> = PuppertinoTableOptions<T> &
   PuppertinoBodyOptions<T> & {
+    /** Opt-in row virtualization. Supplied data remains app-owned; leadingRows is unsupported. */
+    virtualization?: TableVirtualizationOptions;
     /** Completed header drop; cancelled drags never commit. */
     onColumnOrderCommit?: (order: ColumnOrderState) => void;
     /** Completed resize/reset snapshot; previews and cancelled gestures never commit. */

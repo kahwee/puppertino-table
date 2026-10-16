@@ -155,6 +155,7 @@ export type {
   TableBodyProps,
   TableHeaderProps,
   TableStatus,
+  TableVirtualizationOptions,
 } from './table-types.js';
 export { type TagOption, TagPicker, type TagPickerProps } from './tag-picker.js';
 export { type ColumnLayoutOptions, useColumnLayout } from './use-column-layout.js';

@@ -7,6 +7,8 @@ export interface ItemNavigationHookOptions {
     orientation?: ItemNavigationOrientation;
     /** Supply a function to measure responsive grid columns when a key is pressed. */
     columns?: number | (() => number);
+    /** Omit to measure the scrolling viewport for PageUp/PageDown. */
+    pageSize?: number | (() => number);
     disabled?: boolean;
     isItemDisabled?(id: string): boolean;
     /** Called after navigation; connect it to app selection when desired. */
@@ -15,7 +17,7 @@ export interface ItemNavigationHookOptions {
     getItemLabel?(id: string): string;
 }
 /** Roving focus for native rows, buttons and links. Activation and commands remain app-owned. */
-export declare function useItemNavigation({ orderedIds, getItemElement, orientation, columns, disabled, isItemDisabled, onNavigate, getItemLabel, }: ItemNavigationHookOptions): {
+export declare function useItemNavigation({ orderedIds, getItemElement, orientation, columns, disabled, pageSize, isItemDisabled, onNavigate, getItemLabel, }: ItemNavigationHookOptions): {
     activeId: string;
     focus: (id: string) => boolean;
     getItemProps: (id: string) => {

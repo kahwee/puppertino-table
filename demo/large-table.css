@@ -1,0 +1,57 @@
+.demo-large-inventory {
+  border: 1px solid var(--p-separator, #b8b8bd);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--p-window-bg, var(--p-bg-primary, white));
+  color: var(--p-list-text);
+}
+.demo-large-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--p-separator, #b8b8bd);
+}
+.demo-large-controls .p-search {
+  width: 260px;
+  max-width: 100%;
+}
+.demo-large-controls output {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--p-list-text);
+}
+.demo-large-help {
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 12px;
+  line-height: 1.5;
+  border-top: 1px solid var(--p-separator, #b8b8bd);
+}
+@media (max-width: 600px) {
+  .demo-large-controls .p-search {
+    width: 100%;
+  }
+  .demo-large-controls output {
+    margin-left: 0;
+  }
+}
+
+.demo-large-heading {
+  padding: 16px 16px 0;
+}
+.demo-large-heading h1 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+.demo-large-heading p {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 4px 0 0;
+}
+
+.demo-large-controls .p-search input {
+  width: 100%;
+}

@@ -23,7 +23,7 @@ export { PuppertinoTable, PuppertinoTable as TableView } from './table.js';
 export { TableBody } from './table-body.js';
 export { TableHeader } from './table-header.js';
 export type { PuppertinoTableAtoms, PuppertinoTableOptions } from './table-options.js';
-export type { PuppertinoBodyContext, PuppertinoBodyOptions, PuppertinoCell, PuppertinoCellProps, PuppertinoDataAttributes, PuppertinoHeaderMenu, PuppertinoRow, PuppertinoRowProps, PuppertinoTableProps, PuppertinoTableProps as TableViewProps, RowSelectionCheckboxProps, TableBodyProps, TableHeaderProps, TableStatus, } from './table-types.js';
+export type { PuppertinoBodyContext, PuppertinoBodyOptions, PuppertinoCell, PuppertinoCellProps, PuppertinoDataAttributes, PuppertinoHeaderMenu, PuppertinoRow, PuppertinoRowProps, PuppertinoTableProps, PuppertinoTableProps as TableViewProps, RowSelectionCheckboxProps, TableBodyProps, TableHeaderProps, TableStatus, TableVirtualizationOptions, } from './table-types.js';
 export { type TagOption, TagPicker, type TagPickerProps } from './tag-picker.js';
 export { type ColumnLayoutOptions, useColumnLayout } from './use-column-layout.js';
 export { useColumnResize } from './use-column-resize.js';

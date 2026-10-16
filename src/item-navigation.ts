@@ -7,6 +7,8 @@ export interface ItemNavigationOptions {
   orientation?: ItemNavigationOrientation;
   /** Number of visual columns in a grid. */
   columns?: number;
+  /** Visual rows per PageUp/PageDown, default 10. Grid pages preserve the column stride. */
+  pageSize?: number;
 }
 
 // Cache only frozen inputs: mutable caller arrays must reflect in-place edits.
@@ -31,6 +33,7 @@ export function nextItemId({
   key,
   orientation = 'vertical',
   columns = 1,
+  pageSize = 10,
 }: ItemNavigationOptions): string | undefined {
   if (!orderedIds.length) return;
   if (key === 'Home') return orderedIds[0];
@@ -41,6 +44,11 @@ export function nextItemId({
   if (key === 'ArrowUp' && orientation !== 'horizontal') offset = -stride;
   if (key === 'ArrowRight' && orientation !== 'vertical') offset = 1;
   if (key === 'ArrowLeft' && orientation !== 'vertical') offset = -1;
+  const paging = orientation !== 'horizontal' && (key === 'PageUp' || key === 'PageDown');
+  if (paging) {
+    const size = Number.isFinite(pageSize) ? Math.max(1, Math.floor(pageSize)) : 10;
+    offset = stride * size * (key === 'PageUp' ? -1 : 1);
+  }
   if (!offset && key !== 'End') return;
   const { ids, index: positions } = prepareOrder(orderedIds);
   if (key === 'End') return ids.at(-1);
@@ -53,6 +61,30 @@ export function nextItemId({
     Math.floor(index / stride) !== Math.floor((index + offset) / stride)
   )
     return currentId;
-  const next = index + offset;
+  const next = paging ? Math.max(0, Math.min(ids.length - 1, index + offset)) : index + offset;
   return next < 0 || next >= ids.length ? currentId : ids[next];
+}
+
+/** Composition must remain owned by the input method, including legacy keyCode 229 events. */
+export function isCompositionKey(event: { isComposing?: boolean; keyCode?: number }): boolean {
+  return event.isComposing === true || event.keyCode === 229;
+}
+
+/** Read geometry only for page keys; use the nearest vertical scrolling viewport. */
+export function itemPageSize(element: HTMLElement | null | undefined): number {
+  if (!element) return 10;
+  const view = element.ownerDocument.defaultView;
+  let parent = element.parentElement;
+  while (parent) {
+    if (
+      parent.clientHeight > 0 &&
+      /auto|scroll|overlay/.test(view?.getComputedStyle(parent).overflowY ?? '')
+    )
+      break;
+    parent = parent.parentElement;
+  }
+  const header = element.closest('table')?.tHead?.getBoundingClientRect().height ?? 0;
+  const height = (parent?.clientHeight ?? view?.innerHeight ?? 0) - header;
+  const row = element.getBoundingClientRect().height;
+  return height > 0 && row > 0 ? Math.max(1, Math.floor(height / row)) : 10;
 }

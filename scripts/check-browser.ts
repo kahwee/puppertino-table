@@ -11,6 +11,7 @@ import { checkResizeEvents } from './check-resize-events.js';
 import { checkResourceWorkspaces } from './check-resource-workspaces.js';
 import { checkStorybookDocs } from './check-storybook-docs.js';
 import { checkStorybookInteractions } from './check-storybook-interactions.js';
+import { checkVirtualTable } from './check-virtual-table.js';
 import { storyQuery } from './story-presets.mjs';
 import { setStorybookTheme } from './storybook-theme.mjs';
 
@@ -723,6 +724,7 @@ async function checkStories() {
     );
     await page.screenshot({ path: `${evidence}/${story}.png` });
   }
+  await checkVirtualTable(page, stories.base, evidence);
   await checkOutlineViews(page, stories.base, evidence);
   await checkResizeEvents(page, stories.base);
   await checkResourceWorkspaces(page, stories.base, evidence);

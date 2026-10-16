@@ -64,3 +64,29 @@ test('ignored keys and Home never traverse the collection', () => {
   assert.equal(nextItemId({ orderedIds, currentId: 'b', key: 'ArrowLeft' }), undefined);
   assert.equal(nextItemId({ orderedIds, currentId: 'b', key: 'Home' }), 'a');
 });
+
+test('page navigation clamps edges, scales grid strides and leaves horizontal paging native', () => {
+  assert.equal(nextItemId({ orderedIds: ids, currentId: 'b', key: 'PageDown', pageSize: 3 }), 'e');
+  assert.equal(nextItemId({ orderedIds: ids, currentId: 'e', key: 'PageUp', pageSize: 3 }), 'b');
+  assert.equal(nextItemId({ orderedIds: ids, currentId: 'b', key: 'PageUp', pageSize: 3 }), 'a');
+  assert.equal(nextItemId({ orderedIds: ids, currentId: 'e', key: 'PageDown', pageSize: 3 }), 'f');
+  assert.equal(
+    nextItemId({
+      orderedIds: ids,
+      currentId: 'a',
+      key: 'PageDown',
+      orientation: 'grid',
+      columns: 3,
+      pageSize: 1,
+    }),
+    'd',
+  );
+  assert.equal(
+    nextItemId({ orderedIds: ids, currentId: 'a', key: 'PageDown', orientation: 'horizontal' }),
+    undefined,
+  );
+  assert.equal(
+    nextItemId({ orderedIds: ids, currentId: 'a', key: 'PageDown', pageSize: Number.NaN }),
+    'f',
+  );
+});

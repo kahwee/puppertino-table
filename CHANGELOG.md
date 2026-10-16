@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add opt-in TanStack row virtualization with measured heights, native table semantics, logical row counts, focused-row retention and keyboard access to unmounted rows. Ordinary rendering remains the default.
+- Leave IME composition/legacy 229 keys untouched and support viewport-sized Page Up/Down navigation, including grid strides and explicit page-size overrides.
+- Add one controlled Large inventory Storybook example for data size, width, density, rendering and request states, with live code, supporting files and named selection/navigation/search recovery checks.
+
 ## 0.14.0 — 2026-10-15
 
 - Add `useColumnLayout` for saved visibility, order and widths, with protected columns, reusable header-menu commands and widths retained while columns are hidden.

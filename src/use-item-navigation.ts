@@ -1,6 +1,11 @@
 'use client';
 import { type KeyboardEvent, useCallback, useRef, useState } from 'react';
-import { type ItemNavigationOrientation, nextItemId } from './item-navigation.js';
+import {
+  type ItemNavigationOrientation,
+  isCompositionKey,
+  itemPageSize,
+  nextItemId,
+} from './item-navigation.js';
 import type { SelectionModifiers } from './selection-gestures.js';
 import { findTypeaheadMatch } from './typeahead.js';
 
@@ -10,6 +15,8 @@ export interface ItemNavigationHookOptions {
   orientation?: ItemNavigationOrientation;
   /** Supply a function to measure responsive grid columns when a key is pressed. */
   columns?: number | (() => number);
+  /** Omit to measure the scrolling viewport for PageUp/PageDown. */
+  pageSize?: number | (() => number);
   disabled?: boolean;
   isItemDisabled?(id: string): boolean;
   /** Called after navigation; connect it to app selection when desired. */
@@ -25,6 +32,7 @@ export function useItemNavigation({
   orientation = 'vertical',
   columns = 1,
   disabled = false,
+  pageSize,
   isItemDisabled,
   onNavigate,
   getItemLabel,
@@ -52,6 +60,7 @@ export function useItemNavigation({
     onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
       if (
         disabled ||
+        isCompositionKey(event.nativeEvent) ||
         event.defaultPrevented ||
         event.target !== event.currentTarget ||
         event.metaKey ||
@@ -59,12 +68,18 @@ export function useItemNavigation({
         event.altKey
       )
         return;
+      const paging = event.key === 'PageUp' || event.key === 'PageDown';
       let next = nextItemId({
         orderedIds: eligible,
         currentId: id,
         key: event.key,
         orientation,
         columns: typeof columns === 'function' ? columns() : columns,
+        pageSize: paging
+          ? typeof pageSize === 'function'
+            ? pageSize()
+            : (pageSize ?? itemPageSize(getItemElement(id)))
+          : undefined,
       });
       if (next === undefined && getItemLabel && event.key.length === 1 && event.key.trim()) {
         const now = Date.now();
