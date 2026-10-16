@@ -262,6 +262,8 @@ Checkboxes and row gestures share a fixed range anchor. Pass `selectionAnchor` t
 
 ## Storybook playgrounds
 
+Table has four starting points: Playground, State ownership, Paged workspace and Large inventory. Docs mounts one canvas, then explains when to choose each integration, what to try and what to expect. Specialist recipes stay linked from Docs without filling the sidebar; workflows include readable steps and an expected result before their executable check.
+
 Code starts with a short integration; expand Supporting code in Docs for the complete files. Try empty, long-name, large and read-only datasets through args in Table and the composed workspace. Selection counts, command results and empty-state recovery stay visible in the workspace.
 
 Install `@tanstack/react-store` for atom-owned examples. The Paged workspace filters and sorts before paging, keeps selection by stable ID, and subscribes to footer counts. Actions shows callbacks; Interactions checks each workflow.

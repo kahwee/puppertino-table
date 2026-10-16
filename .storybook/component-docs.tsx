@@ -1,18 +1,34 @@
-import {
-  Controls,
-  Primary,
-  Source,
-  Stories,
-  Subtitle,
-  Title,
-  useOf,
-} from '@storybook/addon-docs/blocks';
+import { Controls, Primary, Source, Subtitle, Title, useOf } from '@storybook/addon-docs/blocks';
 import { componentGuides } from './component-guides.js';
 import { scenarioGroups, scenarioHref } from './scenarios.js';
+import { focusedRecipes, type StoryRecipe, tableIntegrations } from './story-catalog.js';
 import { supportingSources } from './supporting-sources.js';
 import { workflows } from './workflows.js';
 
-/** One primary canvas; additional docs stories show distinct recipes only. */
+function RecipeLinks({ recipes, label }: { recipes: readonly StoryRecipe[]; label: string }) {
+  return (
+    <nav aria-label={label}>
+      <ul className="storybook-recipe-grid">
+        {recipes.map((recipe) => (
+          <li key={recipe.story}>
+            <a href={`./?path=/story/${recipe.story}`} target="_top">
+              {recipe.name}
+            </a>
+            <p>{recipe.when}</p>
+            <dl>
+              <dt>Try</dt>
+              <dd>{recipe.try}</dd>
+              <dt>Expect</dt>
+              <dd>{recipe.expect}</dd>
+            </dl>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+/** One interactive canvas per Docs page; open other integrations deliberately. */
 export function ComponentDocs() {
   const resolved = useOf('meta');
   const guide = resolved.type === 'meta' ? componentGuides[resolved.preparedMeta.title] : undefined;
@@ -23,6 +39,8 @@ export function ComponentDocs() {
   const checks = resolved.type === 'meta' ? workflows[resolved.preparedMeta.title] : undefined;
   const supporting =
     resolved.type === 'meta' ? supportingSources[resolved.preparedMeta.title] : undefined;
+  const recipes =
+    resolved.type === 'meta' ? focusedRecipes[resolved.preparedMeta.title] : undefined;
   return (
     <>
       <Title />
@@ -33,20 +51,13 @@ export function ComponentDocs() {
           'Use Controls to explore this component. Use the shared Theme and Viewport toolbars for appearance and responsive layouts.'}
       </p>
       <Primary />
-      {supporting &&
-        [supporting, ...(supporting.additional ?? [])].map((file) => (
-          <details className="storybook-supporting" key={file.filename}>
-            <summary>Supporting code: {file.filename}</summary>
-            <p>
-              {file.filename.endsWith('.tsx') ||
-              file.filename.endsWith('.ts') ||
-              file.filename.endsWith('.css')
-                ? 'Use this file with its matching short integration in Code.'
-                : 'Full default recipe with the original fixtures and cells.'}
-            </p>
-            <Source language={file.filename.endsWith('.css') ? 'css' : 'tsx'} code={file.code} />
-          </details>
-        ))}
+      {resolved.type === 'meta' && resolved.preparedMeta.title === 'Puppertino/Table' && (
+        <>
+          <h2 id="choose-an-integration">Choose an integration</h2>
+          <p>Keep the playground for component behavior. Open a workspace for an app-level task.</p>
+          <RecipeLinks recipes={tableIntegrations} label="Table integration paths" />
+        </>
+      )}
       {scenarios && (
         <>
           <h2 id="open-a-scenario">Open a scenario</h2>
@@ -140,8 +151,8 @@ export function ComponentDocs() {
       {checks && (
         <>
           <h2 id="workflows">Workflows</h2>
-          <p>Replay named steps in Interactions.</p>
-          <ul className="storybook-workflow-links">
+          <p>Follow the journey below, or open its executable check in Interactions.</p>
+          <ul className="storybook-workflow-grid">
             {checks.map((check) => (
               <li key={check.story}>
                 <a
@@ -150,12 +161,38 @@ export function ComponentDocs() {
                 >
                   {check.name}
                 </a>
+                <ol>
+                  {check.steps.map((step) => (
+                    <li key={step}>{step}</li>
+                  ))}
+                </ol>
+                <p>
+                  <strong>Expect:</strong> {check.result}
+                </p>
               </li>
             ))}
           </ul>
         </>
       )}
-      <Stories includePrimary={false} />
+      {recipes && (
+        <details className="storybook-focused-recipes">
+          <summary>Focused recipes ({recipes.length})</summary>
+          <p>Open one when you need its integration detail. Each has its own Code panel.</p>
+          <RecipeLinks recipes={recipes} label="Focused integration recipes" />
+        </details>
+      )}
+      {supporting && (
+        <>
+          <h2 id="supporting-files">Supporting files</h2>
+          <p>Copy the short integration from Code first; expand only the files it imports.</p>
+          {[supporting, ...(supporting.additional ?? [])].map((file) => (
+            <details className="storybook-supporting" key={file.filename}>
+              <summary>Supporting code: {file.filename}</summary>
+              <Source language={file.filename.endsWith('.css') ? 'css' : 'tsx'} code={file.code} />
+            </details>
+          ))}
+        </>
+      )}
     </>
   );
 }

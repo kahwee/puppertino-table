@@ -282,10 +282,21 @@ async function checkStories() {
   await page.goto(`${stories.base}/?path=/story/puppertino-table--default`);
   await page.frameLocator('#storybook-preview-iframe').getByRole('table').waitFor();
   await page.getByRole('link', { name: 'Playground', exact: true }).waitFor();
-  for (const name of ['State ownership', 'Date Columns']) {
+  for (const name of ['State ownership', 'Paged workspace', 'Large inventory']) {
     assert.equal(await page.getByRole('link', { name, exact: true }).count(), 1);
   }
-  for (const name of ['Dark', 'Narrow', 'Keyboard Resize', 'Controlled Sizing']) {
+  for (const name of [
+    'Date Columns',
+    'Item Selection Gestures',
+    'Grouped Headers',
+    'Customized Rows',
+    'Request States',
+    'Server Owned Order',
+    'Dark',
+    'Narrow',
+    'Keyboard Resize',
+    'Controlled Sizing',
+  ]) {
     assert.equal(await page.getByRole('link', { name, exact: true }).count(), 0);
   }
   await page.screenshot({ path: `${evidence}/storybook-pages.png` });

@@ -40,6 +40,59 @@ export async function checkStorybookQuality(page: Page, base: string, evidence: 
       node.textContent?.includes('atoms={{ columnSizing, sorting, rowSelection }}'),
     ),
   );
+  await frame.getByRole('button', { name: 'Reset example', exact: true }).click();
+  await frame.getByLabel('Checked rows').filter({ hasText: '0 selected' }).waitFor();
+  assert.equal(await frame.getByLabel('Atom name width').count(), 0);
+  await page.getByRole('tab', { name: /^Controls/ }).click();
+  await page.waitForFunction(
+    () =>
+      document.querySelector<HTMLInputElement>('input[name="control-stateOwner"][value="react"]')
+        ?.checked,
+  );
+
+  await page.goto(
+    `${base}/?path=/story/puppertino-table--large-inventory&args=rowCount:100;density:comfortable`,
+  );
+  await frame.getByRole('checkbox', { name: 'Select Design archive 00001', exact: true }).check();
+  await frame.getByRole('searchbox', { name: 'Find resources' }).fill('missing resource');
+  await frame.getByText('No matching resources. Clear search to restore the inventory.').waitFor();
+  await frame.getByRole('button', { name: 'Reset example', exact: true }).click();
+  await frame
+    .getByLabel('Inventory summary')
+    .filter({ hasText: '10,000 rows · 10 columns · 0 selected' })
+    .waitFor();
+  assert.equal(await frame.getByRole('searchbox', { name: 'Find resources' }).inputValue(), '');
+  assert.equal(
+    await frame.getByRole('table', { name: 'Resource inventory' }).getAttribute('aria-rowcount'),
+    '10001',
+  );
+  await page.getByRole('tab', { name: /^Controls/ }).click();
+  await page.waitForFunction(
+    () => document.querySelector<HTMLSelectElement>('#control-rowCount')?.value === '10000',
+  );
+  await page.waitForFunction(
+    () =>
+      document.querySelector<HTMLInputElement>('input[name="control-density"][value="native"]')
+        ?.checked,
+  );
+  await page.locator('#control-rowCount').selectOption('1000');
+  await page.locator('input[name="control-density"][value="compact"]').check();
+  await page.getByRole('tab', { name: 'Code', exact: true }).click();
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('pre')].some(
+      (node) =>
+        node.textContent?.includes('rowCount={1000}') &&
+        node.textContent.includes('density="compact"'),
+    ),
+  );
+  await frame.getByRole('button', { name: 'Reset example', exact: true }).click();
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('pre')].some(
+      (node) =>
+        node.textContent?.includes('rowCount={10000}') &&
+        node.textContent.includes('density="native"'),
+    ),
+  );
 
   await page.goto(`${base}/?path=/story/puppertino-finder-composition--composed`);
   await frame.getByRole('row', { name: /Brief.pdf/ }).click();

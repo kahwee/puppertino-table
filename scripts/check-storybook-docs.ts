@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import type { Page } from 'playwright';
+import { focusedRecipes, tableIntegrations } from '../.storybook/story-catalog.js';
+import { workflows } from '../.storybook/workflows.js';
 import { checkDataPresets } from './check-data-presets.js';
 import { checkPagedWorkspace } from './check-paged-workspace.js';
 import { checkPeopleColumns } from './check-people-columns.js';
@@ -117,8 +119,19 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   await checkOverviewInstallation(page, base);
   assert.equal(
     await page.getByRole('table', { name: 'Choose a Storybook example' }).getByRole('row').count(),
-    9,
+    11,
   );
+  for (const [name, story] of [
+    ['Paged workspace', 'paginated-selection'],
+    ['Large inventory', 'large-inventory'],
+  ])
+    assert.equal(
+      await page
+        .getByRole('table', { name: 'Choose a Storybook example' })
+        .getByRole('link', { name, exact: true })
+        .getAttribute('href'),
+      `./?path=/story/puppertino-table--${story}`,
+    );
   assert.equal(
     await page.getByRole('link', { name: 'Finder primitives', exact: true }).getAttribute('href'),
     './?path=/docs/puppertino-finder-composition--docs',
@@ -193,6 +206,32 @@ async function checkThemeToolbar(page: Page, base: string) {
 
 async function checkTableRecipes(page: Page, base: string) {
   console.log('Checking table docs: public API recipes and primary example');
+  const response = await fetch(`${base}/index.json`);
+  assert.ok(response.ok);
+  const { entries } = (await response.json()) as {
+    entries: Record<string, { id: string; title: string; type: string; tags: string[] }>;
+  };
+  const learningPaths = Object.values(entries)
+    .filter(
+      (entry) =>
+        entry.title === 'Puppertino/Table' && entry.type === 'story' && entry.tags.includes('dev'),
+    )
+    .map((entry) => entry.id)
+    .sort();
+  assert.deepEqual(
+    learningPaths,
+    ['puppertino-table--default', ...tableIntegrations.map((recipe) => recipe.story)].sort(),
+    'The sidebar exposes four distinct Table learning paths',
+  );
+  for (const recipe of [
+    ...Object.values(focusedRecipes).flat(),
+    ...Object.values(workflows).flat(),
+  ])
+    assert.equal(
+      entries[recipe.story]?.type,
+      'story',
+      `Recipe/workflow target exists: ${recipe.story}`,
+    );
   await page.goto(`${base}/iframe.html?id=puppertino-table--docs&viewMode=docs`);
   await page.locator('#story--puppertino-table--default--primary').waitFor();
   const primary = page.locator('.sbdocs-preview').first();
@@ -204,44 +243,74 @@ async function checkTableRecipes(page: Page, base: string) {
     'Regression canvases stay out of Autodocs',
   );
   assert.equal(await page.locator('#story--puppertino-table--empty').count(), 0);
+  assert.equal(await page.locator('.sbdocs-preview').count(), 1, 'Docs mounts one canvas');
+  assert.equal(
+    await page.locator('[data-virtual-row]').count(),
+    0,
+    'The large inventory is opened deliberately',
+  );
+  await primary.locator('xpath=..').getByRole('switch', { name: 'Show code' }).click();
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('pre')].some((node) =>
+      node.textContent?.includes('ariaLabel="People"'),
+    ),
+  );
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('details.storybook-supporting pre')].some((node) =>
+      node.textContent?.includes('createPuppertinoColumnHelper<'),
+    ),
+  );
+  const support = (await page.locator('details.storybook-supporting pre').allTextContents()).join(
+    '\n',
+  );
+  const primarySource = await primary.locator('xpath=..').locator('pre').innerText();
+  assert.ok(
+    primarySource.includes('ariaLabel="People"') &&
+      support.includes('createPuppertinoColumnHelper<'),
+  );
+  const frame = page.frameLocator('#storybook-preview-iframe');
   for (const [story, marker] of [
-    ['default', 'ariaLabel="People"'],
     ['selection', 'onRowSelectionChange={setSelection}'],
     ['server-owned-order', 'manualSorting\n'],
     ['customized-rows', 'getRowProps='],
     ['paginated-selection', "from './paged-people'"],
     ['date-columns', "sortFn: 'datetime'"],
     ['request-states', 'status={status}'],
+    ['grouped-headers', 'Identity'],
+    ['item-selection-gestures', 'useRowSelectionGestures'],
+    ['large-inventory', 'virtualized={true}'],
   ]) {
-    const canvasId = story === 'default' ? 'default--primary' : story;
-    const preview = page
-      .locator(`#story--puppertino-table--${canvasId}`)
-      .locator('xpath=ancestor::div[contains(@class,"sbdocs-preview")]/..');
-    await preview.getByRole('switch', { name: 'Show code' }).click();
-    await page.waitForFunction(
-      ({ id, marker }) => {
-        const canvas = document.getElementById(`story--puppertino-table--${id}`);
-        const source = canvas
-          ?.closest('.sbdocs-preview')
-          ?.parentElement?.querySelector<HTMLPreElement>('pre');
-        return source?.innerText?.includes(marker);
-      },
-      { id: canvasId, marker },
+    console.log(`Checking linked recipe: ${story}`);
+    await page.goto(`${base}/?path=/docs/puppertino-table--docs`);
+    const recipe = [...tableIntegrations, ...focusedRecipes['Puppertino/Table']].find(
+      (item) => item.story === `puppertino-table--${story}`,
     );
-    // Supporting recipes render separately from the primary source panel. A cold
-    // docs context must wait for them too, rather than relying on earlier stories.
-    if (['default', 'paginated-selection'].includes(story)) {
-      await page.waitForFunction(() =>
-        [...document.querySelectorAll('details.storybook-supporting pre')].some((source) =>
-          source.textContent?.includes('createPuppertinoColumnHelper<'),
-        ),
-      );
-    }
-    const source = await preview.locator('pre').innerText();
-    const supporting = ['default', 'paginated-selection'].includes(story)
-      ? (await page.locator('details.storybook-supporting pre').allTextContents()).join('\n')
-      : '';
-    const complete = source + supporting;
+    assert.ok(recipe);
+    const specialist = focusedRecipes['Puppertino/Table'].includes(recipe);
+    if (specialist) await frame.locator('.storybook-focused-recipes > summary').click();
+    const links = frame.getByRole('navigation', {
+      name: specialist ? 'Focused integration recipes' : 'Table integration paths',
+    });
+    await links.getByRole('link', { name: recipe.name, exact: true }).click();
+    await page.waitForURL((url) => url.searchParams.get('path') === `/story/${recipe.story}`);
+    await page.getByRole('tab', { name: 'Code', exact: true }).click();
+    await page
+      .waitForFunction(
+        (expected) =>
+          [...document.querySelectorAll('pre')].some((node) =>
+            node.textContent?.includes(expected),
+          ),
+        marker,
+      )
+      .catch(async (error) => {
+        throw new Error(
+          `${story}: expected Code to include ${JSON.stringify(marker)}. Observed: ${(await page.locator('pre').allTextContents()).join('\n').slice(0, 1600)}`,
+          { cause: error },
+        );
+      });
+    const source = (await page.locator('pre').allTextContents()).join('\n');
+    const complete =
+      source + (['paginated-selection', 'large-inventory'].includes(story) ? support : '');
     assert.ok(complete.includes("from 'puppertino-table'"), `${story}: public imports`);
     assert.ok(complete.includes('createPuppertinoColumnHelper<'), `${story}: typed columns`);
     assert.ok(source.includes(marker), `${story}: actual state wiring`);
@@ -254,7 +323,7 @@ async function checkTableRecipes(page: Page, base: string) {
 
 async function checkFocusedViewDocs(page: Page, base: string) {
   for (const [component, count] of [
-    ['outline-view', 2],
+    ['outline-view', 1],
     ['split-view', 1],
     ['sidebar', 1],
   ] as const) {

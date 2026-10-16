@@ -351,6 +351,7 @@ function ItemGestureExample({ ownership }: { ownership: 'controlled' | 'local' |
 }
 
 export const ItemSelectionGestures: Story = {
+  tags: ['!dev', '!autodocs'],
   args: { gestureOwnership: 'controlled' },
   argTypes: {
     gestureOwnership: {
@@ -393,8 +394,14 @@ export const Selection: Story = {
       table: { category: 'State ownership' },
     },
   },
-  render: (args) =>
-    args.stateOwner === 'atoms' ? <AtomOwnershipExample /> : <Example {...args} />,
+  render: function Ownership(args) {
+    const [, , resetArgs] = useArgs<typeof args>();
+    return (
+      <ResettableExample onReset={resetArgs}>
+        {args.stateOwner === 'atoms' ? <AtomOwnershipExample /> : <Example {...args} />}
+      </ResettableExample>
+    );
+  },
   parameters: {
     controls: { include: ['stateOwner'] },
     docs: {
@@ -504,6 +511,7 @@ export const ReadOnly: Story = {
   },
 };
 export const ServerOwnedOrder: Story = {
+  tags: ['!dev', '!autodocs'],
   args: { manualSorting: true },
   parameters: {
     docs: {
@@ -542,6 +550,7 @@ export const DifferentSchema: Story = {
 };
 
 export const GroupedHeaders: Story = {
+  tags: ['!dev', '!autodocs'],
   parameters: { docs: { source: { code: tableRecipes.grouped } } },
   args: {
     columns: [
@@ -669,6 +678,7 @@ function CustomizedRowsExample({ empty = false }: { empty?: boolean }) {
   );
 }
 export const CustomizedRows: Story = {
+  tags: ['!dev', '!autodocs'],
   parameters: { controls: { disable: true }, docs: { source: { code: tableRecipes.customized } } },
   render: () => <CustomizedRowsExample />,
 };
@@ -1005,6 +1015,7 @@ export const ResizeEvents: Story = {
 };
 
 export const DateColumns: Story = {
+  tags: ['!dev', '!autodocs'],
   parameters: {
     controls: { disable: true },
     docs: {
@@ -1042,6 +1053,7 @@ export const DateColumns: Story = {
 };
 
 export const RequestStates: Story = {
+  tags: ['!dev', '!autodocs'],
   parameters: {
     controls: { disable: true },
     docs: {
@@ -1127,8 +1139,13 @@ export const KeyboardItems: Story = {
   },
 };
 
-function renderLargeInventory(args: LargeTableProps) {
-  return <LargeTableExample {...args} />;
+function LargeInventoryCanvas(args: LargeTableProps) {
+  const [, , resetArgs] = useArgs<LargeTableProps>();
+  return (
+    <ResettableExample onReset={resetArgs}>
+      <LargeTableExample {...args} />
+    </ResettableExample>
+  );
 }
 
 export const LargeInventory: Story = {
@@ -1167,6 +1184,7 @@ export const LargeInventory: Story = {
           'One loaded inventory, two rendering modes. Use Controls to compare 100–10,000 rows and 10–100 columns. Virtualization bounds the mounted rows; every column remains available horizontally. Data, filtering, sorting and selection keep the same ownership. For server-paged screens, ordinary rendering is often sufficient.',
       },
       source: {
+        type: 'dynamic',
         transform: (
           _code: string,
           context: { args: LargeTableProps },
@@ -1184,13 +1202,13 @@ export function Inventory() {
       },
     },
   },
-  render: renderLargeInventory,
+  render: LargeInventoryCanvas,
 };
 
 export const LargeInventoryWorkflow: Story = {
   name: 'Large inventory workflow',
   args: { rowCount: 10000, columnCount: 10, virtualized: true, density: 'native', status: 'ready' },
-  render: renderLargeInventory,
+  render: LargeInventoryCanvas,
   tags: ['!dev', '!autodocs'],
   parameters: { controls: { disable: true } },
   play: async ({ canvasElement, args, step }) => {

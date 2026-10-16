@@ -10,7 +10,7 @@ export interface ComponentGuide {
 export const componentGuides: Readonly<Record<string, ComponentGuide>> = {
   'Puppertino/Table': {
     intro:
-      'Start with the typed table. Explore behavior in Controls before choosing a state-ownership recipe below.',
+      'Start with a small typed table. Use Controls for behavior and data variants; choose a workspace below for paging, loaded inventories or shared state.',
     scenarios: [
       {
         setting: 'selectable / selectionCheckboxes',

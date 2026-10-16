@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Curate Table into four learning paths, move specialist integrations into a focused recipe index, and mount one canvas per component Docs page. Explain each recipe's purpose, exercise and expected result; add readable workflow steps and reset support for ownership/inventory playgrounds.
 - Add opt-in TanStack row virtualization with measured heights, native table semantics, logical row counts, focused-row retention and keyboard access to unmounted rows. Ordinary rendering remains the default.
 - Leave IME composition/legacy 229 keys untouched and support viewport-sized Page Up/Down navigation, including grid strides and explicit page-size overrides.
 - Add one controlled Large inventory Storybook example for data size, width, density, rendering and request states, with live code, supporting files and named selection/navigation/search recovery checks.
