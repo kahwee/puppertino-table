@@ -70,8 +70,8 @@
     "@types/react-dom": "^19.3.0",
     "axe-core": "4.14.0",
     "playwright": "^1.64.0",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "storybook": "10.6.2",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
@@ -100,6 +100,6 @@
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@tanstack/react-store": "0.11.2",
-    "@tanstack/react-virtual": "3.14.20"
+    "@tanstack/react-virtual": "3.14.21"
   }
 }
