@@ -43,10 +43,10 @@ Import Puppertino's sidebar CSS and `puppertino-table/style.css`. Use `size="sma
 ## Install
 
 ```sh
-pnpm add puppertino-table@0.14.0 @tanstack/react-table@9.3.1 @codedgar/puppertino@2 react@19.3.0 react-dom@19.3.0
+pnpm add puppertino-table@0.14.0 @tanstack/react-table@9.3.1 @codedgar/puppertino@2 react@19.3.1 react-dom@19.3.1
 ```
 
-React and React DOM (`^19.3.0`), TanStack Table and Puppertino are peer dependencies. Base UI is included as a runtime dependency for shared context-menu behavior. Import the Puppertino styles used by your components, followed by the library stylesheet:
+React and React DOM (`^19.3.1`), TanStack Table and Puppertino are peer dependencies. Base UI is included as a runtime dependency for shared context-menu behavior. Import the Puppertino styles used by your components, followed by the library stylesheet:
 
 ```tsx
 import { TableView, createPuppertinoColumnHelper } from 'puppertino-table';
