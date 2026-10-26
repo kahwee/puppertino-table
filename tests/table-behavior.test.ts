@@ -11,13 +11,27 @@ import {
   usePuppertinoTable,
 } from '../src/index.js';
 
+function TableConsumer<T extends RowData>({
+  options,
+  capture,
+}: {
+  options: PuppertinoTableOptions<T>;
+  capture: (table: PuppertinoTableInstance<T>) => void;
+}) {
+  capture(usePuppertinoTable(options));
+  return null;
+}
+
 function makeTable<T extends RowData>(options: PuppertinoTableOptions<T>) {
   let table!: PuppertinoTableInstance<T>;
-  function Consumer() {
-    table = usePuppertinoTable(options);
-    return null;
-  }
-  renderToStaticMarkup(createElement(Consumer));
+  renderToStaticMarkup(
+    createElement(TableConsumer<T>, {
+      options,
+      capture: (instance) => {
+        table = instance;
+      },
+    }),
+  );
   return table;
 }
 const data = [
@@ -86,23 +100,28 @@ test('automatic string sorting is natural and named datetime sorting is chronolo
   );
 });
 
-function primitiveMarkup(options: PuppertinoTableOptions<(typeof data)[number]>) {
-  function Consumer() {
-    const table = usePuppertinoTable(options);
-    return createElement(
-      'table',
-      null,
-      createElement(TableHeader<(typeof data)[number]>, { table }),
-      createElement(TableBody<(typeof data)[number]>, {
-        table,
-        getRowProps: (_row, context) => ({
-          'data-column-count': context.columnCount,
-          'data-disabled': context.disabled,
-        }),
+function PrimitiveConsumer({
+  options,
+}: {
+  options: PuppertinoTableOptions<(typeof data)[number]>;
+}) {
+  const table = usePuppertinoTable(options);
+  return createElement(
+    'table',
+    null,
+    createElement(TableHeader<(typeof data)[number]>, { table }),
+    createElement(TableBody<(typeof data)[number]>, {
+      table,
+      getRowProps: (_row, context) => ({
+        'data-column-count': context.columnCount,
+        'data-disabled': context.disabled,
       }),
-    );
-  }
-  return renderToStaticMarkup(createElement(Consumer));
+    }),
+  );
+}
+
+function primitiveMarkup(options: PuppertinoTableOptions<(typeof data)[number]>) {
+  return renderToStaticMarkup(createElement(PrimitiveConsumer, { options }));
 }
 
 test('primitive layouts inherit selection visibility and disabled policy from the hook', () => {

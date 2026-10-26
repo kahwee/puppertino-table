@@ -57,13 +57,13 @@
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.15",
+    "@biomejs/biome": "2.6.2",
     "@codedgar/puppertino": "2.0.0",
     "@phosphor-icons/react": "^2.1.10",
-    "@storybook/addon-a11y": "10.6.2",
-    "@storybook/addon-docs": "10.6.2",
-    "@storybook/addon-themes": "10.6.2",
-    "@storybook/react-vite": "10.6.2",
+    "@storybook/addon-a11y": "10.6.3",
+    "@storybook/addon-docs": "10.6.3",
+    "@storybook/addon-themes": "10.6.3",
+    "@storybook/react-vite": "10.6.3",
     "@tanstack/react-table": "9.3.1",
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
@@ -72,7 +72,7 @@
     "playwright": "^1.64.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "storybook": "10.6.2",
+    "storybook": "10.6.3",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vite": "^8.3.4"
@@ -100,6 +100,6 @@
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@tanstack/react-store": "0.11.2",
-    "@tanstack/react-virtual": "3.14.21"
+    "@tanstack/react-virtual": "3.14.22"
   }
 }

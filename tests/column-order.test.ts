@@ -3,22 +3,43 @@ import { test } from 'node:test';
 import { createAtom } from '@tanstack/react-store';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { type PuppertinoTableInstance, reorderColumn, usePuppertinoTable } from '../src/index.js';
+import {
+  type PuppertinoTableInstance,
+  type PuppertinoTableOptions,
+  reorderColumn,
+  usePuppertinoTable,
+} from '../src/index.js';
 import { validateAtomOwnership } from '../src/state-ownership.js';
+
+type OrderRow = { id: string; size: number };
+
+function OrderConsumer({
+  options,
+  capture,
+}: {
+  options: PuppertinoTableOptions<OrderRow>;
+  capture: (table: PuppertinoTableInstance<OrderRow>) => void;
+}) {
+  capture(usePuppertinoTable(options));
+  return null;
+}
 
 test('native TanStack order atom updates leaf columns and row cells without rebuilding definitions', () => {
   let table!: PuppertinoTableInstance<{ id: string; size: number }>;
   const columnOrder = createAtom(['id', 'size']);
-  function Consumer() {
-    table = usePuppertinoTable({
-      data: [{ id: 'a', size: 12 }],
-      columns: [{ accessorKey: 'id' }, { accessorKey: 'size' }],
-      getRowId: (item) => item.id,
-      atoms: { columnOrder },
-    });
-    return null;
-  }
-  renderToStaticMarkup(createElement(Consumer));
+  renderToStaticMarkup(
+    createElement(OrderConsumer, {
+      options: {
+        data: [{ id: 'a', size: 12 }],
+        columns: [{ accessorKey: 'id' }, { accessorKey: 'size' }],
+        getRowId: (item) => item.id,
+        atoms: { columnOrder },
+      },
+      capture: (instance) => {
+        table = instance;
+      },
+    }),
+  );
   table.setColumnOrder((previous) => [...previous].reverse());
   assert.deepEqual(columnOrder.get(), ['size', 'id']);
   assert.deepEqual(

@@ -2,28 +2,48 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { type PuppertinoTableInstance, usePuppertinoTable } from '../src/index.js';
+import {
+  type PuppertinoTableInstance,
+  type PuppertinoTableOptions,
+  usePuppertinoTable,
+} from '../src/index.js';
+
+type StateRow = { id: string };
+
+function StateConsumer({
+  options,
+  capture,
+}: {
+  options: PuppertinoTableOptions<StateRow>;
+  capture: (table: PuppertinoTableInstance<StateRow>) => void;
+}) {
+  capture(usePuppertinoTable(options));
+  return null;
+}
 
 test('uncontrolled state observers fire once and preserve functional updaters', () => {
   let table!: PuppertinoTableInstance<{ id: string }>;
   const counts = { sizing: 0, sorting: 0, selection: 0 };
   const resize = (previous: Record<string, number>) => ({ ...previous, id: 275 });
-  function Consumer() {
-    table = usePuppertinoTable({
-      data: [{ id: 'a' }],
-      columns: [{ accessorKey: 'id', size: 200 }],
-      getRowId: (row) => row.id,
-      selectable: true,
-      onColumnSizingChange: (update) => {
-        counts.sizing++;
-        assert.equal(update, resize);
+  renderToStaticMarkup(
+    createElement(StateConsumer, {
+      options: {
+        data: [{ id: 'a' }],
+        columns: [{ accessorKey: 'id', size: 200 }],
+        getRowId: (row) => row.id,
+        selectable: true,
+        onColumnSizingChange: (update) => {
+          counts.sizing++;
+          assert.equal(update, resize);
+        },
+        onSortingChange: () => counts.sorting++,
+        onRowSelectionChange: () => counts.selection++,
       },
-      onSortingChange: () => counts.sorting++,
-      onRowSelectionChange: () => counts.selection++,
-    });
-    return null;
-  }
-  renderToStaticMarkup(createElement(Consumer));
+      capture: (instance) => {
+        table = instance;
+      },
+    }),
+  );
   table.setColumnSizing(resize);
   table.setSorting([{ id: 'id', desc: true }]);
   table.setRowSelection({ a: true });
