@@ -225,22 +225,29 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
         })
         .click({ modifiers: ['Control'] });
     }
+    // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
     assert.match(await summary.innerText(), /2 of 6 selected/);
     if (view === 'list') await page.screenshot({ path: `${evidence}/finder-bulk-selection.png` });
     await remove();
+    // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
     assert.match(await summary.innerText(), /4 items/);
     await finderCommand(page, 'Undo Move to Trash');
+    // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
     assert.match(await summary.innerText(), /6 items/);
     await selectAll(view);
     await remove();
+    // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
     assert.match(await summary.innerText(), /0 items/);
     await favorites.getByRole('button', { name: 'Trash', exact: true }).click();
+    // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
     assert.match(await summary.innerText(), /6 items/);
     await selectAll(view);
     await finderCommand(page, 'Put Back');
+    // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
     assert.match(await summary.innerText(), /0 items/);
     assert.equal(await commandDisabled(page, 'Undo Move to Trash'), true);
     await favorites.getByRole('button', { name: 'Projects', exact: true }).click();
+    // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
     assert.match(await summary.innerText(), /6 items/);
   }
   await page.getByRole('button', { name: 'Icons', exact: true }).click();
@@ -248,6 +255,7 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
   await page
     .getByRole('button', { name: 'Budget.xlsx Spreadsheet', exact: true })
     .click({ modifiers: ['Shift'] });
+  // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
   assert.match(await summary.innerText(), /3 of 6 selected/, 'Shift extends a visible file range');
   await finderCommand(page, 'Deselect All');
   await page.getByRole('button', { name: 'List', exact: true }).click();
@@ -258,6 +266,7 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
     .click({ modifiers: ['Control'] });
   for (const view of ['Icons', 'Columns', 'Gallery', 'List']) {
     await page.getByRole('button', { name: view, exact: true }).click();
+    // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
     assert.match(await summary.innerText(), /2 of 6 selected/, 'selection survives changing views');
   }
   await page.getByRole('button', { name: 'Search', exact: true }).click();
@@ -271,6 +280,7 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
   await remove();
   await page.getByRole('searchbox', { name: 'Search files' }).fill('');
   await page.getByRole('row').filter({ hasText: 'Budget.xlsx' }).waitFor();
+  // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
   assert.match(await summary.innerText(), /5 items/, 'hidden search results were not deleted');
   await finderCommand(page, 'Undo Move to Trash');
   await page
@@ -289,6 +299,7 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
   await page.getByRole('row').filter({ hasText: 'Project brief.pdf' }).focus();
   await page.keyboard.press('Shift+F10');
   await page.getByRole('menuitem', { name: 'Move to Trash', exact: true }).click();
+  // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
   assert.match(await summary.innerText(), /0 items/);
   await favorites.getByRole('button', { name: 'Trash', exact: true }).click();
   await selectAll('list');
@@ -296,6 +307,7 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
   assert.deepEqual(await finderViolations(page), [], 'Trash and bulk action accessibility');
   await page.getByRole('button', { name: 'Reset demo' }).click();
   await favorites.getByRole('button', { name: 'Trash', exact: true }).click();
+  // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
   assert.match(await summary.innerText(), /0 items/, 'reset empties Trash');
   await page.getByRole('button', { name: 'Reset demo' }).click();
   await page.getByRole('row').filter({ hasText: 'Project brief.pdf' }).click();
@@ -307,8 +319,10 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
     .getByRole('row')
     .filter({ hasText: 'Project brief.pdf' })
     .dragTo(favorites.getByRole('button', { name: 'Archive', exact: true }));
+  // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
   assert.match(await summary.innerText(), /4 items/, 'dragging a selected file moves the group');
   await favorites.getByRole('button', { name: 'Archive', exact: true }).click();
+  // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
   assert.match(await summary.innerText(), /2 items/);
   await selectAll('list');
   await remove();
@@ -316,6 +330,7 @@ async function checkFinderBulkActions(page: Page, base: string, evidence: string
   await selectAll('list');
   await finderCommand(page, 'Put Back');
   await favorites.getByRole('button', { name: 'Archive', exact: true }).click();
+  // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
   assert.match(await summary.innerText(), /2 items/, 'restore returns archived files to Archive');
   await page.getByRole('button', { name: 'Reset demo' }).click();
   await selectAll('list');

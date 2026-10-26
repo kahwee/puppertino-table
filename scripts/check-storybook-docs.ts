@@ -19,11 +19,13 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
   assert.equal(await page.locator('video').count(), 3);
   assert.equal(await page.locator('img[src*="/media/"]').count(), 5);
   await page.waitForFunction(
+    // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
     () => document.body.innerText.includes('createPuppertinoColumnHelper'),
     undefined,
     { timeout: 15000 },
   );
   assert.ok(
+    // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
     !(await page.locator('body').innerText()).includes('<v\n'),
     'Sources use readable library recipes, not minified demo component names',
   );
@@ -157,8 +159,10 @@ export async function checkStorybookDocs(page: Page, base: string, evidence: str
 export async function checkOverviewInstallation(page: Page, base: string) {
   await page.goto(`${base}/iframe.html?id=start-here-overview--docs&viewMode=docs`);
   await page.locator('#puppertino-table').waitFor();
+  // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
   await page.waitForFunction(() => document.body.innerText.includes('pnpm add puppertino-table@'));
   const { version } = JSON.parse(await readFile('package.json', 'utf8'));
+  // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
   const overviewText = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
   assert.ok(
     overviewText.includes(`pnpm add puppertino-table@${version} `),
@@ -263,6 +267,7 @@ async function checkTableRecipes(page: Page, base: string) {
   const support = (await page.locator('details.storybook-supporting pre').allTextContents()).join(
     '\n',
   );
+  // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
   const primarySource = await primary.locator('xpath=..').locator('pre').innerText();
   assert.ok(
     primarySource.includes('ariaLabel="People"') &&
@@ -336,6 +341,7 @@ async function checkFocusedViewDocs(page: Page, base: string) {
     );
     await page.getByRole('heading', { name: 'Open a scenario', exact: true }).waitFor();
     await page.getByRole('heading', { name: 'Integration', exact: true }).waitFor();
+    // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
     assert.ok((await page.locator('body').innerText()).includes('Inspect callbacks in Actions.'));
   }
   const preview = page.locator('.sbdocs-preview').first().locator('..');

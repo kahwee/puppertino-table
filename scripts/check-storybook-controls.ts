@@ -230,6 +230,7 @@ export async function checkPlaygroundControls(page: Page, base: string, evidence
     .waitFor();
   await page.getByRole('tab', { name: 'Code', exact: true }).click();
   await page.waitForFunction(() => document.body.textContent?.includes("from './outline-example'"));
+  // biome-ignore lint/performance/useDomNodeTextContent: This browser assertion intentionally checks CSS-rendered text, not hidden DOM content.
   assert.ok((await page.locator('body').innerText()).includes("from 'puppertino-table'"));
   await page.getByRole('tab', { name: /^Controls/ }).click();
   await page.screenshot({ path: `${evidence}/outline-playground-controls.png` });
