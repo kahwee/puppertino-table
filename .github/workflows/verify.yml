@@ -23,10 +23,10 @@ jobs:
           persist-credentials: false
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
         with:
-          version: 12.11.2
+          version: 12.15.0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24.22.0
+          node-version: 24.22.1
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Cache Chromium
@@ -41,9 +41,17 @@ jobs:
       - name: Select installed Chromium
         if: (matrix.lane == 'demo' || startsWith(matrix.lane, 'stories-'))
         run: pnpm exec node -e "const {chromium}=require('playwright'); require('node:fs').appendFileSync(process.env.GITHUB_ENV, 'PLAYWRIGHT_CHROMIUM_EXECUTABLE=' + chromium.executablePath() + '\n')"
-      - name: Lint, types and unit/release tests
-        if: matrix.lane == 'quality'
-        run: pnpm lint && pnpm typecheck && pnpm test
+      # Source checks are independent; benchmarks wait for the whole group.
+      - parallel:
+          - name: Lint
+            if: matrix.lane == 'quality'
+            run: pnpm lint
+          - name: Type check
+            if: matrix.lane == 'quality'
+            run: pnpm typecheck
+          - name: Unit and release tests
+            if: matrix.lane == 'quality'
+            run: pnpm test
       - name: Record collection benchmarks
         if: matrix.lane == 'quality'
         run: pnpm profile:collections

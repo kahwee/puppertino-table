@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Update Storybook to the release-age-eligible 10.6.4, TanStack Virtual to 3.14.23, Playwright to 1.64.1, Vite to 8.3.5 and Biome to 2.6.3. Keep the React 19 and TanStack Table peer contracts unchanged.
+- Align local and CI tooling on pnpm 12.15.0 and Node 24.22.1. Run independent quality checks in parallel before collection benchmarks, preserving every verification lane and release artifact gate.
+- Shorten the README verification overview and document detailed CI behavior separately; refresh release-toolchain and consumer-version guidance.
+
 - Curate Table into four learning paths, move specialist integrations into a focused recipe index, and mount one canvas per component Docs page. Explain each recipe's purpose, exercise and expected result; add readable workflow steps and reset support for ownership/inventory playgrounds.
 - Add opt-in TanStack row virtualization with measured heights, native table semantics, logical row counts, focused-row retention and keyboard access to unmounted rows. Ordinary rendering remains the default.
 - Leave IME composition/legacy 229 keys untouched and support viewport-sized Page Up/Down navigation, including grid strides and explicit page-size overrides.

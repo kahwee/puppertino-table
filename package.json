@@ -57,30 +57,30 @@
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.2",
+    "@biomejs/biome": "2.6.3",
     "@codedgar/puppertino": "2.0.0",
     "@phosphor-icons/react": "^2.1.10",
-    "@storybook/addon-a11y": "10.6.3",
-    "@storybook/addon-docs": "10.6.3",
-    "@storybook/addon-themes": "10.6.3",
-    "@storybook/react-vite": "10.6.3",
+    "@storybook/addon-a11y": "10.6.4",
+    "@storybook/addon-docs": "10.6.4",
+    "@storybook/addon-themes": "10.6.4",
+    "@storybook/react-vite": "10.6.4",
     "@tanstack/react-table": "9.3.1",
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "axe-core": "4.14.0",
-    "playwright": "^1.64.0",
+    "playwright": "^1.64.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "storybook": "10.6.3",
+    "storybook": "10.6.4",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
-    "vite": "^8.3.4"
+    "vite": "^8.3.5"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   },
-  "packageManager": "pnpm@12.11.2",
+  "packageManager": "pnpm@12.15.0",
   "homepage": "https://kahwee.github.io/puppertino-table/",
   "bugs": {
     "url": "https://github.com/kahwee/puppertino-table/issues"
@@ -100,6 +100,6 @@
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@tanstack/react-store": "0.11.2",
-    "@tanstack/react-virtual": "3.14.22"
+    "@tanstack/react-virtual": "3.14.23"
   }
 }

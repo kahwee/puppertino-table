@@ -6,15 +6,15 @@ Stable versions of the public `puppertino-table` package publish through `.githu
 
 1. Confirm the requested version is absent from both npm and GitHub. Never overwrite a version or move an existing tag.
 2. Update `package.json`, `CHANGELOG.md`, and README install examples together. Preserve `pnpm-lock.yaml`; use the pinned pnpm version.
-3. Run `pnpm install --frozen-lockfile` when dependencies change, then `pnpm check`. Review source, exports/types, peer dependencies, license, README and the tarball file allowlist. The checks install the artifact into isolated React 19.3.0 consumers and test types, rendering and CSS.
+3. Run `pnpm install --frozen-lockfile` when dependencies change, then `pnpm check`. Review source, exports/types, peer dependencies, license, README and the tarball file allowlist. The checks install the artifact into isolated React 19.3.1 consumers and test types, rendering and CSS.
 4. Commit the source and matching generated `dist`, push main, and wait for verification and Storybook deployment to pass. Confirm the exact remote SHA.
 5. Create an immutable annotated `v<version>` tag on that verified SHA, push it, and publish a stable GitHub Release. This requires an explicit owner request to publish.
 
 ## Publishing and verification
 
-All GitHub Actions workflows use Node 24.22.0 and pnpm 12.11.2. Actions are pinned to immutable commits and use Node 24 runtimes, including the Pages upload action’s nested artifact action. The release verification job validates the repository, stable tag, event SHA, main ancestry, package version and tarball. The shared verification workflow runs the `pnpm check` gates in parallel. The release verification job runs release-guard tests, revalidates the already-checked package and uploads the verified artifact.
+All GitHub Actions workflows use Node 24.22.1 and pnpm 12.15.0. Actions are pinned to immutable commits and use Node 24 runtimes, including the Pages upload action’s nested artifact action. The release verification job validates the repository, stable tag, event SHA, main ancestry, package version and tarball. The shared verification workflow runs the `pnpm check` gates in parallel. The release verification job runs release-guard tests, revalidates the already-checked package and uploads the verified artifact.
 
-Only the publish job receives `id-token: write`; other jobs receive `contents: read`. The publish job downloads the exact artifact, rechecks its SHA-512 integrity and remote tag, and publishes with pnpm OIDC and provenance. It installs no dependencies and runs no lifecycle scripts. The separate consumer job installs the public registry version with React 19.3.0, verifies typed imports, server rendering and CSS, and receives no OIDC permission.
+Only the publish job receives `id-token: write`; other jobs receive `contents: read`. The publish job downloads the exact artifact, rechecks its SHA-512 integrity and remote tag, and publishes with pnpm OIDC and provenance. It installs no dependencies and runs no lifecycle scripts. The separate consumer job installs the public registry version with React 19.3.1, verifies typed imports, server rendering and CSS, and receives no OIDC permission.
 
 If the version already exists with the same integrity, the workflow verifies it and skips publication. Different bytes under an existing version fail. Authentication, rate-limit and server errors fail rather than being treated as an absent version. The original manual 0.1.0 release cannot be replayed through this workflow.
 
