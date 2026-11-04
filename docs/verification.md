@@ -1,6 +1,6 @@
 # Verification
 
-Use pnpm 12.15.0 and Node 24.22.1 to match CI. `pnpm check` runs the full local gate. Keep generated `dist` committed for Git installs and verify it matches a fresh build.
+Use pnpm 12.15.0 and Node 26.13.0 to match CI. `pnpm check` runs the full local gate. Keep generated `dist` committed for Git installs and verify it matches a fresh build.
 
 ## CI lanes
 
